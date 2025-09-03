@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using SudokuHelper;
 
 namespace SudokuWpfApp
 {
@@ -209,7 +211,6 @@ namespace SudokuWpfApp
 
                     int r = row, c = col;
                     tb.TextChanged += (s, e) => UpdateCandidates();
-                    tb.GotFocus += (s, e) => HighlightPeers(r, c);
                     tb.LostFocus += (s, e) => ClearHighlighting();
 
                     _cells[row, col] = new SudokuCell { Box = tb, CandidatesBlock = candidates, Border = border };
@@ -328,26 +329,15 @@ namespace SudokuWpfApp
         private void Hint_Click(object sender, RoutedEventArgs e)
         {
             int[,] board = GetBoard();
-            int minCandidates = 10;
-            int hintRow = -1, hintCol = -1;
-            List<int> hintCandidates = null;
+            int hintRow = -1, hintCol = -1, hintNumber = 0;
+            string groupType = null;
+            string explanation = null;
 
-            for (int r = 0; r < 9; r++)
+            // Use OnlyValue rule for hint
+            if (SolvingRules.OnlyValue(board, out hintNumber, out hintRow, out hintCol, out groupType))
             {
-                for (int c = 0; c < 9; c++)
-                {
-                    if (board[r, c] == 0)
-                    {
-                        var possible = GetPossibleNumbers(board, r, c);
-                        if (possible.Count < minCandidates)
-                        {
-                            minCandidates = possible.Count;
-                            hintRow = r;
-                            hintCol = c;
-                            hintCandidates = possible;
-                        }
-                    }
-                }
+                explanation = $"Number {hintNumber} can only go in this cell in its {groupType}.";
+                Debug.WriteLine($"Hint found: {explanation} at ({hintRow}, {hintCol})");
             }
 
             // Remove previous popup
@@ -357,11 +347,37 @@ namespace SudokuWpfApp
                 _hintPopup = null;
             }
 
-            if (hintRow >= 0 && hintCandidates != null)
+            // Clear previous highlighting
+            for (int r = 0; r < 9; r++)
+                for (int c = 0; c < 9; c++)
+                    if (_cells[r, c].Box.Background != Brushes.LightGreen)
+                        _cells[r, c].Box.Background = Brushes.White;
+
+            if (hintRow >= 0 && hintCol >= 0 && hintNumber > 0)
             {
+                // Highlight group
+                if (groupType == "row")
+                {
+                    for (int c = 0; c < 9; c++)
+                        _cells[hintRow, c].Box.Background = Brushes.LightYellow;
+                }
+                else if (groupType == "column")
+                {
+                    for (int r = 0; r < 9; r++)
+                        _cells[r, hintCol].Box.Background = Brushes.LightYellow;
+                }
+                else if (groupType == "grid")
+                {
+                    int startRow = hintRow - hintRow % 3;
+                    int startCol = hintCol - hintCol % 3;
+                    for (int r = startRow; r < startRow + 3; r++)
+                        for (int c = startCol; c < startCol + 3; c++)
+                            _cells[r, c].Box.Background = Brushes.LightYellow;
+                }
+                // Highlight the hint cell
                 _cells[hintRow, hintCol].Box.Background = Brushes.LightGreen;
                 _cells[hintRow, hintCol].Box.Focus();
-                string candidatesStr = string.Join(", ", hintCandidates);
+                string candidatesStr = $"{explanation}";
 
                 // Tooltip-like UI
                 var stack = new StackPanel { Orientation = Orientation.Vertical };
@@ -374,7 +390,7 @@ namespace SudokuWpfApp
                     Padding = new Thickness(6),
                     Child = new TextBlock
                     {
-                        Text = $"Candidates: {candidatesStr}",
+                        Text = candidatesStr,
                         Foreground = Brushes.Black,
                         FontSize = 11
                     }
@@ -409,32 +425,6 @@ namespace SudokuWpfApp
             }
         }
 
-        private void HighlightPeers(int focusRow, int focusCol)
-        {
-            for (int r = 0; r < 9; r++)
-            {
-                for (int c = 0; c < 9; c++)
-                {
-                    if (_cells[r, c].Box.Background != Brushes.LightGreen)
-                        _cells[r, c].Box.Background = Brushes.White;
-                }
-            }
-
-            for (int i = 0; i < 9; i++)
-            {
-                _cells[focusRow, i].Box.Background = Brushes.LightYellow;
-                _cells[i, focusCol].Box.Background = Brushes.LightYellow;
-            }
-
-            int startRow = focusRow - focusRow % 3;
-            int startCol = focusCol - focusCol % 3;
-
-            for (int r = startRow; r < startRow + 3; r++)
-                for (int c = startCol; c < startCol + 3; c++)
-                    _cells[r, c].Box.Background = Brushes.LightYellow;
-
-            _cells[focusRow, focusCol].Box.Background = Brushes.LightBlue;
-        }
 
         private void ClearHighlighting()
         {
