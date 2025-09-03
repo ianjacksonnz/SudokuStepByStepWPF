@@ -1,6 +1,6 @@
 ﻿namespace SudokuWpfApp;
 
-public class SudokuSolver
+public class SudokuHelper
 {
     public bool Solve(int[,] board)
     {

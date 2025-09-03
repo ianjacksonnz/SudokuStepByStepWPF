@@ -16,7 +16,7 @@ namespace SudokuWpfApp
         }
 
         private SudokuCell[,] _cells = new SudokuCell[9, 9];
-        private SudokuSolver _solver = new SudokuSolver();
+        private SudokuHelper _solver = new SudokuHelper();
 
         private readonly Dictionary<string, int[,]> _puzzles = new Dictionary<string, int[,]>
         {
