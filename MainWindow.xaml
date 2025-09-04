@@ -23,7 +23,7 @@
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
             <Button Content="Solve" Width="100" Margin="5" Click="Solve_Click"/>
             <Button Content="Clear" Width="100" Margin="5" Click="Clear_Click"/>
-            <Button Content="Hint" Width="100" Margin="5" Click="Hint_Click"/>
+            <Button x:Name="HintButton" Content="Hint" Width="100" Margin="5" Click="Hint_Click"/>
         </StackPanel>
     </Grid>
 </Window>

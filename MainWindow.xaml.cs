@@ -19,6 +19,8 @@ namespace SudokuWpfApp
 
         private SudokuCell[,] _cells = new SudokuCell[9, 9];
         private SudokuHelper _solver = new SudokuHelper();
+        private List<TextBox> _highlightedCells = new List<TextBox>();
+
 
         private readonly Dictionary<string, int[,]> _puzzles = new Dictionary<string, int[,]>
         {
@@ -325,13 +327,24 @@ namespace SudokuWpfApp
 
         private int _hintRow = -1, _hintCol = -1; // Track last hint cell
         private Popup _hintPopup = null; // Popup for hint
+        private TextBox _prevHintBox = null;
 
         private void Hint_Click(object sender, RoutedEventArgs e)
         {
             int[,] board = GetBoard();
             int hintRow = -1, hintCol = -1, hintNumber = 0;
-            string groupType = null;
-            string explanation = null;
+            string? groupType = null;
+            string? explanation = null;
+
+            // Remove previous popup and highlighting
+            ClearHighlighting();
+
+            // Detach previous KeyDown handler if any
+            if (_prevHintBox != null)
+            {
+                _prevHintBox.KeyDown -= HintCell_KeyDown;
+                _prevHintBox = null;
+            }
 
             // Use OnlyValue rule for hint
             if (SolvingRules.OnlyValue(board, out hintNumber, out hintRow, out hintCol, out groupType))
@@ -340,31 +353,32 @@ namespace SudokuWpfApp
                 Debug.WriteLine($"Hint found: {explanation} at ({hintRow}, {hintCol})");
             }
 
-            // Remove previous popup
-            if (_hintPopup != null)
-            {
-                _hintPopup.IsOpen = false;
-                _hintPopup = null;
-            }
-
-            // Clear previous highlighting
-            for (int r = 0; r < 9; r++)
-                for (int c = 0; c < 9; c++)
-                    if (_cells[r, c].Box.Background != Brushes.LightGreen)
-                        _cells[r, c].Box.Background = Brushes.White;
+            _hintRow = hintRow;
+            _hintCol = hintCol;
 
             if (hintRow >= 0 && hintCol >= 0 && hintNumber > 0)
             {
+                explanation += "\nPress Enter to fill in this number.";
+
                 // Highlight group
+                _highlightedCells.Clear();
                 if (groupType == "row")
                 {
                     for (int c = 0; c < 9; c++)
-                        _cells[hintRow, c].Box.Background = Brushes.LightYellow;
+                    {
+                        var box = _cells[hintRow, c].Box;
+                        box.Background = Brushes.LightYellow;
+                        _highlightedCells.Add(box);
+                    }
                 }
                 else if (groupType == "column")
                 {
                     for (int r = 0; r < 9; r++)
-                        _cells[r, hintCol].Box.Background = Brushes.LightYellow;
+                    {
+                        var box = _cells[r, hintCol].Box;
+                        box.Background = Brushes.LightYellow;
+                        _highlightedCells.Add(box);
+                    }
                 }
                 else if (groupType == "grid")
                 {
@@ -372,11 +386,20 @@ namespace SudokuWpfApp
                     int startCol = hintCol - hintCol % 3;
                     for (int r = startRow; r < startRow + 3; r++)
                         for (int c = startCol; c < startCol + 3; c++)
-                            _cells[r, c].Box.Background = Brushes.LightYellow;
+                        {
+                            var box = _cells[r, c].Box;
+                            box.Background = Brushes.LightYellow;
+                            _highlightedCells.Add(box);
+                        }
                 }
-                // Highlight the hint cell
-                _cells[hintRow, hintCol].Box.Background = Brushes.LightGreen;
-                _cells[hintRow, hintCol].Box.Focus();
+
+                // Highlight the hint cell (overwrite group color)
+                var hintBox = _cells[hintRow, hintCol].Box;
+                hintBox.Background = Brushes.LightGreen;
+                if (!_highlightedCells.Contains(hintBox))
+                    _highlightedCells.Add(hintBox);
+
+                hintBox.Focus();
                 string candidatesStr = $"{explanation}";
 
                 // Tooltip-like UI
@@ -396,10 +419,11 @@ namespace SudokuWpfApp
                     }
                 };
                 stack.Children.Add(border);
+
                 // Arrow pointing down
                 var arrow = new System.Windows.Shapes.Polygon
                 {
-                    Points = new PointCollection { new Point(0,0), new Point(12,0), new Point(6,8) },
+                    Points = new PointCollection { new Point(0, 0), new Point(12, 0), new Point(6, 8) },
                     Fill = Brushes.LightYellow,
                     Stroke = Brushes.Gray,
                     StrokeThickness = 1,
@@ -417,28 +441,66 @@ namespace SudokuWpfApp
                     IsOpen = true,
                     AllowsTransparency = true
                 };
+
+                // Attach KeyDown handler for Enter
+                hintBox.KeyDown -= HintCell_KeyDown; // Remove previous handler if any
+                hintBox.KeyDown += HintCell_KeyDown;
+                _prevHintBox = hintBox;
             }
             else
             {
+                _hintRow = -1;
+                _hintCol = -1;
                 MessageBox.Show("No hints available. Puzzle may be complete or need advanced solving.",
                                 "Sudoku Hint", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
+        private void HintCell_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter && _hintRow >= 0 && _hintCol >= 0 && _hintPopup != null)
+            {
+                int[,] board = GetBoard();
+                int hintNumber = 0;
+                int hintRow = _hintRow;
+                int hintCol = _hintCol;
+                string groupType = null;
+
+                if (SolvingRules.OnlyValue(board, out hintNumber, out hintRow, out hintCol, out groupType))
+                {
+                    _cells[hintRow, hintCol].Box.Text = hintNumber.ToString();
+
+                    // Remove green highlight after filling in the hint
+                    _cells[hintRow, hintCol].Box.Background = Brushes.White;
+
+                    _hintPopup.IsOpen = false;
+                    _hintPopup = null;
+
+                    _cells[hintRow, hintCol].Box.KeyDown -= HintCell_KeyDown;
+                    _prevHintBox = null;
+
+                    UpdateCandidates();
+
+                    // Instead of calling Hint_Click directly, simulate a button click to ensure event args are passed
+                    // This will ensure the highlighting logic runs as expected
+                    Hint_Click(HintButton, new RoutedEventArgs(Button.ClickEvent));
+                }
+            }
+        }
 
         private void ClearHighlighting()
         {
-            for (int r = 0; r < 9; r++)
-                for (int c = 0; c < 9; c++)
-                {
-                    if (_cells[r, c].Box.Background != Brushes.LightGreen)
-                        _cells[r, c].Box.Background = Brushes.White;
-                }
+            foreach (var cell in _highlightedCells)
+                cell.Background = Brushes.White;
+
+            _highlightedCells.Clear();
+
             if (_hintPopup != null)
             {
                 _hintPopup.IsOpen = false;
-                _hintPopup = null;
+                _hintPopup = null!;
             }
         }
+
     }
 }
