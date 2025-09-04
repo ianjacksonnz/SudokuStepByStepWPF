@@ -358,8 +358,6 @@ namespace SudokuWpfApp
 
             if (hintRow >= 0 && hintCol >= 0 && hintNumber > 0)
             {
-                explanation += "\nPress Enter to fill in this number.";
-
                 // Highlight group
                 _highlightedCells.Clear();
                 if (groupType == "row")
