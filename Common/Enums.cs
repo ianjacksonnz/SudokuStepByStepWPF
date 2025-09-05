@@ -1,4 +1,4 @@
-﻿namespace SudokoStepByStep.Common;
+﻿namespace SudokuStepByStep.Common;
 
 public class Enums
 {
@@ -9,7 +9,7 @@ public class Enums
         PointingPairs
     }
 
-    public enum CellGroupType
+    public enum SquareGroupType
     {
         Column,
         Row,

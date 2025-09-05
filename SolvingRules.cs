@@ -1,6 +1,6 @@
-﻿using SudokoStepByStep.Common;
+﻿using SudokuStepByStep.Common;
 
-namespace SudokoStepByStep;
+namespace SudokuStepByStep;
 
 public class SolvingRules
 {
@@ -9,7 +9,7 @@ public class SolvingRules
         out int numberSolved,
         out int rowSolved,
         out int columnSolved,
-        out Enums.CellGroupType? groupType)
+        out Enums.SquareGroupType? groupType)
     {
         numberSolved = 0;
         rowSolved = -1;
@@ -33,7 +33,7 @@ public class SolvingRules
                     numberSolved = number;
                     rowSolved = row;
                     columnSolved = possibleColumns[0];
-                    groupType = Enums.CellGroupType.Row;
+                    groupType = Enums.SquareGroupType.Row;
                     return true;
                 }
             }
@@ -61,7 +61,7 @@ public class SolvingRules
                     numberSolved = number;
                     rowSolved = possibleRows[0];
                     columnSolved = column;
-                    groupType = Enums.CellGroupType.Column;
+                    groupType = Enums.SquareGroupType.Column;
                     return true;
                 }
             }
@@ -74,7 +74,7 @@ public class SolvingRules
             {
                 for (int number = 1; number <= 9; number++)
                 {
-                    var possibleCells = new List<(int r, int c)>();
+                    var possibleSquares = new List<(int r, int c)>();
 
                     for (int r = boxRow * 3; r < boxRow * 3 + 3; r++)
                     {
@@ -84,17 +84,17 @@ public class SolvingRules
                                 board[r, c].Contains(number) &&
                                 RulesHelper.IsSafe(board, r, c, number))
                             {
-                                possibleCells.Add((r, c));
+                                possibleSquares.Add((r, c));
                             }
                         }
                     }
 
-                    if (possibleCells.Count == 1)
+                    if (possibleSquares.Count == 1)
                     {
                         numberSolved = number;
-                        rowSolved = possibleCells[0].r;
-                        columnSolved = possibleCells[0].c;
-                        groupType = Enums.CellGroupType.Grid;
+                        rowSolved = possibleSquares[0].r;
+                        columnSolved = possibleSquares[0].c;
+                        groupType = Enums.SquareGroupType.Grid;
                         return true;
                     }
                 }
@@ -108,11 +108,11 @@ public class SolvingRules
         HashSet<int>[,] board,
         List<HashSet<(int row, int col)>> shownGroups,
         out int[] pairValues,
-        out (int row, int col)[] pairCells,
-        out Enums.CellGroupType? groupType)
+        out (int row, int col)[] pairSquares,
+        out Enums.SquareGroupType? groupType)
     {
         pairValues = Array.Empty<int>();
-        pairCells = Array.Empty<(int, int)>();
+        pairSquares = Array.Empty<(int, int)>();
         groupType = null;
 
         // --- Rows ---
@@ -133,17 +133,17 @@ public class SolvingRules
             foreach (var pair in nakedPairs)
             {
                 var cols = pair.Select(c => c.Key).ToList();
-                var groupCells = new HashSet<(int, int)> { (row, cols[0]), (row, cols[1]) };
+                var groupSquares = new HashSet<(int, int)> { (row, cols[0]), (row, cols[1]) };
 
                 // skip if already hinted
-                if (shownGroups.Any(g => g.SetEquals(groupCells)))
+                if (shownGroups.Any(g => g.SetEquals(groupSquares)))
                 {
                     continue;
                 }
 
                 bool removed = false;
 
-                // Remove these two candidates from other cells in the row
+                // Remove these two candidates from other squares in the row
                 foreach (int c in Enumerable.Range(0, 9))
                 {
                     if (cols.Contains(c))
@@ -162,8 +162,8 @@ public class SolvingRules
                 if (removed)
                 {
                     pairValues = pair.First().Value.ToArray();
-                    pairCells = groupCells.ToArray();
-                    groupType = Enums.CellGroupType.Row;
+                    pairSquares = groupSquares.ToArray();
+                    groupType = Enums.SquareGroupType.Row;
                     return true; // return because we show one hint at a time
                 }
             }
@@ -187,16 +187,16 @@ public class SolvingRules
             foreach (var pair in nakedPairs)
             {
                 var rows = pair.Select(c => c.Key).ToList();
-                var groupCells = new HashSet<(int, int)> { (rows[0], col), (rows[1], col) };
+                var groupSquares = new HashSet<(int, int)> { (rows[0], col), (rows[1], col) };
 
-                if (shownGroups.Any(g => g.SetEquals(groupCells)))
+                if (shownGroups.Any(g => g.SetEquals(groupSquares)))
                 {
                     continue;
                 }
 
                 bool removed = false;
 
-                // Remove these two candidates from other cells in the column
+                // Remove these two candidates from other squares in the column
                 for (int r = 0; r < 9; r++)
                 {
                     if (rows.Contains(r))
@@ -215,8 +215,8 @@ public class SolvingRules
                 if (removed)
                 {
                     pairValues = pair.First().Value.ToArray();
-                    pairCells = groupCells.ToArray();
-                    groupType = Enums.CellGroupType.Column;
+                    pairSquares = groupSquares.ToArray();
+                    groupType = Enums.SquareGroupType.Column;
                     return true;
                 }
             }
@@ -244,9 +244,9 @@ public class SolvingRules
 
                 foreach (var pair in nakedPairs)
                 {
-                    var cells = new HashSet<(int, int)>(pair.Select(c => c.Key));
+                    var squares = new HashSet<(int, int)>(pair.Select(c => c.Key));
 
-                    if (shownGroups.Any(g => g.SetEquals(cells)))
+                    if (shownGroups.Any(g => g.SetEquals(squares)))
                         continue;
 
                     bool removed = false;
@@ -255,7 +255,7 @@ public class SolvingRules
                     {
                         for (int c = boxCol * 3; c < boxCol * 3 + 3; c++)
                         {
-                            if (cells.Contains((r, c)))
+                            if (squares.Contains((r, c)))
                                 continue;
 
                             foreach (var val in pair.First().Value)
@@ -272,8 +272,8 @@ public class SolvingRules
                     if (removed)
                     {
                         pairValues = pair.First().Value.ToArray();
-                        pairCells = cells.ToArray();
-                        groupType = Enums.CellGroupType.Grid;
+                        pairSquares = squares.ToArray();
+                        groupType = Enums.SquareGroupType.Grid;
                         return true;
                     }
                 }
@@ -287,11 +287,11 @@ public class SolvingRules
         HashSet<int>[,] board,
         List<HashSet<(int row, int col)>> hintedGroups,
         out int[] pairValues,
-        out (int row, int col)[] pairCells,
-        out Enums.CellGroupType? groupType)
+        out (int row, int col)[] pairSquares,
+        out Enums.SquareGroupType? groupType)
     {
         pairValues = Array.Empty<int>();
-        pairCells = Array.Empty<(int, int)>();
+        pairSquares = Array.Empty<(int, int)>();
         groupType = null;
 
         for (int boxRow = 0; boxRow < 3; boxRow++)
@@ -300,7 +300,7 @@ public class SolvingRules
             {
                 for (int number = 1; number <= 9; number++)
                 {
-                    var candidateCells = new List<(int r, int c)>();
+                    var candidateSquares = new List<(int r, int c)>();
 
                     for (int r = boxRow * 3; r < boxRow * 3 + 3; r++)
                     {
@@ -309,18 +309,18 @@ public class SolvingRules
                             
                             if (board[r, c].Contains(number))
                             {
-                                candidateCells.Add((r, c));
+                                candidateSquares.Add((r, c));
                             }
                         }
                     }
 
-                    if (candidateCells.Count <= 1)
+                    if (candidateSquares.Count <= 1)
                         continue;
 
                     // Check same row
-                    if (candidateCells.All(cell => cell.r == candidateCells[0].r))
+                    if (candidateSquares.All(square => square.r == candidateSquares[0].r))
                     {
-                        int row = candidateCells[0].r;
+                        int row = candidateSquares[0].r;
                         bool removed = false;
 
                         for (int c = 0; c < 9; c++)
@@ -338,16 +338,16 @@ public class SolvingRules
                         if (removed)
                         {
                             pairValues = new int[] { number };
-                            pairCells = candidateCells.ToArray();
-                            groupType = Enums.CellGroupType.Row;
+                            pairSquares = candidateSquares.ToArray();
+                            groupType = Enums.SquareGroupType.Row;
                             return true; // return immediately for first hint
                         }
                     }
 
                     // Check same column
-                    if (candidateCells.All(cell => cell.c == candidateCells[0].c))
+                    if (candidateSquares.All(square => square.c == candidateSquares[0].c))
                     {
-                        int col = candidateCells[0].c;
+                        int col = candidateSquares[0].c;
                         bool removed = false;
 
                         for (int r = 0; r < 9; r++)
@@ -365,8 +365,8 @@ public class SolvingRules
                         if (removed)
                         {
                             pairValues = new int[] { number };
-                            pairCells = candidateCells.ToArray();
-                            groupType = Enums.CellGroupType.Column;
+                            pairSquares = candidateSquares.ToArray();
+                            groupType = Enums.SquareGroupType.Column;
                             return true; // return immediately for first hint
                         }
                     }

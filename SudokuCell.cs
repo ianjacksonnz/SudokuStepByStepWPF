@@ -1,14 +1,14 @@
 ﻿using System.Windows.Controls;
 
-namespace SudokoStepByStep;
+namespace SudokuStepByStep;
 
-public class SudokuCell
+public class SudokuSquare
 {
     public TextBox Box { get; init; }
     public TextBlock CandidatesBlock { get; init; }
     public Border Border { get; init; }
 
-    public SudokuCell(TextBox box, TextBlock candidates, Border border)
+    public SudokuSquare(TextBox box, TextBlock candidates, Border border)
     {
         Box = box;
         CandidatesBlock = candidates;

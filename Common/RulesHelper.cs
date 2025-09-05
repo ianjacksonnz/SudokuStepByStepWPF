@@ -1,4 +1,4 @@
-﻿namespace SudokoStepByStep.Common;
+﻿namespace SudokuStepByStep.Common;
 
 public static class RulesHelper
 {
@@ -7,10 +7,10 @@ public static class RulesHelper
         // Check row
         for (int c = 0; c < 9; c++)
         {
-            // Only treat as conflict if the cell is solved (null or Count == 0) or already entered
+            // Only treat as conflict if the square is solved (null or Count == 0) or already entered
             if (c != column && board[row, c] == null)
             {
-                continue; // solved cell is fine unless it matches the number
+                continue; // solved square is fine unless it matches the number
             }
 
             if (board[row, c]?.Count == 0)
@@ -141,10 +141,10 @@ public static class RulesHelper
         }
     }
 
-    // Helper to set a cell as solved
-    public static void SetCell(HashSet<int>[,] board, int row, int column, int value) => board[row, column] = [value];
+    // Helper to set a square as solved
+    public static void SetSquare(HashSet<int>[,] board, int row, int column, int value) => board[row, column] = [value];
 
-    // Helper to initialize board with all candidates (1-9) for unsolved cells, or single value for solved
+    // Helper to initialize board with all candidates (1-9) for unsolved squares, or single value for solved
     public static HashSet<int>[,] InitializeBoard(int[,] initial)
     {
         var board = new HashSet<int>[9, 9];

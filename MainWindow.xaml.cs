@@ -1,5 +1,7 @@
-﻿using SudokoStepByStep;
-using SudokoStepByStep.Common;
+﻿using SudokuStepByStep.Common;
+using SudokuStepByStep.Logic;
+using SudokuStepByStep.Logic.Helpers;
+using SudokuStepByStep.Models;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
@@ -12,180 +14,48 @@ namespace SudokuStepByStep;
 
 public partial class MainWindow : Window
 {
-    private class SudokuCell
-    {
-        public required TextBox Box { get; set; }
-        public required TextBlock CandidatesBlock { get; set; }
-        public required Border Border { get; set; } // Add reference to Border
-    }
-
-    private static readonly SudokuCell[,] sudokuCells = new SudokuCell[9, 9];
-    private readonly SudokuCell[,] _cells = sudokuCells;
+    private Dictionary<string, int[,]> _puzzles = new Dictionary<string, int[,]>();
+    private SudokuSquare[,] _squares = new SudokuSquare[9, 9];
     private readonly SudokuSolver _solver = new();
-    private readonly List<TextBox> _highlightedCells = [];
+    private readonly List<TextBox> _highlightedSquares = [];
     private int _hintRow = -1;
     private int _hintCol = -1;
     private int _hintNumber = -1;
     private Popup? _hintPopup = null!;
     private TextBox? _prevHintBox = null!;
     private Enums.SolvingMethod? _currentHintMethod;
-    private Enums.CellGroupType? _currentGroupType;
+    private Enums.SquareGroupType? _currentGroupType;
     private bool _showingPossibleValues = false;
 
-    // Tracks OnlyValue cells that have been hinted
-    private List<(int row, int col)> _shownOnlyValueCells = new();
+    // Tracks OnlyValue squares that have been hinted
+    private List<(int row, int col)> _shownOnlyValueSquares = new();
 
     // Tracks NakedPairs that have already been hinted
     private List<(int row1, int col1, int row2, int col2)> _hintedNakedPairs = new();
     private List<HashSet<(int row, int col)>> _hintedGroups = new();
-
-    private readonly Dictionary<string, int[,]> _puzzles = new()
-    {
-        { "Genius Puzzle 1", new int[9,9]
-            {
-                {0,0,0,0,0,0,0,0,4},
-                {0,0,9,8,7,0,0,0,6},
-                {0,0,0,0,0,3,0,7,0},
-                {0,0,0,0,0,8,2,4,0},
-                {0,0,5,0,9,0,8,0,0},
-                {0,1,2,4,0,0,0,0,0},
-                {0,2,0,7,0,0,0,0,0},
-                {3,0,0,0,6,1,5,0,0},
-                {7,0,0,0,0,0,0,0,0}
-            }
-        },
-        { "Genius Puzzle 2", new int[9,9]
-            {
-                {0,0,0,0,0,0,0,0,0},
-                {3,0,0,8,0,0,0,4,0},
-                {0,1,2,7,0,0,0,6,5},
-                {0,4,0,9,0,6,5,0,0},
-                {0,0,1,0,8,0,7,0,0},
-                {0,0,6,2,0,1,0,8,0},
-                {1,5,0,0,0,4,9,2,0},
-                {0,9,0,0,0,7,0,0,3},
-                {0,0,0,0,0,0,0,0,0}
-            }
-        },
-        { "Genius Puzzle 3", new int[9,9]
-            {
-                {0,0,0,0,0,0,0,0,0},
-                {0,0,0,0,7,5,3,8,0},
-                {3,0,6,9,0,0,2,0,0},
-                {0,0,0,0,0,1,0,0,9},
-                {0,0,2,0,8,0,6,0,0},
-                {4,0,0,2,0,0,0,0,0},
-                {0,0,5,0,0,7,9,0,1},
-                {0,2,3,6,9,0,0,0,0},
-                {0,0,0,0,0,0,0,0,0}
-            }
-        },
-        { "Genius Puzzle 4", new int[9,9]
-            {
-                {0,0,0,0,0,0,0,0,0},
-                {0,3,0,6,9,0,0,8,5},
-                {9,8,0,1,0,0,0,6,3},
-                {0,0,1,0,0,0,0,0,4},
-                {0,6,0,4,8,7,0,1,0},
-                {3,0,0,0,0,0,6,0,0},
-                {2,7,0,0,0,6,0,3,8},
-                {8,1,0,0,5,2,0,9,0},
-                {0,0,0,0,0,0,0,0,0}
-            }
-        },
-        { "Genius Puzzle 5", new int[9,9]
-            {
-                {0,9,0,0,0,0,0,0,7},
-                {0,0,3,0,8,0,9,0,0},
-                {0,0,0,0,0,7,4,0,3},
-                {9,0,0,0,5,0,8,0,0},
-                {6,0,0,2,9,8,0,0,4},
-                {0,0,5,0,6,0,0,0,2},
-                {5,0,6,1,0,0,0,0,0},
-                {0,0,8,0,4,0,6,0,0},
-                {1,0,0,0,0,0,0,7,0}
-            }
-        },
-        { "Genius Puzzle 6", new int[9,9]
-            {
-                {0,7,0,0,0,0,0,0,0},
-                {0,0,1,2,0,0,0,0,9},
-                {0,3,0,0,0,0,4,1,6},
-                {9,0,0,0,4,0,0,0,0},
-                {1,2,0,0,3,0,0,9,7},
-                {0,0,0,0,1,0,0,0,2},
-                {7,1,2,0,0,0,0,6,0},
-                {8,0,0,0,0,3,2,0,0},
-                {0,0,0,0,0,0,0,5,0}
-            }
-        },
-        { "Genius Puzzle 7", new int[9,9]
-            {
-                {0,0,1,0,0,0,0,0,7},
-                {0,0,0,8,5,0,1,0,0},
-                {0,0,0,0,0,0,0,9,4},
-                {0,1,0,5,0,0,7,6,0},
-                {0,5,0,4,1,9,0,8,0},
-                {0,9,3,0,0,6,0,1,0},
-                {4,6,0,0,0,0,0,0,0},
-                {0,0,5,0,3,7,0,0,0},
-                {3,0,0,0,0,0,2,0,0}
-            }
-        },
-        { "Genius Puzzle 8", new int[9,9]
-            {
-                {0,0,0,0,0,0,0,9,3},
-                {0,0,0,0,0,0,0,8,0},
-                {2,9,0,7,0,0,5,0,0},
-                {6,0,5,9,0,3,0,0,4},
-                {0,0,2,0,8,0,9,0,0},
-                {3,0,0,4,0,7,2,0,8},
-                {0,0,4,0,0,6,0,1,9},
-                {0,5,0,0,0,0,0,0,0},
-                {1,2,0,0,0,0,0,0,0}
-            }
-        },
-        { "Genius Puzzle 9", new int[9,9]
-            {
-                {0,0,0,0,0,0,4,0,0},
-                {7,0,0,5,4,0,0,9,3},
-                {0,0,5,9,0,0,0,0,0},
-                {0,0,0,0,0,2,6,0,8},
-                {0,0,6,0,3,0,5,0,0},
-                {2,0,7,8,0,0,0,0,0},
-                {0,0,0,0,0,1,3,0,0},
-                {5,6,0,0,9,3,0,0,2},
-                {0,0,8,0,0,0,0,0,0}
-            }
-        },
-        { "Genius Puzzle 10", new int[9,9]
-            {
-                {0,0,0,0,0,0,0,3,0},
-                {0,0,0,0,1,0,0,0,9},
-                {4,2,0,0,8,0,6,7,0},
-                {0,0,0,8,0,1,2,0,3},
-                {0,9,0,0,0,0,0,8,0},
-                {3,0,8,5,0,2,0,0,0},
-                {0,3,1,0,7,0,0,9,6},
-                {7,0,0,0,2,0,0,0,0},
-                {0,6,0,0,0,0,0,0,0}
-            }
-        }
-    };
-
+    
 
     public MainWindow()
     {
         InitializeComponent();
+
         InitializeGrid();
-
-        foreach (var key in _puzzles.Keys)
-            PuzzleSelector.Items.Add(key);
-
-        PuzzleSelector.SelectedIndex = 0;
-
+        CreatePuzzles();
+        
         // Close hint tooltip on outside clicks
         this.PreviewMouseDown += MainWindow_PreviewMouseDown;
+    }
+
+    private void CreatePuzzles()
+    {
+        _puzzles = PuzzleLoader.GetPuzzles();
+
+        foreach (var key in _puzzles.Keys)
+        {
+            PuzzleSelector.Items.Add(key);
+        }
+
+        PuzzleSelector.SelectedIndex = 0;
     }
 
     private void InitializeGrid()
@@ -238,12 +108,7 @@ public partial class MainWindow : Window
                 tb.TextChanged += (s, e) => UpdateCandidates();
                 tb.LostFocus += (s, e) => ClearHighlighting();
 
-                _cells[row, col] = new SudokuCell
-                {
-                    Box = tb,
-                    CandidatesBlock = candidates,
-                    Border = border
-                };
+                _squares[row, col] = new SudokuSquare(tb, candidates, border);
 
                 SudokuGrid.Children.Add(border);
             }
@@ -267,53 +132,16 @@ public partial class MainWindow : Window
     private void ResetHintTracking()
     {
         _hintedNakedPairs.Clear();
-        _shownOnlyValueCells.Clear();
+        _shownOnlyValueSquares.Clear();
     }
 
     private void LoadPuzzle(int[,] puzzle)
     {
-        for (int r = 0; r < 9; r++)
-        {
-            for (int c = 0; c < 9; c++)
-            {
-                if (puzzle[r, c] != 0)
-                {
-                    _cells[r, c].Box.Text = puzzle[r, c].ToString();
-                    _cells[r, c].Box.IsReadOnly = true;
-                    _cells[r, c].Box.Foreground = Brushes.DarkBlue;
-                    _cells[r, c].CandidatesBlock.Text = "";
-                }
-                else
-                {
-                    _cells[r, c].Box.Text = "";
-                    _cells[r, c].Box.IsReadOnly = false;
-                    _cells[r, c].Box.Foreground = Brushes.Black;
-                }
-            }
-        }
+        PuzzleLoader.LoadPuzzle(puzzle, _squares);
 
         ClearHighlighting();
         UpdateCandidates();
     }
-
-
-
-    private int[,] GetBoard()
-    {
-        int[,] board = new int[9, 9];
-
-        for (int r = 0; r < 9; r++)
-        {
-            for (int c = 0; c < 9; c++)
-            {
-                board[r, c] = int.TryParse(_cells[r, c].Box.Text, out int val) ? val : 0;
-            }
-        }
-
-        return board;
-    }
-
-
 
     private void Step_Click(object sender, RoutedEventArgs e)
     {
@@ -345,34 +173,21 @@ public partial class MainWindow : Window
         _hintRow = -1;
         _hintCol = -1;
 
-        // --- Clear the board cells for editable cells ---
-        for (int r = 0; r < 9; r++)
-        {
-            for (int c = 0; c < 9; c++)
-            {
-                if (!_cells[r, c].Box.IsReadOnly)
-                {
-                    _cells[r, c].Box.Text = "";
-                    _cells[r, c].Box.Background = Brushes.White; // reset background highlighting
-                }
-            }
-        }
-
-        // --- Recalculate candidates for all cells ---
+        GridHelper.ClearSquares(_squares);
         UpdateCandidates();
     }
 
     private void Solve_Click(object sender, RoutedEventArgs e)
     {
-        int[,] board = GetBoard();
+        int[,] grid = GridHelper.GetNumbers(_squares);
 
-        if (SudokuSolver.Solve(board))
+        if (SudokuSolver.Solve(grid))
         {
             for (int r = 0; r < 9; r++)
             {
                 for (int c = 0; c < 9; c++)
                 {
-                    _cells[r, c].Box.Text = board[r, c].ToString();
+                    _squares[r, c].Box.Text = grid[r, c].ToString();
                 }
             }
         }
@@ -388,43 +203,27 @@ public partial class MainWindow : Window
     {
         if (!_showingPossibleValues) return; // Only update display if toggled on
 
-        int[,] board = GetBoard();
+        int[,] grid = GridHelper.GetNumbers(_squares);
 
         for (int r = 0; r < 9; r++)
         {
             for (int c = 0; c < 9; c++)
             {
-                var cell = _cells[r, c];
+                var square = _squares[r, c];
 
-                if (board[r, c] == 0)
+                if (grid[r, c] == 0)
                 {
-                    var possibleNumbers = GetPossibleNumbers(board, r, c);
-                    cell.CandidatesBlock.Text = string.Join(" ", possibleNumbers);
-                    cell.CandidatesBlock.Visibility = Visibility.Visible;
+                    var possibleNumbers = GridHelper.GetPossibleNumbers(grid, r, c);
+                    square.CandidatesBlock.Text = string.Join(" ", possibleNumbers);
+                    square.CandidatesBlock.Visibility = Visibility.Visible;
                 }
                 else
                 {
-                    cell.CandidatesBlock.Text = string.Empty;
-                    cell.CandidatesBlock.Visibility = Visibility.Collapsed;
+                    square.CandidatesBlock.Text = string.Empty;
+                    square.CandidatesBlock.Visibility = Visibility.Collapsed;
                 }
             }
         }
-    }
-
-
-    private static List<int> GetPossibleNumbers(int[,] board, int row, int col)
-    {
-        List<int> possible = [];
-
-        for (int num = 1; num <= 9; num++)
-        {
-            if (SudokuSolver.IsSafe(board, row, col, num))
-            {
-                possible.Add(num);
-            }
-        }
-
-        return possible;
     }
 
     private void ShowPossibleValues_Click(object sender, RoutedEventArgs e)
@@ -444,24 +243,24 @@ public partial class MainWindow : Window
 
     private void ShowPossibleValues(bool show)
     {
-        int[,] board = GetBoard();
+        int[,] grid = GridHelper.GetNumbers(_squares);
 
         for (int r = 0; r < 9; r++)
         {
             for (int c = 0; c < 9; c++)
             {
-                var cell = _cells[r, c];
+                var square = _squares[r, c];
 
-                if (show && board[r, c] == 0)
+                if (show && grid[r, c] == 0)
                 {
-                    var possibleNumbers = GetPossibleNumbers(board, r, c);
-                    cell.CandidatesBlock.Text = string.Join(" ", possibleNumbers);
-                    cell.CandidatesBlock.Visibility = Visibility.Visible;
+                    var possibleNumbers = GridHelper.GetPossibleNumbers(grid, r, c);
+                    square.CandidatesBlock.Text = string.Join(" ", possibleNumbers);
+                    square.CandidatesBlock.Visibility = Visibility.Visible;
                 }
                 else
                 {
-                    cell.CandidatesBlock.Text = string.Empty;
-                    cell.CandidatesBlock.Visibility = Visibility.Collapsed;
+                    square.CandidatesBlock.Text = string.Empty;
+                    square.CandidatesBlock.Visibility = Visibility.Collapsed;
                 }
             }
         }
@@ -475,16 +274,16 @@ public partial class MainWindow : Window
             return;
         }
 
-        int[,] board = GetBoard();
+        int[,] grid = GridHelper.GetNumbers(_squares);
         var candidatesBoard = new HashSet<int>[9, 9];
 
-        // Populate candidate sets for empty cells
+        // Populate candidate sets for empty squares
         for (int r = 0; r < 9; r++)
         {
             for (int c = 0; c < 9; c++)
             {
-                candidatesBoard[r, c] = board[r, c] == 0
-                    ? new HashSet<int>(GetPossibleNumbers(board, r, c))
+                candidatesBoard[r, c] = grid[r, c] == 0
+                    ? new HashSet<int>(GridHelper.GetPossibleNumbers(grid, r, c))
                     : new HashSet<int>();
             }
         }
@@ -492,8 +291,8 @@ public partial class MainWindow : Window
         // Detach previous handlers and clear previous highlighting/popup
         if (_prevHintBox != null)
         {
-            _prevHintBox.KeyDown -= HintCell_KeyDown;
-            _prevHintBox.TextChanged -= HintCell_TextChanged;
+            _prevHintBox.KeyDown -= HintSquare_KeyDown;
+            _prevHintBox.TextChanged -= HintSquare_TextChanged;
             _prevHintBox = null;
         }
 
@@ -502,9 +301,9 @@ public partial class MainWindow : Window
         bool isMultiHint = false;
         int hintNumber = 0;
         int hintRow = -1, hintCol = -1;
-        Enums.CellGroupType? groupType = null;
+        Enums.SquareGroupType? groupType = null;
         int[] pairValues = Array.Empty<int>();
-        (int row, int col)[] pairCells = Array.Empty<(int, int)>();
+        (int row, int col)[] pairSquares = Array.Empty<(int, int)>();
         string explanation = null;
 
         // --- OnlyValue hint ---
@@ -517,7 +316,7 @@ public partial class MainWindow : Window
             _hintCol = hintCol;
             isMultiHint = false;
 
-            explanation = $"Number {hintNumber} can only go in this cell in its {groupType?.ToString().ToLower()}.";
+            explanation = $"Number {hintNumber} can only go in this square in its {groupType?.ToString().ToLower()}.";
         }
         // --- Pairs hint (Naked + Pointing) ---
         else
@@ -525,13 +324,13 @@ public partial class MainWindow : Window
             bool pairFound = false;
 
             // First try NakedPairs
-            if (SolvingRules.NakedPairs(candidatesBoard, _hintedGroups, out pairValues, out pairCells, out groupType))
+            if (SolvingRules.NakedPairs(candidatesBoard, _hintedGroups, out pairValues, out pairSquares, out groupType))
             {
                 _currentHintMethod = Enums.SolvingMethod.NakedPairs;
                 pairFound = true;
             }
             // If no NakedPair, then try PointingPairs
-            else if (SolvingRules.ApplyPointingPairs(candidatesBoard, _hintedGroups, out pairValues, out pairCells, out groupType))
+            else if (SolvingRules.ApplyPointingPairs(candidatesBoard, _hintedGroups, out pairValues, out pairSquares, out groupType))
             {
                 _currentHintMethod = Enums.SolvingMethod.PointingPairs;
                 pairFound = true;
@@ -540,16 +339,16 @@ public partial class MainWindow : Window
             if (pairFound)
             {
                 // Check if this group was already hinted
-                if (!_hintedGroups.Any(g => g.SetEquals(pairCells)))
+                if (!_hintedGroups.Any(g => g.SetEquals(pairSquares)))
                 {
-                    var groupCells = new HashSet<(int row, int col)>(pairCells);
-                    _hintedGroups.Add(groupCells);
+                    var groupSquares = new HashSet<(int row, int col)>(pairSquares);
+                    _hintedGroups.Add(groupSquares);
 
                     _currentGroupType = groupType;
                     isMultiHint = true;
 
-                    string cellPositions = string.Join(" and ", pairCells.Select(p => $"({p.row + 1},{p.col + 1})"));
-                    explanation = $"{_currentHintMethod}: {{{string.Join(", ", pairValues)}}} found at {cellPositions}.";
+                    string squarePositions = string.Join(" and ", pairSquares.Select(p => $"({p.row + 1},{p.col + 1})"));
+                    explanation = $"{_currentHintMethod}: {{{string.Join(", ", pairValues)}}} found at {squarePositions}.";
 
                     // 🔑 Refresh displayed candidates so removals are visible in the UI
                     UpdateCandidates(); // TODO this does not include the candidates removes from the pointing pairs rule. It just has all possible values. Fix this
@@ -569,8 +368,8 @@ public partial class MainWindow : Window
 
         // Determine placement target
         TextBox placementTargetBox = isMultiHint
-            ? _cells[pairCells[0].row, pairCells[0].col].Box
-            : _cells[hintRow, hintCol].Box;
+            ? _squares[pairSquares[0].row, pairSquares[0].col].Box
+            : _squares[hintRow, hintCol].Box;
 
         // --- Build popup and highlight logic ---
         var stack = new StackPanel { Orientation = Orientation.Vertical };
@@ -620,13 +419,13 @@ public partial class MainWindow : Window
 
         popup.Opened += (s, args) =>
         {
-            int colToCheck = isMultiHint ? pairCells[0].col : hintCol;
+            int colToCheck = isMultiHint ? pairSquares[0].col : hintCol;
 
             if (colToCheck > 4)
             {
                 double tooltipWidth = border.ActualWidth > 0 ? border.ActualWidth : stack.ActualWidth;
-                double cellWidth = placementTargetBox.ActualWidth > 0 ? placementTargetBox.ActualWidth : 40;
-                popup.HorizontalOffset = cellWidth - tooltipWidth;
+                double squareWidth = placementTargetBox.ActualWidth > 0 ? placementTargetBox.ActualWidth : 40;
+                popup.HorizontalOffset = squareWidth - tooltipWidth;
             }
         };
 
@@ -640,52 +439,52 @@ public partial class MainWindow : Window
 
                 if (!isMultiHint)
                 {
-                    HighlightOnlyValueCell(_hintRow, _hintCol, _currentGroupType.Value);
+                    HighlightOnlyValueSquare(_hintRow, _hintCol, _currentGroupType.Value);
                 }
                 else
                 {
-                    HighlightNakedPair(pairCells, _currentGroupType.Value);
+                    HighlightNakedPair(pairSquares, _currentGroupType.Value);
                 }
             }));
 
         _prevHintBox = placementTargetBox;
-        _prevHintBox.KeyDown += HintCell_KeyDown;
-        _prevHintBox.TextChanged += HintCell_TextChanged;
+        _prevHintBox.KeyDown += HintSquare_KeyDown;
+        _prevHintBox.TextChanged += HintSquare_TextChanged;
         _prevHintBox.Focus();
     }
 
-    private void HighlightOnlyValueCell(int hintRow, int hintCol, Enums.CellGroupType groupType)
+    private void HighlightOnlyValueSquare(int hintRow, int hintCol, Enums.SquareGroupType groupType)
     {
         switch (groupType)
         {
-            case Enums.CellGroupType.Row:
+            case Enums.SquareGroupType.Row:
                 for (int c = 0; c < 9; c++)
                 {
-                    var box = _cells[hintRow, c].Box;
+                    var box = _squares[hintRow, c].Box;
                     box.Background = (c == hintCol) ? Brushes.LightGreen : Brushes.LightYellow;
-                    _highlightedCells.Add(box);
+                    _highlightedSquares.Add(box);
                 }
                 break;
 
-            case Enums.CellGroupType.Column:
+            case Enums.SquareGroupType.Column:
                 for (int r = 0; r < 9; r++)
                 {
-                    var box = _cells[r, hintCol].Box;
+                    var box = _squares[r, hintCol].Box;
                     box.Background = (r == hintRow) ? Brushes.LightGreen : Brushes.LightYellow;
-                    _highlightedCells.Add(box);
+                    _highlightedSquares.Add(box);
                 }
                 break;
 
-            case Enums.CellGroupType.Grid:
+            case Enums.SquareGroupType.Grid:
                 int startRow = (hintRow / 3) * 3;
                 int startCol = (hintCol / 3) * 3;
                 for (int r = startRow; r < startRow + 3; r++)
                 {
                     for (int c = startCol; c < startCol + 3; c++)
                     {
-                        var box = _cells[r, c].Box;
+                        var box = _squares[r, c].Box;
                         box.Background = (r == hintRow && c == hintCol) ? Brushes.LightGreen : Brushes.LightYellow;
-                        _highlightedCells.Add(box);
+                        _highlightedSquares.Add(box);
                     }
                 }
                 break;
@@ -693,55 +492,55 @@ public partial class MainWindow : Window
     }
 
     // Highlight a naked pair hint
-    private void HighlightNakedPair((int row, int col)[] pairCells, Enums.CellGroupType groupType)
+    private void HighlightNakedPair((int row, int col)[] pairSquares, Enums.SquareGroupType groupType)
     {
-        if (pairCells.Length < 2) return;
+        if (pairSquares.Length < 2) return;
 
-        if (groupType == Enums.CellGroupType.Row)
+        if (groupType == Enums.SquareGroupType.Row)
         {
-            int r = pairCells[0].row;
+            int r = pairSquares[0].row;
             for (int c = 0; c < 9; c++)
             {
-                bool isPairCell = pairCells.Any(p => p.row == r && p.col == c);
-                var box = _cells[r, c].Box;
-                box.Background = isPairCell ? Brushes.LightGreen : Brushes.LightYellow;
-                _highlightedCells.Add(box);
+                bool isPairSquare = pairSquares.Any(p => p.row == r && p.col == c);
+                var box = _squares[r, c].Box;
+                box.Background = isPairSquare ? Brushes.LightGreen : Brushes.LightYellow;
+                _highlightedSquares.Add(box);
             }
         }
-        else if (groupType == Enums.CellGroupType.Column)
+        else if (groupType == Enums.SquareGroupType.Column)
         {
-            int c = pairCells[0].col;
+            int c = pairSquares[0].col;
             for (int r = 0; r < 9; r++)
             {
-                bool isPairCell = pairCells.Any(p => p.row == r && p.col == c);
-                var box = _cells[r, c].Box;
-                box.Background = isPairCell ? Brushes.LightGreen : Brushes.LightYellow;
-                _highlightedCells.Add(box);
+                bool isPairSquare = pairSquares.Any(p => p.row == r && p.col == c);
+                var box = _squares[r, c].Box;
+                box.Background = isPairSquare ? Brushes.LightGreen : Brushes.LightYellow;
+                _highlightedSquares.Add(box);
             }
         }
-        else if (groupType == Enums.CellGroupType.Grid)
+        else if (groupType == Enums.SquareGroupType.Grid)
         {
-            int gridStartRow = (pairCells[0].row / 3) * 3;
-            int gridStartCol = (pairCells[0].col / 3) * 3;
+            int gridStartRow = (pairSquares[0].row / 3) * 3;
+            int gridStartCol = (pairSquares[0].col / 3) * 3;
             for (int r = gridStartRow; r < gridStartRow + 3; r++)
             {
                 for (int c = gridStartCol; c < gridStartCol + 3; c++)
                 {
-                    bool isPairCell = pairCells.Any(p => p.row == r && p.col == c);
-                    var box = _cells[r, c].Box;
-                    box.Background = isPairCell ? Brushes.LightGreen : Brushes.LightYellow;
-                    _highlightedCells.Add(box);
+                    bool isPairSquare = pairSquares.Any(p => p.row == r && p.col == c);
+                    var box = _squares[r, c].Box;
+                    box.Background = isPairSquare ? Brushes.LightGreen : Brushes.LightYellow;
+                    _highlightedSquares.Add(box);
                 }
             }
         }
         else
         {
-            // fallback: just highlight the pair cells
-            foreach (var pc in pairCells)
+            // fallback: just highlight the pair squares
+            foreach (var pc in pairSquares)
             {
-                var box = _cells[pc.row, pc.col].Box;
+                var box = _squares[pc.row, pc.col].Box;
                 box.Background = Brushes.LightGreen;
-                _highlightedCells.Add(box);
+                _highlightedSquares.Add(box);
             }
         }
     }
@@ -749,13 +548,13 @@ public partial class MainWindow : Window
 
     private bool PuzzleSolved()
     {
-        int[,] board = GetBoard();
+        int[,] grid = GridHelper.GetNumbers(_squares);
 
         for (int r = 0; r < 9; r++)
         {
             for (int c = 0; c < 9; c++)
             {
-                if (board[r, c] == 0)
+                if (grid[r, c] == 0)
                 {
                     return false;
                 }
@@ -766,18 +565,18 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Manually entering the hint number into the hint cell
+    /// Manually entering the hint number into the hint square
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
-    private void HintCell_TextChanged(object sender, TextChangedEventArgs e)
+    private void HintSquare_TextChanged(object sender, TextChangedEventArgs e)
     {
         if (_hintRow < 0 || _hintCol < 0) return;
 
-        var cell = _cells[_hintRow, _hintCol];
-        if (cell.Box.Text == _hintNumber.ToString())
+        var square = _squares[_hintRow, _hintCol];
+        if (square.Box.Text == _hintNumber.ToString())
         {
-            cell.Box.TextChanged -= HintCell_TextChanged;
+            square.Box.TextChanged -= HintSquare_TextChanged;
 
             if (_hintPopup != null)
             {
@@ -794,24 +593,24 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Clicking enter key for the hint cell
+    /// Clicking enter key for the hint square
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
-    private void HintCell_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    private void HintSquare_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         if (e.Key == System.Windows.Input.Key.Enter && _hintRow >= 0 && _hintCol >= 0)
         {
-            var cell = _cells[_hintRow, _hintCol];
+            var square = _squares[_hintRow, _hintCol];
 
             if (_prevHintBox != null)
             {
-                _prevHintBox.KeyDown -= HintCell_KeyDown;
-                _prevHintBox.TextChanged -= HintCell_TextChanged;
+                _prevHintBox.KeyDown -= HintSquare_KeyDown;
+                _prevHintBox.TextChanged -= HintSquare_TextChanged;
                 _prevHintBox = null;
             }
 
-            cell.Box.Text = _hintNumber.ToString();
+            square.Box.Text = _hintNumber.ToString();
 
             if (_hintPopup != null)
             {
@@ -830,12 +629,12 @@ public partial class MainWindow : Window
 
     private void ClearHighlighting()
     {
-        foreach (var cell in _highlightedCells)
+        foreach (var square in _highlightedSquares)
         {
-            cell.Background = Brushes.White;
+            square.Background = Brushes.White;
         }
 
-        _highlightedCells.Clear();
+        _highlightedSquares.Clear();
 
         if (_hintPopup != null)
         {
