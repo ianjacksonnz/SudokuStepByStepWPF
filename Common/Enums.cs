@@ -5,8 +5,10 @@ public class Enums
     public enum SolvingMethod
     {
         OnlyValue,
+        PointingPairs,
+        PointingTriples,
         NakedPairs,
-        PointingPairs
+        NakedTriples
     }
 
     public enum SquareGroupType

@@ -1,4 +1,4 @@
-﻿namespace SudokuStepByStep.Common;
+﻿namespace SudokuStepByStep.Logic.Helpers;
 
 public static class RulesHelper
 {

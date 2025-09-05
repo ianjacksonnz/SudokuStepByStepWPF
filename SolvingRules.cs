@@ -1,4 +1,5 @@
 ﻿using SudokuStepByStep.Common;
+using SudokuStepByStep.Logic.Helpers;
 
 namespace SudokuStepByStep;
 

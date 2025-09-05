@@ -2,8 +2,6 @@
 using SudokuStepByStep.Logic;
 using SudokuStepByStep.Logic.Helpers;
 using SudokuStepByStep.Models;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -16,7 +14,6 @@ public partial class MainWindow : Window
 {
     private Dictionary<string, int[,]> _puzzles = new Dictionary<string, int[,]>();
     private SudokuSquare[,] _squares = new SudokuSquare[9, 9];
-    private readonly SudokuSolver _solver = new();
     private readonly List<TextBox> _highlightedSquares = [];
     private int _hintRow = -1;
     private int _hintCol = -1;
@@ -145,7 +142,14 @@ public partial class MainWindow : Window
 
     private void Step_Click(object sender, RoutedEventArgs e)
     {
-        ShowPossibleValues(true); 
+        if (GridHelper.PuzzleSolved(_squares))
+        {
+            MessageBox.Show("Puzzle Solved!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Information);
+            ShowPossibleValues(false);
+            return;
+        }
+
+        ShowPossibleValues(true);
     }
 
     private void Clear_Click(object sender, RoutedEventArgs e)
@@ -181,7 +185,7 @@ public partial class MainWindow : Window
     {
         int[,] grid = GridHelper.GetNumbers(_squares);
 
-        if (SudokuSolver.Solve(grid))
+        if (GridHelper.SolveCompletePuzzle(grid))
         {
             for (int r = 0; r < 9; r++)
             {
@@ -268,7 +272,7 @@ public partial class MainWindow : Window
 
     private void Hint_Click(object sender, RoutedEventArgs e)
     {
-        if (PuzzleSolved())
+        if (GridHelper.PuzzleSolved(_squares))
         {
             MessageBox.Show("Puzzle Solved!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
@@ -545,25 +549,6 @@ public partial class MainWindow : Window
         }
     }
 
-
-    private bool PuzzleSolved()
-    {
-        int[,] grid = GridHelper.GetNumbers(_squares);
-
-        for (int r = 0; r < 9; r++)
-        {
-            for (int c = 0; c < 9; c++)
-            {
-                if (grid[r, c] == 0)
-                {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
     /// <summary>
     /// Manually entering the hint number into the hint square
     /// </summary>
@@ -626,7 +611,6 @@ public partial class MainWindow : Window
         }
     }
 
-
     private void ClearHighlighting()
     {
         foreach (var square in _highlightedSquares)
@@ -641,7 +625,6 @@ public partial class MainWindow : Window
             _hintPopup.IsOpen = false;
         }
     }
-
 
     /// <summary>
     /// Handler for clicking outside the grid. Removes the tooltips
@@ -673,6 +656,4 @@ public partial class MainWindow : Window
             }
         }
     }
-
-
 }
