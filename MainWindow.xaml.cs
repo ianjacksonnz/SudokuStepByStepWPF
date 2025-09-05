@@ -31,6 +31,12 @@ public partial class MainWindow : Window
     private Enums.CellGroupType? _currentGroupType;
     private bool _showingPossibleValues = false;
 
+    // Tracks OnlyValue cells that have been hinted
+    private List<(int row, int col)> _shownOnlyValueCells = new();
+
+    // Tracks NakedPairs that have already been hinted
+    private List<(int row1, int col1, int row2, int col2)> _shownNakedPairs = new();
+    private List<(int row1, int col1, int row2, int col2)> _hintedNakedPairs = new();
 
     private readonly Dictionary<string, int[,]> _puzzles = new()
     {
@@ -167,6 +173,13 @@ public partial class MainWindow : Window
     };
 
 
+    private void ResetHintTracking()
+    {
+        _shownNakedPairs.Clear();
+        _shownOnlyValueCells.Clear();
+    }
+
+
     public MainWindow()
     {
         InitializeComponent();
@@ -209,6 +222,8 @@ public partial class MainWindow : Window
 
     private void PuzzleSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        ResetHintTracking();
+
         if (PuzzleSelector.SelectedItem == null) { return; }
 
         string? selected = PuzzleSelector.SelectedItem.ToString();
@@ -320,6 +335,8 @@ public partial class MainWindow : Window
 
     private void Clear_Click(object sender, RoutedEventArgs e)
     {
+        ResetHintTracking();
+
         for (int r = 0; r < 9; r++)
         {
             for (int c = 0; c < 9; c++)
@@ -345,6 +362,7 @@ public partial class MainWindow : Window
             for (int c = 0; c < 9; c++)
             {
                 var cell = _cells[r, c];
+
                 if (board[r, c] == 0)
                 {
                     var possibleNumbers = GetPossibleNumbers(board, r, c);
@@ -382,12 +400,14 @@ public partial class MainWindow : Window
 
         // Change button text accordingly
         var button = sender as Button;
+
         if (button != null)
         {
             button.Content = _showingPossibleValues ? "Hide Possible Values" : "Show Possible Values";
         }
 
         int[,] board = GetBoard();
+
         for (int r = 0; r < 9; r++)
         {
             for (int c = 0; c < 9; c++)
@@ -409,6 +429,7 @@ public partial class MainWindow : Window
         }
     }
 
+
     private void Hint_Click(object sender, RoutedEventArgs e)
     {
         if (PuzzleSolved())
@@ -429,49 +450,78 @@ public partial class MainWindow : Window
             }
         }
 
-        int hintRow = -1, hintCol = -1;
-        string? explanation = null;
-
-        // Remove previous handlers and highlighting
+        // Detach previous handlers and clear previous highlighting/popup
         if (_prevHintBox != null)
         {
             _prevHintBox.KeyDown -= HintCell_KeyDown;
             _prevHintBox.TextChanged -= HintCell_TextChanged;
             _prevHintBox = null;
         }
+
         ClearHighlighting();
 
-        Enums.CellGroupType? groupType;
+        bool isMultiHint = false;
+        int hintNumber = 0;
+        int hintRow = -1, hintCol = -1;
+        Enums.CellGroupType? groupType = null;
+        int[] pairValues = Array.Empty<int>();
+        (int row, int col)[] pairCells = Array.Empty<(int, int)>();
+        string explanation = null;
 
-        // Determine the next hint
-        if (SolvingRules.OnlyValue(candidatesBoard, out int hintNumber, out hintRow, out hintCol, out groupType))
+        // --- OnlyValue hint ---
+        if (SolvingRules.OnlyValue(candidatesBoard, out hintNumber, out hintRow, out hintCol, out groupType))
         {
             _currentHintMethod = Enums.SolvingMethod.OnlyValue;
             _currentGroupType = groupType;
+            _hintNumber = hintNumber;
+            _hintRow = hintRow;
+            _hintCol = hintCol;
+            isMultiHint = false;
 
             explanation = $"Number {hintNumber} can only go in this cell in its {groupType?.ToString().ToLower()}.";
-            _hintNumber = hintNumber;
         }
-        else if (SolvingRules.NakedPairs(candidatesBoard, out hintNumber, out hintRow, out hintCol, out groupType))
-        {
-            _currentHintMethod = Enums.SolvingMethod.NakedPairs;
-            _currentGroupType = groupType;
-
-            explanation = $"Naked pair found, number {hintNumber} can be placed here in its {groupType?.ToString().ToLower()}.";
-            _hintNumber = hintNumber;
-        }
+        // --- NakedPairs hint ---
         else
         {
-            MessageBox.Show("No hints available!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
+            bool pairFound = false;
+
+            while (SolvingRules.NakedPairs(candidatesBoard, _hintedNakedPairs, out pairValues, out pairCells, out groupType))
+            {
+                // Check if this pair was already hinted
+                if (!_hintedNakedPairs.Any(p =>
+                    (p.row1 == pairCells[0].row && p.col1 == pairCells[0].col &&
+                     p.row2 == pairCells[1].row && p.col2 == pairCells[1].col) ||
+                    (p.row1 == pairCells[1].row && p.col1 == pairCells[1].col &&
+                     p.row2 == pairCells[0].row && p.col2 == pairCells[0].col)))
+                {
+                    _hintedNakedPairs.Add((
+                        pairCells[0].row, pairCells[0].col,
+                        pairCells[1].row, pairCells[1].col));
+
+                    _currentHintMethod = Enums.SolvingMethod.NakedPairs;
+                    _currentGroupType = groupType;
+                    isMultiHint = true;
+
+                    explanation = $"Naked pair {{{pairValues[0]}, {pairValues[1]}}} " +
+                                  $"found at ({pairCells[0].row + 1},{pairCells[0].col + 1}) and ({pairCells[1].row + 1},{pairCells[1].col + 1}).";
+
+                    pairFound = true;
+                    break;
+                }
+            }
+
+            if (!pairFound)
+            {
+                MessageBox.Show("No hints available!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
         }
 
-        _hintRow = hintRow;
-        _hintCol = hintCol;
+        // Determine placement target
+        TextBox placementTargetBox = isMultiHint ? _cells[pairCells[0].row, pairCells[0].col].Box
+                                                  : _cells[hintRow, hintCol].Box;
 
-        if (_hintRow < 0 || _hintCol < 0) return;
-
-        var cell = _cells[_hintRow, _hintCol];
+        // --- Build popup and highlight logic remains the same ---
         var stack = new StackPanel { Orientation = Orientation.Vertical };
 
         var border = new Border
@@ -481,13 +531,14 @@ public partial class MainWindow : Window
             BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(4),
             Padding = new Thickness(6),
-            MinWidth = cell.Box.ActualWidth > 0 ? cell.Box.ActualWidth : 40,
+            MinWidth = placementTargetBox.ActualWidth > 0 ? placementTargetBox.ActualWidth : 40,
             Child = new TextBlock
             {
-                Text = explanation ?? "Hint: " + cell.CandidatesBlock.Text,
+                Text = explanation ?? "Hint",
                 Foreground = Brushes.Black,
                 FontSize = 11,
-                TextAlignment = TextAlignment.Center
+                TextAlignment = TextAlignment.Center,
+                TextWrapping = TextWrapping.Wrap
             }
         };
 
@@ -495,7 +546,7 @@ public partial class MainWindow : Window
 
         var arrow = new System.Windows.Shapes.Polygon
         {
-            Points = [new Point(0, 0), new Point(12, 0), new Point(6, 8)],
+            Points = new PointCollection { new Point(0, 0), new Point(12, 0), new Point(6, 8) },
             Fill = Brushes.LightYellow,
             Stroke = Brushes.Gray,
             StrokeThickness = 1,
@@ -506,24 +557,10 @@ public partial class MainWindow : Window
 
         stack.Children.Add(arrow);
 
-        // Align tooltip left/right depending on cell column
-        if (_hintCol <= 4)
-        {
-            stack.HorizontalAlignment = HorizontalAlignment.Left;
-            border.HorizontalAlignment = HorizontalAlignment.Left;
-            arrow.HorizontalAlignment = HorizontalAlignment.Left;
-        }
-        else
-        {
-            stack.HorizontalAlignment = HorizontalAlignment.Right;
-            border.HorizontalAlignment = HorizontalAlignment.Right;
-            arrow.HorizontalAlignment = HorizontalAlignment.Right;
-        }
-
         var popup = new Popup
         {
             Child = stack,
-            PlacementTarget = cell.Box,
+            PlacementTarget = placementTargetBox,
             Placement = PlacementMode.Top,
             StaysOpen = true,
             AllowsTransparency = true,
@@ -532,10 +569,12 @@ public partial class MainWindow : Window
 
         popup.Opened += (s, args) =>
         {
-            if (_hintCol > 4)
+            int colToCheck = isMultiHint ? pairCells[0].col : hintCol;
+
+            if (colToCheck > 4)
             {
                 double tooltipWidth = border.ActualWidth > 0 ? border.ActualWidth : stack.ActualWidth;
-                double cellWidth = cell.Box.ActualWidth > 0 ? cell.Box.ActualWidth : 40;
+                double cellWidth = placementTargetBox.ActualWidth > 0 ? placementTargetBox.ActualWidth : 40;
                 popup.HorizontalOffset = cellWidth - tooltipWidth;
             }
         };
@@ -548,58 +587,121 @@ public partial class MainWindow : Window
             {
                 _hintPopup.IsOpen = true;
 
-                // Highlight cells based on OnlyValue rule group type
-                if (_currentHintMethod == Enums.SolvingMethod.OnlyValue && _currentGroupType.HasValue)
+                if (!isMultiHint)
                 {
-                    switch (_currentGroupType.Value)
-                    {
-                        case Enums.CellGroupType.Column:
-                            for (int r = 0; r < 9; r++)
-                            {
-                                var colCell = _cells[r, _hintCol].Box;
-                                colCell.Background = (r == _hintRow) ? Brushes.LightGreen : Brushes.LightYellow;
-                                _highlightedCells.Add(colCell);
-                            }
-                            break;
-
-                        case Enums.CellGroupType.Row:
-                            for (int c = 0; c < 9; c++)
-                            {
-                                var rowCell = _cells[_hintRow, c].Box;
-                                rowCell.Background = (c == _hintCol) ? Brushes.LightGreen : Brushes.LightYellow;
-                                _highlightedCells.Add(rowCell);
-                            }
-                            break;
-
-                        case Enums.CellGroupType.Grid:
-                            int startRow = (_hintRow / 3) * 3;
-                            int startCol = (_hintCol / 3) * 3;
-                            for (int r = startRow; r < startRow + 3; r++)
-                            {
-                                for (int c = startCol; c < startCol + 3; c++)
-                                {
-                                    var gridCell = _cells[r, c].Box;
-                                    gridCell.Background = (r == _hintRow && c == _hintCol) ? Brushes.LightGreen : Brushes.LightYellow;
-                                    _highlightedCells.Add(gridCell);
-                                }
-                            }
-                            break;
-                    }
+                    // OnlyValue highlight logic (unchanged)
+                    HighlightOnlyValueCell(_hintRow, _hintCol, _currentGroupType.Value);
                 }
                 else
                 {
-                    // For NakedPairs or other hints, just highlight the hint cell
-                    cell.Box.Background = Brushes.LightGreen;
-                    _highlightedCells.Add(cell.Box);
+                    // NakedPairs highlight logic (green for pair, yellow for rest of group)
+                    HighlightNakedPair(pairCells, _currentGroupType.Value);
                 }
             }));
 
-        // Set focus so Enter advances automatically
-        _prevHintBox = cell.Box;
+        _prevHintBox = placementTargetBox;
         _prevHintBox.KeyDown += HintCell_KeyDown;
         _prevHintBox.TextChanged += HintCell_TextChanged;
         _prevHintBox.Focus();
     }
+
+
+
+
+
+    // Highlight a single-cell OnlyValue hint
+    private void HighlightOnlyValueCell(int hintRow, int hintCol, Enums.CellGroupType groupType)
+    {
+        switch (groupType)
+        {
+            case Enums.CellGroupType.Row:
+                for (int c = 0; c < 9; c++)
+                {
+                    var box = _cells[hintRow, c].Box;
+                    box.Background = (c == hintCol) ? Brushes.LightGreen : Brushes.LightYellow;
+                    _highlightedCells.Add(box);
+                }
+                break;
+
+            case Enums.CellGroupType.Column:
+                for (int r = 0; r < 9; r++)
+                {
+                    var box = _cells[r, hintCol].Box;
+                    box.Background = (r == hintRow) ? Brushes.LightGreen : Brushes.LightYellow;
+                    _highlightedCells.Add(box);
+                }
+                break;
+
+            case Enums.CellGroupType.Grid:
+                int startRow = (hintRow / 3) * 3;
+                int startCol = (hintCol / 3) * 3;
+                for (int r = startRow; r < startRow + 3; r++)
+                {
+                    for (int c = startCol; c < startCol + 3; c++)
+                    {
+                        var box = _cells[r, c].Box;
+                        box.Background = (r == hintRow && c == hintCol) ? Brushes.LightGreen : Brushes.LightYellow;
+                        _highlightedCells.Add(box);
+                    }
+                }
+                break;
+        }
+    }
+
+    // Highlight a naked pair hint
+    private void HighlightNakedPair((int row, int col)[] pairCells, Enums.CellGroupType groupType)
+    {
+        if (pairCells.Length < 2) return;
+
+        if (groupType == Enums.CellGroupType.Row)
+        {
+            int r = pairCells[0].row;
+            for (int c = 0; c < 9; c++)
+            {
+                bool isPairCell = pairCells.Any(p => p.row == r && p.col == c);
+                var box = _cells[r, c].Box;
+                box.Background = isPairCell ? Brushes.LightGreen : Brushes.LightYellow;
+                _highlightedCells.Add(box);
+            }
+        }
+        else if (groupType == Enums.CellGroupType.Column)
+        {
+            int c = pairCells[0].col;
+            for (int r = 0; r < 9; r++)
+            {
+                bool isPairCell = pairCells.Any(p => p.row == r && p.col == c);
+                var box = _cells[r, c].Box;
+                box.Background = isPairCell ? Brushes.LightGreen : Brushes.LightYellow;
+                _highlightedCells.Add(box);
+            }
+        }
+        else if (groupType == Enums.CellGroupType.Grid)
+        {
+            int gridStartRow = (pairCells[0].row / 3) * 3;
+            int gridStartCol = (pairCells[0].col / 3) * 3;
+            for (int r = gridStartRow; r < gridStartRow + 3; r++)
+            {
+                for (int c = gridStartCol; c < gridStartCol + 3; c++)
+                {
+                    bool isPairCell = pairCells.Any(p => p.row == r && p.col == c);
+                    var box = _cells[r, c].Box;
+                    box.Background = isPairCell ? Brushes.LightGreen : Brushes.LightYellow;
+                    _highlightedCells.Add(box);
+                }
+            }
+        }
+        else
+        {
+            // fallback: just highlight the pair cells
+            foreach (var pc in pairCells)
+            {
+                var box = _cells[pc.row, pc.col].Box;
+                box.Background = Brushes.LightGreen;
+                _highlightedCells.Add(box);
+            }
+        }
+    }
+
 
     private bool PuzzleSolved()
     {

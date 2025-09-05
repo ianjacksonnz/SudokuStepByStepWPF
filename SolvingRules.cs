@@ -109,17 +109,16 @@ public class SolvingRules
 
     public static bool NakedPairs(
         HashSet<int>[,] board,
-        out int numberSolved,
-        out int rowSolved,
-        out int colSolved,
+        List<(int row1, int col1, int row2, int col2)> shownPairs,
+        out int[] pairValues,
+        out (int row, int col)[] pairCells,
         out Enums.CellGroupType? groupType)
     {
-        numberSolved = 0;
-        rowSolved = -1;
-        colSolved = -1;
+        pairValues = Array.Empty<int>();
+        pairCells = Array.Empty<(int, int)>();
         groupType = null;
 
-        // Check rows for naked pairs
+        // Check rows
         for (int row = 0; row < 9; row++)
         {
             var candidates = new Dictionary<int, List<int>>();
@@ -128,7 +127,8 @@ public class SolvingRules
             {
                 if (board[row, col].Count == 2)
                 {
-                    var possibleNumbers = RulesHelper.GetPossibleNumbers(board, row, col);
+                    var possibleNumbers = board[row, col].ToList();
+
                     if (possibleNumbers.Count == 2)
                     {
                         candidates[col] = possibleNumbers;
@@ -136,13 +136,19 @@ public class SolvingRules
                 }
             }
 
-            // Find naked pairs
             var nakedPairs = candidates.GroupBy(c => string.Join(",", c.Value)).Where(g => g.Count() == 2);
+
             foreach (var pair in nakedPairs)
             {
                 var cols = pair.Select(c => c.Key).ToList();
+                var candidatePair = (row, cols[0], row, cols[1]);
 
-                // Remove these candidates from other cells in the same row
+                if (shownPairs.Contains(candidatePair))
+                {
+                    continue;
+                }
+
+                // Remove candidates from other cells in the same row
                 foreach (var col in cols)
                 {
                     for (int c = 0; c < 9; c++)
@@ -157,17 +163,118 @@ public class SolvingRules
                     }
                 }
 
-                // Return the first naked pair as a hint
-                numberSolved = pair.First().Value[0]; // pick one of the two candidates
-                rowSolved = row;
-                colSolved = cols[0];
+                // Return this pair
+                pairValues = pair.First().Value.ToArray();
+                pairCells = new[] { (row, cols[0]), (row, cols[1]) };
                 groupType = Enums.CellGroupType.Row;
+                shownPairs.Add(candidatePair);
+
                 return true;
             }
         }
 
-        // Optionally, you can add column and grid checks in a similar manner
-        // For now, we only implement naked pairs in rows for hints
+        // --- Check Columns ---
+        for (int col = 0; col < 9; col++)
+        {
+            var candidates = new Dictionary<int, List<int>>();
+
+            for (int row = 0; row < 9; row++)
+            {
+                if (board[row, col].Count == 2)
+                {
+                    var possibleNumbers = board[row, col].ToList();
+                    candidates[row] = possibleNumbers;
+                }
+            }
+
+            var nakedPairs = candidates.GroupBy(c => string.Join(",", c.Value)).Where(g => g.Count() == 2);
+
+            foreach (var pair in nakedPairs)
+            {
+                var rows = pair.Select(c => c.Key).ToList();
+                var candidatePair = (rows[0], col, rows[1], col);
+
+                if (shownPairs.Contains(candidatePair))
+                {
+                    continue;
+                }
+
+                // Remove candidates from other cells in the column
+                foreach (var row in rows)
+                {
+                    for (int r = 0; r < 9; r++)
+                    {
+                        if (r != row && board[r, col].Count > 0)
+                        {
+                            foreach (var candidate in pair.First().Value)
+                            {
+                                RulesHelper.RemoveCandidates(board, r, col, candidate.ToString());
+                            }
+                        }
+                    }
+                }
+
+                pairValues = pair.First().Value.ToArray();
+                pairCells = new[] { (rows[0], col), (rows[1], col) };
+                groupType = Enums.CellGroupType.Column;
+                shownPairs.Add(candidatePair);
+                return true;
+            }
+        }
+
+        // --- Check 3x3 Grids ---
+        for (int boxRow = 0; boxRow < 3; boxRow++)
+        {
+            for (int boxCol = 0; boxCol < 3; boxCol++)
+            {
+                var candidates = new Dictionary<(int, int), List<int>>();
+
+                for (int r = boxRow * 3; r < boxRow * 3 + 3; r++)
+                {
+                    for (int c = boxCol * 3; c < boxCol * 3 + 3; c++)
+                    {
+                        if (board[r, c].Count == 2)
+                        {
+                            candidates[(r, c)] = board[r, c].ToList();
+                        }
+                    }
+                }
+
+                var nakedPairs = candidates.GroupBy(c => string.Join(",", c.Value)).Where(g => g.Count() == 2);
+
+                foreach (var pair in nakedPairs)
+                {
+                    var cells = pair.Select(c => c.Key).ToList();
+                    var candidatePair = (cells[0].Item1, cells[0].Item2, cells[1].Item1, cells[1].Item2);
+
+                    if (shownPairs.Contains(candidatePair))
+                    {
+                        continue;
+                    }
+
+                    // Remove candidates from other cells in the grid
+                    for (int r = boxRow * 3; r < boxRow * 3 + 3; r++)
+                    {
+                        for (int c = boxCol * 3; c < boxCol * 3 + 3; c++)
+                        {
+                            if (!cells.Contains((r, c)) && board[r, c].Count > 0)
+                            {
+                                foreach (var candidate in pair.First().Value)
+                                {
+                                    RulesHelper.RemoveCandidates(board, r, c, candidate.ToString());
+                                }
+                            }
+                        }
+                    }
+
+                    pairValues = pair.First().Value.ToArray();
+                    pairCells = new[] { cells[0], cells[1] };
+                    groupType = Enums.CellGroupType.Grid;
+                    shownPairs.Add(candidatePair);
+                    return true;
+                }
+            }
+        }
 
         return false;
     }
