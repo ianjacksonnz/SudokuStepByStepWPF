@@ -1,9 +1,9 @@
 ﻿using System.Windows.Controls;
 
-namespace SudokuWpfApp;
+namespace SudokuHelper;
 
 public class SudokuCell
 {
-    public TextBox Box { get; set; }
-    public TextBlock CandidatesBlock { get; set; }
+    public required TextBox Box { get; set; }
+    public required TextBlock CandidatesBlock { get; set; }
 }

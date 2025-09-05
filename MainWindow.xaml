@@ -1,4 +1,4 @@
-﻿<Window x:Class="SudokuWpfApp.MainWindow"
+﻿<Window x:Class="SudokuHelper.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Sudoku Solver" Height="650" Width="600">
@@ -21,9 +21,9 @@
 
         <!-- Buttons -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
+            <Button x:Name="HintButton" Content="Hint" Width="100" Margin="5" Click="Hint_Click"/>
             <Button Content="Solve" Width="100" Margin="5" Click="Solve_Click"/>
             <Button Content="Clear" Width="100" Margin="5" Click="Clear_Click"/>
-            <Button x:Name="HintButton" Content="Hint" Width="100" Margin="5" Click="Hint_Click"/>
         </StackPanel>
     </Grid>
 </Window>
