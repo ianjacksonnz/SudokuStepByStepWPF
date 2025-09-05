@@ -5,7 +5,8 @@ public class Enums
     public enum SolvingMethod
     {
         OnlyValue,
-        NakedPairs
+        NakedPairs,
+        PointingPairs
     }
 
     public enum CellGroupType

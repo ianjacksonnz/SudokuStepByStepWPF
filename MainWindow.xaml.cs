@@ -27,7 +27,7 @@ public partial class MainWindow : Window
     private int _hintNumber = -1;
     private Popup? _hintPopup = null!; 
     private TextBox? _prevHintBox = null!; 
-    private Enums.SolvingMethod _currentHintMethod;
+    private Enums.SolvingMethod? _currentHintMethod;
     private Enums.CellGroupType? _currentGroupType;
     private bool _showingPossibleValues = false;
 
@@ -35,8 +35,8 @@ public partial class MainWindow : Window
     private List<(int row, int col)> _shownOnlyValueCells = new();
 
     // Tracks NakedPairs that have already been hinted
-    private List<(int row1, int col1, int row2, int col2)> _shownNakedPairs = new();
     private List<(int row1, int col1, int row2, int col2)> _hintedNakedPairs = new();
+    private List<HashSet<(int row, int col)>> _hintedGroups = new();
 
     private readonly Dictionary<string, int[,]> _puzzles = new()
     {
@@ -175,7 +175,7 @@ public partial class MainWindow : Window
 
     private void ResetHintTracking()
     {
-        _shownNakedPairs.Clear();
+        _hintedNakedPairs.Clear();
         _shownOnlyValueCells.Clear();
     }
 
@@ -335,8 +335,30 @@ public partial class MainWindow : Window
 
     private void Clear_Click(object sender, RoutedEventArgs e)
     {
+        // --- Reset all hint tracking ---
         ResetHintTracking();
 
+        // Clear the hinted pairs/groups tracking
+        _hintedGroups.Clear();        // for both naked pairs and pointing pairs
+        _hintedNakedPairs.Clear();    // if still used separately
+        _prevHintBox = null;          // remove reference to previous hint textbox
+
+        // Close any active hint popup
+        if (_hintPopup != null)
+        {
+            _hintPopup.IsOpen = false;
+            _hintPopup.Child = null;
+            _hintPopup = null;
+        }
+
+        // Reset all hint state variables
+        _currentHintMethod = null;
+        _currentGroupType = null;
+        _hintNumber = 0;
+        _hintRow = -1;
+        _hintCol = -1;
+
+        // --- Clear the board cells for editable cells ---
         for (int r = 0; r < 9; r++)
         {
             for (int c = 0; c < 9; c++)
@@ -344,10 +366,12 @@ public partial class MainWindow : Window
                 if (!_cells[r, c].Box.IsReadOnly)
                 {
                     _cells[r, c].Box.Text = "";
+                    _cells[r, c].Box.Background = Brushes.White; // reset background highlighting
                 }
             }
         }
 
+        // --- Recalculate candidates for all cells ---
         UpdateCandidates();
     }
 
@@ -362,7 +386,7 @@ public partial class MainWindow : Window
             for (int c = 0; c < 9; c++)
             {
                 var cell = _cells[r, c];
-
+               
                 if (board[r, c] == 0)
                 {
                     var possibleNumbers = GetPossibleNumbers(board, r, c);
@@ -429,7 +453,6 @@ public partial class MainWindow : Window
         }
     }
 
-
     private void Hint_Click(object sender, RoutedEventArgs e)
     {
         if (PuzzleSolved())
@@ -446,7 +469,9 @@ public partial class MainWindow : Window
         {
             for (int c = 0; c < 9; c++)
             {
-                candidatesBoard[r, c] = board[r, c] == 0 ? [.. GetPossibleNumbers(board, r, c)] : [];
+                candidatesBoard[r, c] = board[r, c] == 0
+                    ? new HashSet<int>(GetPossibleNumbers(board, r, c))
+                    : new HashSet<int>();
             }
         }
 
@@ -480,33 +505,44 @@ public partial class MainWindow : Window
 
             explanation = $"Number {hintNumber} can only go in this cell in its {groupType?.ToString().ToLower()}.";
         }
-        // --- NakedPairs hint ---
+        // --- Pairs hint (Naked + Pointing) ---
         else
         {
             bool pairFound = false;
 
-            while (SolvingRules.NakedPairs(candidatesBoard, _hintedNakedPairs, out pairValues, out pairCells, out groupType))
+            // First try NakedPairs
+            if (SolvingRules.NakedPairs(candidatesBoard, _hintedGroups, out pairValues, out pairCells, out groupType))
             {
-                // Check if this pair was already hinted
-                if (!_hintedNakedPairs.Any(p =>
-                    (p.row1 == pairCells[0].row && p.col1 == pairCells[0].col &&
-                     p.row2 == pairCells[1].row && p.col2 == pairCells[1].col) ||
-                    (p.row1 == pairCells[1].row && p.col1 == pairCells[1].col &&
-                     p.row2 == pairCells[0].row && p.col2 == pairCells[0].col)))
-                {
-                    _hintedNakedPairs.Add((
-                        pairCells[0].row, pairCells[0].col,
-                        pairCells[1].row, pairCells[1].col));
+                _currentHintMethod = Enums.SolvingMethod.NakedPairs;
+                pairFound = true;
+            }
+            // If no NakedPair, then try PointingPairs
+            else if (SolvingRules.ApplyPointingPairs(candidatesBoard, _hintedGroups, out pairValues, out pairCells, out groupType))
+            {
+                _currentHintMethod = Enums.SolvingMethod.PointingPairs;
+                pairFound = true;
+            }
 
-                    _currentHintMethod = Enums.SolvingMethod.NakedPairs;
+            if (pairFound)
+            {
+                // Check if this group was already hinted
+                if (!_hintedGroups.Any(g => g.SetEquals(pairCells)))
+                {
+                    var groupCells = new HashSet<(int row, int col)>(pairCells);
+                    _hintedGroups.Add(groupCells);
+
                     _currentGroupType = groupType;
                     isMultiHint = true;
 
-                    explanation = $"Naked pair {{{pairValues[0]}, {pairValues[1]}}} " +
-                                  $"found at ({pairCells[0].row + 1},{pairCells[0].col + 1}) and ({pairCells[1].row + 1},{pairCells[1].col + 1}).";
+                    string cellPositions = string.Join(" and ", pairCells.Select(p => $"({p.row + 1},{p.col + 1})"));
+                    explanation = $"{_currentHintMethod}: {{{string.Join(", ", pairValues)}}} found at {cellPositions}.";
 
-                    pairFound = true;
-                    break;
+                    // 🔑 Refresh displayed candidates so removals are visible in the UI
+                    UpdateCandidates(); // TODO this does not include the candidates removes from the pointing pairs rule. It just has all possible values. Fix this
+                }
+                else
+                {
+                    pairFound = false; // Already hinted, so skip
                 }
             }
 
@@ -518,10 +554,11 @@ public partial class MainWindow : Window
         }
 
         // Determine placement target
-        TextBox placementTargetBox = isMultiHint ? _cells[pairCells[0].row, pairCells[0].col].Box
-                                                  : _cells[hintRow, hintCol].Box;
+        TextBox placementTargetBox = isMultiHint
+            ? _cells[pairCells[0].row, pairCells[0].col].Box
+            : _cells[hintRow, hintCol].Box;
 
-        // --- Build popup and highlight logic remains the same ---
+        // --- Build popup and highlight logic ---
         var stack = new StackPanel { Orientation = Orientation.Vertical };
 
         var border = new Border
@@ -589,12 +626,10 @@ public partial class MainWindow : Window
 
                 if (!isMultiHint)
                 {
-                    // OnlyValue highlight logic (unchanged)
                     HighlightOnlyValueCell(_hintRow, _hintCol, _currentGroupType.Value);
                 }
                 else
                 {
-                    // NakedPairs highlight logic (green for pair, yellow for rest of group)
                     HighlightNakedPair(pairCells, _currentGroupType.Value);
                 }
             }));
@@ -605,11 +640,6 @@ public partial class MainWindow : Window
         _prevHintBox.Focus();
     }
 
-
-
-
-
-    // Highlight a single-cell OnlyValue hint
     private void HighlightOnlyValueCell(int hintRow, int hintCol, Enums.CellGroupType groupType)
     {
         switch (groupType)
