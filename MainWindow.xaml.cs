@@ -1,4 +1,5 @@
-﻿using SudokuHelper.Common;
+﻿using SudokoStepByStep;
+using SudokoStepByStep.Common;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
@@ -7,7 +8,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Threading;
 
-namespace SudokuHelper;
+namespace SudokuStepByStep;
 
 public partial class MainWindow : Window
 {
@@ -25,8 +26,8 @@ public partial class MainWindow : Window
     private int _hintRow = -1;
     private int _hintCol = -1;
     private int _hintNumber = -1;
-    private Popup? _hintPopup = null!; 
-    private TextBox? _prevHintBox = null!; 
+    private Popup? _hintPopup = null!;
+    private TextBox? _prevHintBox = null!;
     private Enums.SolvingMethod? _currentHintMethod;
     private Enums.CellGroupType? _currentGroupType;
     private bool _showingPossibleValues = false;
@@ -173,13 +174,6 @@ public partial class MainWindow : Window
     };
 
 
-    private void ResetHintTracking()
-    {
-        _hintedNakedPairs.Clear();
-        _shownOnlyValueCells.Clear();
-    }
-
-
     public MainWindow()
     {
         InitializeComponent();
@@ -192,61 +186,6 @@ public partial class MainWindow : Window
 
         // Close hint tooltip on outside clicks
         this.PreviewMouseDown += MainWindow_PreviewMouseDown;
-    }
-
-    private void LoadPuzzle(int[,] puzzle)
-    {
-        for (int r = 0; r < 9; r++)
-        {
-            for (int c = 0; c < 9; c++)
-            {
-                if (puzzle[r, c] != 0)
-                {
-                    _cells[r, c].Box.Text = puzzle[r, c].ToString();
-                    _cells[r, c].Box.IsReadOnly = true;
-                    _cells[r, c].Box.Foreground = Brushes.DarkBlue;
-                    _cells[r, c].CandidatesBlock.Text = "";
-                }
-                else
-                {
-                    _cells[r, c].Box.Text = "";
-                    _cells[r, c].Box.IsReadOnly = false;
-                    _cells[r, c].Box.Foreground = Brushes.Black;
-                }
-            }
-        }
-
-        ClearHighlighting();
-        UpdateCandidates();
-    }
-
-    private void PuzzleSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        ResetHintTracking();
-
-        if (PuzzleSelector.SelectedItem == null) { return; }
-
-        string? selected = PuzzleSelector.SelectedItem.ToString();
-
-        if (selected != null && _puzzles.TryGetValue(selected, out int[,]? value))
-        {
-            LoadPuzzle(value);
-        }
-    }
-
-    private int[,] GetBoard()
-    {
-        int[,] board = new int[9, 9];
-
-        for (int r = 0; r < 9; r++)
-        {
-            for (int c = 0; c < 9; c++)
-            {
-                board[r, c] = int.TryParse(_cells[r, c].Box.Text, out int val) ? val : 0;
-            }
-        }
-
-        return board;
     }
 
     private void InitializeGrid()
@@ -311,31 +250,79 @@ public partial class MainWindow : Window
         }
     }
 
-    private void Solve_Click(object sender, RoutedEventArgs e)
+    private void PuzzleSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        int[,] board = GetBoard();
+        ResetHintTracking();
 
-        if (SudokuSolver.Solve(board))
+        if (PuzzleSelector.SelectedItem == null) { return; }
+
+        string? selected = PuzzleSelector.SelectedItem.ToString();
+
+        if (selected != null && _puzzles.TryGetValue(selected, out int[,]? value))
         {
-            for (int r = 0; r < 9; r++)
+            LoadPuzzle(value);
+        }
+    }
+
+    private void ResetHintTracking()
+    {
+        _hintedNakedPairs.Clear();
+        _shownOnlyValueCells.Clear();
+    }
+
+    private void LoadPuzzle(int[,] puzzle)
+    {
+        for (int r = 0; r < 9; r++)
+        {
+            for (int c = 0; c < 9; c++)
             {
-                for (int c = 0; c < 9; c++)
+                if (puzzle[r, c] != 0)
                 {
-                    _cells[r, c].Box.Text = board[r, c].ToString();
+                    _cells[r, c].Box.Text = puzzle[r, c].ToString();
+                    _cells[r, c].Box.IsReadOnly = true;
+                    _cells[r, c].Box.Foreground = Brushes.DarkBlue;
+                    _cells[r, c].CandidatesBlock.Text = "";
+                }
+                else
+                {
+                    _cells[r, c].Box.Text = "";
+                    _cells[r, c].Box.IsReadOnly = false;
+                    _cells[r, c].Box.Foreground = Brushes.Black;
                 }
             }
         }
-        else
+
+        ClearHighlighting();
+        UpdateCandidates();
+    }
+
+
+
+    private int[,] GetBoard()
+    {
+        int[,] board = new int[9, 9];
+
+        for (int r = 0; r < 9; r++)
         {
-            MessageBox.Show("No solution found!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Warning);
+            for (int c = 0; c < 9; c++)
+            {
+                board[r, c] = int.TryParse(_cells[r, c].Box.Text, out int val) ? val : 0;
+            }
         }
 
-        UpdateCandidates();
+        return board;
+    }
+
+
+
+    private void Step_Click(object sender, RoutedEventArgs e)
+    {
+        ShowPossibleValues(true); 
     }
 
     private void Clear_Click(object sender, RoutedEventArgs e)
     {
-        // --- Reset all hint tracking ---
+        ShowPossibleValues(false);
         ResetHintTracking();
 
         // Clear the hinted pairs/groups tracking
@@ -375,6 +362,28 @@ public partial class MainWindow : Window
         UpdateCandidates();
     }
 
+    private void Solve_Click(object sender, RoutedEventArgs e)
+    {
+        int[,] board = GetBoard();
+
+        if (SudokuSolver.Solve(board))
+        {
+            for (int r = 0; r < 9; r++)
+            {
+                for (int c = 0; c < 9; c++)
+                {
+                    _cells[r, c].Box.Text = board[r, c].ToString();
+                }
+            }
+        }
+        else
+        {
+            MessageBox.Show("No solution found!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+
+        UpdateCandidates();
+    }
+
     private void UpdateCandidates()
     {
         if (!_showingPossibleValues) return; // Only update display if toggled on
@@ -386,7 +395,7 @@ public partial class MainWindow : Window
             for (int c = 0; c < 9; c++)
             {
                 var cell = _cells[r, c];
-               
+
                 if (board[r, c] == 0)
                 {
                     var possibleNumbers = GetPossibleNumbers(board, r, c);
@@ -430,6 +439,11 @@ public partial class MainWindow : Window
             button.Content = _showingPossibleValues ? "Hide Possible Values" : "Show Possible Values";
         }
 
+        ShowPossibleValues(_showingPossibleValues);
+    }
+
+    private void ShowPossibleValues(bool show)
+    {
         int[,] board = GetBoard();
 
         for (int r = 0; r < 9; r++)
@@ -438,7 +452,7 @@ public partial class MainWindow : Window
             {
                 var cell = _cells[r, c];
 
-                if (_showingPossibleValues && board[r, c] == 0)
+                if (show && board[r, c] == 0)
                 {
                     var possibleNumbers = GetPossibleNumbers(board, r, c);
                     cell.CandidatesBlock.Text = string.Join(" ", possibleNumbers);
@@ -737,9 +751,9 @@ public partial class MainWindow : Window
     {
         int[,] board = GetBoard();
 
-        for (int r = 0; r< 9; r++)
+        for (int r = 0; r < 9; r++)
         {
-            for (int c = 0; c< 9; c++)
+            for (int c = 0; c < 9; c++)
             {
                 if (board[r, c] == 0)
                 {
@@ -775,7 +789,7 @@ public partial class MainWindow : Window
             UpdateCandidates();
 
             // Move to next hint
-            Hint_Click(HintButton, new RoutedEventArgs(Button.ClickEvent));
+            // Hint_Click(HintButton, new RoutedEventArgs(Button.ClickEvent));
         }
     }
 
@@ -809,7 +823,7 @@ public partial class MainWindow : Window
             UpdateCandidates();
 
             // Move to next hint
-            Hint_Click(HintButton, new RoutedEventArgs(Button.ClickEvent));
+            // Hint_Click(HintButton, new RoutedEventArgs(Button.ClickEvent));
         }
     }
 
@@ -860,4 +874,6 @@ public partial class MainWindow : Window
             }
         }
     }
+
+
 }

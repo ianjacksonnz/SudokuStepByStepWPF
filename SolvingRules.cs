@@ -1,6 +1,6 @@
-﻿using SudokuHelper.Common;
+﻿using SudokoStepByStep.Common;
 
-namespace SudokuHelper;
+namespace SudokoStepByStep;
 
 public class SolvingRules
 {

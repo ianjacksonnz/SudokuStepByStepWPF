@@ -1,4 +1,4 @@
-﻿namespace SudokuHelper;
+﻿namespace SudokoStepByStep;
 
 public class SudokuSolver
 {

@@ -1,4 +1,4 @@
-﻿namespace SudokuHelper.Common;
+﻿namespace SudokoStepByStep.Common;
 
 public class Enums
 {
