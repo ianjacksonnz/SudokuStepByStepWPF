@@ -1,6 +1,4 @@
 ﻿using SudokuHelper.Common;
-using System;
-using System.Collections.Generic;
 
 namespace SudokuHelper;
 
@@ -14,33 +12,34 @@ public class SolvingRules
         HashSet<int>[,] board,
         out int numberSolved,
         out int rowSolved,
-        out int colSolved,
+        out int columnSolved,
         out Enums.CellGroupType? groupType)
     {
         numberSolved = 0;
         rowSolved = -1;
-        colSolved = -1;
+        columnSolved = -1;
         groupType = null;
 
         // Check rows
         for (int row = 0; row < 9; row++)
         {
-            for (int num = 1; num <= 9; num++)
+            for (int number = 1; number <= 9; number++)
             {
-                if (RulesHelper.RowHasNumber(board, row, num)) continue;
+                var possibleColumns = new List<int>();
 
-                var possibleCols = new List<int>();
-                for (int col = 0; col < 9; col++)
+                for (int column = 0; column < 9; column++)
                 {
-                    if (board[row, col].Count > 0 && board[row, col].Contains(num) && RulesHelper.IsSafe(board, row, col, num))
-                        possibleCols.Add(col);
+                    if (board[row, column].Count > 0 && board[row, column].Contains(number) && RulesHelper.IsSafe(board, row, column, number))
+                    {
+                        possibleColumns.Add(column);
+                    }
                 }
 
-                if (possibleCols.Count == 1)
+                if (possibleColumns.Count == 1)
                 {
-                    numberSolved = num;
+                    numberSolved = number;
                     rowSolved = row;
-                    colSolved = possibleCols[0];
+                    columnSolved = possibleColumns[0];
                     groupType = Enums.CellGroupType.Row;
                     return true;
                 }
@@ -48,24 +47,25 @@ public class SolvingRules
         }
 
         // Check columns
-        for (int col = 0; col < 9; col++)
+        for (int column = 0; column < 9; column++)
         {
-            for (int num = 1; num <= 9; num++)
+            for (int number = 1; number <= 9; number++)
             {
-                if (RulesHelper.ColHasNumber(board, col, num)) continue;
-
                 var possibleRows = new List<int>();
+
                 for (int row = 0; row < 9; row++)
                 {
-                    if (board[row, col].Count > 0 && board[row, col].Contains(num) && RulesHelper.IsSafe(board, row, col, num))
+                    if (board[row, column].Count > 0 && board[row, column].Contains(number) && RulesHelper.IsSafe(board, row, column, number))
+                    {
                         possibleRows.Add(row);
+                    }
                 }
 
                 if (possibleRows.Count == 1)
                 {
-                    numberSolved = num;
+                    numberSolved = number;
                     rowSolved = possibleRows[0];
-                    colSolved = col;
+                    columnSolved = column;
                     groupType = Enums.CellGroupType.Column;
                     return true;
                 }
@@ -75,27 +75,28 @@ public class SolvingRules
         // Check 3x3 grids
         for (int boxRow = 0; boxRow < 3; boxRow++)
         {
-            for (int boxCol = 0; boxCol < 3; boxCol++)
+            for (int boxColumn = 0; boxColumn < 3; boxColumn++)
             {
-                for (int num = 1; num <= 9; num++)
+                for (int number = 1; number <= 9; number++)
                 {
-                    if (RulesHelper.GridHasNumber(board, boxRow, boxCol, num)) continue;
-
                     var possibleCells = new List<(int r, int c)>();
-                    for (int r = boxRow * 3; r < boxRow * 3 + 3; r++)
+
+                    for (int row = boxRow * 3; row < boxRow * 3 + 3; row++)
                     {
-                        for (int c = boxCol * 3; c < boxCol * 3 + 3; c++)
+                        for (int column = boxColumn * 3; column < boxColumn * 3 + 3; column++)
                         {
-                            if (board[r, c].Count > 0 && board[r, c].Contains(num) && RulesHelper.IsSafe(board, r, c, num))
-                                possibleCells.Add((r, c));
+                            if (board[row, column].Count > 0 && board[row, column].Contains(number) && RulesHelper.IsSafe(board, row, column, number))
+                            {
+                                possibleCells.Add((row, column));
+                            }
                         }
                     }
 
                     if (possibleCells.Count == 1)
                     {
-                        numberSolved = num;
+                        numberSolved = number;
                         rowSolved = possibleCells[0].r;
-                        colSolved = possibleCells[0].c;
+                        columnSolved = possibleCells[0].c;
                         groupType = Enums.CellGroupType.Grid;
                         return true;
                     }
@@ -107,11 +108,11 @@ public class SolvingRules
     }
 
     public static bool NakedPairs(
-    HashSet<int>[,] board,
-    out int numberSolved,
-    out int rowSolved,
-    out int colSolved,
-    out Enums.CellGroupType? groupType)
+        HashSet<int>[,] board,
+        out int numberSolved,
+        out int rowSolved,
+        out int colSolved,
+        out Enums.CellGroupType? groupType)
     {
         numberSolved = 0;
         rowSolved = -1;

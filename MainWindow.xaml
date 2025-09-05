@@ -21,8 +21,9 @@
 
         <!-- Buttons -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
-            <Button x:Name="HintButton" Content="Hint" Width="100" Margin="5" Click="Hint_Click"/>
-            <Button Content="Solve" Width="100" Margin="5" Click="Solve_Click"/>
+            <Button Content="Show Possible Values" Width="130" Margin="5" Click="ShowPossibleValues_Click"/>
+            <Button x:Name="HintButton" Content="Hint Next Number" Width="130" Margin="5" Click="Hint_Click"/>
+            <Button Content="Solve Puzzle" Width="100" Margin="5" Click="Solve_Click"/>
             <Button Content="Clear" Width="100" Margin="5" Click="Clear_Click"/>
         </StackPanel>
     </Grid>

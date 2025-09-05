@@ -4,6 +4,15 @@ namespace SudokuHelper;
 
 public class SudokuCell
 {
-    public required TextBox Box { get; set; }
-    public required TextBlock CandidatesBlock { get; set; }
+    public TextBox Box { get; init; }
+    public TextBlock CandidatesBlock { get; init; }
+    public Border Border { get; init; }
+
+    public SudokuCell(TextBox box, TextBlock candidates, Border border)
+    {
+        Box = box;
+        CandidatesBlock = candidates;
+        Border = border;
+    }
 }
+

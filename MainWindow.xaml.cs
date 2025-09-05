@@ -29,6 +29,7 @@ public partial class MainWindow : Window
     private TextBox? _prevHintBox = null!; 
     private Enums.SolvingMethod _currentHintMethod;
     private Enums.CellGroupType? _currentGroupType;
+    private bool _showingPossibleValues = false;
 
 
     private readonly Dictionary<string, int[,]> _puzzles = new()
@@ -180,92 +181,6 @@ public partial class MainWindow : Window
         this.PreviewMouseDown += MainWindow_PreviewMouseDown;
     }
 
-    /// <summary>
-    /// Handler for clicking outside the grid. Removes the tooltips
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void MainWindow_PreviewMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-    {
-        if (_hintPopup != null && _hintPopup.IsOpen)
-        {
-            var clickedElement = e.OriginalSource as DependencyObject;
-            bool clickedInsideGrid = false;
-
-            while (clickedElement != null)
-            {
-                if (clickedElement == SudokuGrid)
-                {
-                    clickedInsideGrid = true;
-                    break;
-                }
-                clickedElement = VisualTreeHelper.GetParent(clickedElement);
-            }
-
-            if (!clickedInsideGrid)
-            {
-                _hintPopup.IsOpen = false;
-                _hintPopup = null;
-                ClearHighlighting();
-            }
-        }
-    }
-
-
-
-    private void InitializeGrid()
-    {
-        SudokuGrid.Children.Clear();
-
-        for (int row = 0; row < 9; row++)
-        {
-            for (int col = 0; col < 9; col++)
-            {
-                // Use a Border for cell borders
-                var border = new Border
-                {
-                    BorderThickness = new Thickness(
-                        col % 3 == 0 ? 2 : 0.5,
-                        row % 3 == 0 ? 2 : 0.5,
-                        (col + 1) % 3 == 0 ? 2 : 0.5,
-                        (row + 1) % 3 == 0 ? 2 : 0.5),
-                    BorderBrush = Brushes.Black
-                };
-
-                // Inner Grid for TextBox + Candidates
-                var grid = new Grid();
-
-                var tb = new TextBox
-                {
-                    FontSize = 20,
-                    HorizontalContentAlignment = HorizontalAlignment.Center,
-                    VerticalContentAlignment = VerticalAlignment.Center,
-                    Background = Brushes.White
-                };
-
-                var candidates = new TextBlock
-                {
-                    FontSize = 10,
-                    Foreground = Brushes.Gray,
-                    TextWrapping = TextWrapping.Wrap
-                };
-
-                grid.Children.Add(candidates);
-                grid.Children.Add(tb);
-
-                border.Child = grid;
-
-                int r = row, c = col;
-                tb.TextChanged += (s, e) => UpdateCandidates();
-                tb.LostFocus += (s, e) => ClearHighlighting();
-
-                _cells[row, col] = new SudokuCell { Box = tb, CandidatesBlock = candidates, Border = border };
-                SudokuGrid.Children.Add(border);
-            }
-        }
-    }
-
-
     private void LoadPuzzle(int[,] puzzle)
     {
         for (int r = 0; r < 9; r++)
@@ -319,39 +234,66 @@ public partial class MainWindow : Window
         return board;
     }
 
-    private void UpdateCandidates()
+    private void InitializeGrid()
     {
-        int[,] board = GetBoard();
+        SudokuGrid.Children.Clear();
 
-        for (int r = 0; r < 9; r++)
+        for (int row = 0; row < 9; row++)
         {
-            for (int c = 0; c < 9; c++)
+            for (int col = 0; col < 9; col++)
             {
-                if (_cells[r, c].Box.IsReadOnly || !string.IsNullOrEmpty(_cells[r, c].Box.Text))
+                var border = new Border
                 {
-                    _cells[r, c].CandidatesBlock.Text = "";
-                    continue;
-                }
+                    BorderThickness = new Thickness(
+                        col % 3 == 0 ? 2 : 0.5,
+                        row % 3 == 0 ? 2 : 0.5,
+                        (col + 1) % 3 == 0 ? 2 : 0.5,
+                        (row + 1) % 3 == 0 ? 2 : 0.5),
+                    BorderBrush = Brushes.Black
+                };
 
-                var possible = GetPossibleNumbers(board, r, c);
-                _cells[r, c].CandidatesBlock.Text = string.Join(" ", possible);
+                var grid = new Grid();
+
+                // Candidates TextBlock (hidden by default)
+                var candidates = new TextBlock
+                {
+                    FontSize = 10,
+                    Foreground = Brushes.Red,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Top,
+                    Margin = new Thickness(2),
+                    IsHitTestVisible = false,
+                    Visibility = Visibility.Collapsed, // hide initially
+                    Text = string.Empty
+                };
+
+                var tb = new TextBox
+                {
+                    FontSize = 20,
+                    HorizontalContentAlignment = HorizontalAlignment.Center,
+                    VerticalContentAlignment = VerticalAlignment.Center,
+                    Background = Brushes.White
+                };
+
+                grid.Children.Add(tb);
+                grid.Children.Add(candidates);
+
+                border.Child = grid;
+
+                int r = row, c = col;
+                tb.TextChanged += (s, e) => UpdateCandidates();
+                tb.LostFocus += (s, e) => ClearHighlighting();
+
+                _cells[row, col] = new SudokuCell
+                {
+                    Box = tb,
+                    CandidatesBlock = candidates,
+                    Border = border
+                };
+
+                SudokuGrid.Children.Add(border);
             }
         }
-    }
-
-    private static List<int> GetPossibleNumbers(int[,] board, int row, int col)
-    {
-        List<int> possible = [];
-
-        for (int num = 1; num <= 9; num++)
-        {
-            if (SudokuSolver.IsSafe(board, row, col, num))
-            {
-                possible.Add(num);
-            }
-        }
-
-        return possible;
     }
 
     private void Solve_Click(object sender, RoutedEventArgs e)
@@ -392,9 +334,89 @@ public partial class MainWindow : Window
         UpdateCandidates();
     }
 
+    private void UpdateCandidates()
+    {
+        if (!_showingPossibleValues) return; // Only update display if toggled on
+
+        int[,] board = GetBoard();
+
+        for (int r = 0; r < 9; r++)
+        {
+            for (int c = 0; c < 9; c++)
+            {
+                var cell = _cells[r, c];
+                if (board[r, c] == 0)
+                {
+                    var possibleNumbers = GetPossibleNumbers(board, r, c);
+                    cell.CandidatesBlock.Text = string.Join(" ", possibleNumbers);
+                    cell.CandidatesBlock.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    cell.CandidatesBlock.Text = string.Empty;
+                    cell.CandidatesBlock.Visibility = Visibility.Collapsed;
+                }
+            }
+        }
+    }
+
+
+    private static List<int> GetPossibleNumbers(int[,] board, int row, int col)
+    {
+        List<int> possible = [];
+
+        for (int num = 1; num <= 9; num++)
+        {
+            if (SudokuSolver.IsSafe(board, row, col, num))
+            {
+                possible.Add(num);
+            }
+        }
+
+        return possible;
+    }
+
+    private void ShowPossibleValues_Click(object sender, RoutedEventArgs e)
+    {
+        _showingPossibleValues = !_showingPossibleValues; // toggle
+
+        // Change button text accordingly
+        var button = sender as Button;
+        if (button != null)
+        {
+            button.Content = _showingPossibleValues ? "Hide Possible Values" : "Show Possible Values";
+        }
+
+        int[,] board = GetBoard();
+        for (int r = 0; r < 9; r++)
+        {
+            for (int c = 0; c < 9; c++)
+            {
+                var cell = _cells[r, c];
+
+                if (_showingPossibleValues && board[r, c] == 0)
+                {
+                    var possibleNumbers = GetPossibleNumbers(board, r, c);
+                    cell.CandidatesBlock.Text = string.Join(" ", possibleNumbers);
+                    cell.CandidatesBlock.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    cell.CandidatesBlock.Text = string.Empty;
+                    cell.CandidatesBlock.Visibility = Visibility.Collapsed;
+                }
+            }
+        }
+    }
 
     private void Hint_Click(object sender, RoutedEventArgs e)
     {
+        if (PuzzleSolved())
+        {
+            MessageBox.Show("Puzzle Solved!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
         int[,] board = GetBoard();
         var candidatesBoard = new HashSet<int>[9, 9];
 
@@ -473,7 +495,7 @@ public partial class MainWindow : Window
 
         var arrow = new System.Windows.Shapes.Polygon
         {
-            Points = new PointCollection { new Point(0, 0), new Point(12, 0), new Point(6, 8) },
+            Points = [new Point(0, 0), new Point(12, 0), new Point(6, 8)],
             Fill = Brushes.LightYellow,
             Stroke = Brushes.Gray,
             StrokeThickness = 1,
@@ -579,8 +601,23 @@ public partial class MainWindow : Window
         _prevHintBox.Focus();
     }
 
+    private bool PuzzleSolved()
+    {
+        int[,] board = GetBoard();
 
+        for (int r = 0; r< 9; r++)
+        {
+            for (int c = 0; c< 9; c++)
+            {
+                if (board[r, c] == 0)
+                {
+                    return false;
+                }
+            }
+        }
 
+        return true;
+    }
 
     /// <summary>
     /// Manually entering the hint number into the hint cell
@@ -661,4 +698,34 @@ public partial class MainWindow : Window
     }
 
 
+    /// <summary>
+    /// Handler for clicking outside the grid. Removes the tooltips
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void MainWindow_PreviewMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (_hintPopup != null && _hintPopup.IsOpen)
+        {
+            var clickedElement = e.OriginalSource as DependencyObject;
+            bool clickedInsideGrid = false;
+
+            while (clickedElement != null)
+            {
+                if (clickedElement == SudokuGrid)
+                {
+                    clickedInsideGrid = true;
+                    break;
+                }
+                clickedElement = VisualTreeHelper.GetParent(clickedElement);
+            }
+
+            if (!clickedInsideGrid)
+            {
+                _hintPopup.IsOpen = false;
+                _hintPopup = null;
+                ClearHighlighting();
+            }
+        }
+    }
 }
