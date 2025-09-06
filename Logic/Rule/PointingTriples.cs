@@ -8,13 +8,7 @@ public static class PointingTriples
     {
         var solveStep = new SolveStep()
         {
-            Row = 0,
-            Column = 0,
-            Value = 0,
-            IsSolved = false,
-            Method = Common.Enums.SolvingRule.PointingTriples,
-            HighlightedSquares = new int[9, 9],
-            Explanation = "This is a placeholder explanation."
+            Rule = Common.Enums.SolvingRule.PointingTriples
         };
 
         return solveStep;

@@ -182,11 +182,8 @@ public partial class MainWindow : Window
 
     private void Solve_Click(object sender, RoutedEventArgs e)
     {
-        // Get the numbers from the UI
-        int[,] initial = GridHelper.GetNumbers(_squares);
-
         // Convert to candidate grid
-        var candidateGrid = RulesHelper.InitializeBoard(initial);
+        var candidateGrid = GridHelper.ConvertToHashSetGrid(_squares);
 
         // Solve using candidate grid
         if (RulesHelper.SolveCompletePuzzle(candidateGrid))

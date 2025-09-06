@@ -2,12 +2,12 @@
 
 public class SolveStep
 {
-    public int Row { get; set; }
-    public int Column { get; set; }
-    public int Value { get; set; }
-    public bool IsSolved { get; set; }
-    public Common.Enums.SolvingRule Method { get; set; }
-    public int[,] HighlightedSquares { get; set; }
+    public int Row { get; set; } = 0;
+    public int Column { get; set; } = 0;
+    public int Number { get; set; } = 0;
+    public bool IsSolved { get; set; } = false;
+    public Common.Enums.SolvingRule Rule { get; set; }
+    public HashSet<(int row, int col)> HighlightedSquares { get; set; } = new();
 
-    public string Explanation { get; set; }
+    public string Explanation { get; set; } = string.Empty;
 }

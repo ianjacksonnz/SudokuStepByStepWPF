@@ -4,7 +4,7 @@ namespace SudokuStepByStep.Models;
 
 public class SudokuSquare
 {
-    public List<int> PossibleNumbers { get; set; } = [];
+    public HashSet<int> PossibleNumbers { get; set; } = new HashSet<int>();
     public TextBox Box { get; set; }
     public TextBlock CandidatesBlock { get; set; }
     public Border Border { get; set; }

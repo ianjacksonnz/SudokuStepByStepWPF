@@ -1,123 +1,155 @@
-﻿//using SudokuStepByStep.Common;
-//using SudokuStepByStep.Logic.Helpers;
-//using SudokuStepByStep.Models;
+﻿using SudokuStepByStep.Common;
+using SudokuStepByStep.Logic.Helpers;
+using SudokuStepByStep.Models;
+using System.Data.Common;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
-//namespace SudokuStepByStep.Logic.Rule;
+namespace SudokuStepByStep.Logic.Rule;
 
-//public static class OnlyValue
-//{
-//    public static SolveStep Run(SudokuSquare[,] squares)
-//    {
-//        numberSolved = 0;
-//        rowSolved = -1;
-//        columnSolved = -1;
-//        groupType = null;
+public static class OnlyValue
+{
+    public static SolveStep Run(SudokuSquare[,] squares)
+    {
+        var solveStep = new SolveStep()
+        {
+            Rule = Enums.SolvingRule.OnlyValue,
+        };
 
-//        // --- rows ---
-//        for (int row = 0; row < 9; row++)
-//        {
-//            for (int number = 1; number <= 9; number++)
-//            {
-//                var possibleColumns = new List<int>();
+        var grid = GridHelper.ConvertToHashSetGrid(squares);
 
-//                for (int column = 0; column < 9; column++)
-//                {
-//                    var square = squares[row, column];
-//                    var isSafe = RulesHelper.IsSafe(squares, row, column, number);
+        // --- rows ---
+        for (int row = 0; row < 9; row++)
+        {
+            for (int number = 1; number <= 9; number++)
+            {
+                var possibleColumns = new List<int>();
 
-//                    if (square.PossibleNumbers.Count > 0 &&
-//                        square.PossibleNumbers.Contains(number) &&
-//                        RulesHelper.IsSafe(squares, row, column, number))
-//                        possibleColumns.Add(column);
-//                }
+                for (int column = 0; column < 9; column++)
+                {
+                    var square = squares[row, column];
+                    var isSafe = RulesHelper.IsSafe(grid, row, column, number);
 
-//                if (possibleColumns.Count == 1)
-//                {
-//                    numberSolved = number;
-//                    rowSolved = row;
-//                    columnSolved = possibleColumns[0];
-//                    groupType = Enums.SquareGroupType.Row;
-//                    return true;
-//                }
-//            }
-//        }
+                    if (square.PossibleNumbers.Count > 0 &&
+                        square.PossibleNumbers.Contains(number) && 
+                        isSafe)
+                    {
+                        possibleColumns.Add(column);
+                    }
+                }
 
-//        // --- columns ---
-//        for (int column = 0; column < 9; column++)
-//        {
-//            for (int number = 1; number <= 9; number++)
-//            {
-//                var possibleRows = new List<int>();
+                if (possibleColumns.Count == 1)
+                {
+                    var solvedColumn = possibleColumns[0];
 
-//                for (int row = 0; row < 9; row++)
-//                {
-//                    if (grid[row, column].Count > 0 &&
-//                        grid[row, column].Contains(number) &&
-//                        RulesHelper.IsSafe(grid, row, column, number))
-//                    {
-//                        possibleRows.Add(row);
-//                    }
-//                }
+                    solveStep.Number = number;
+                    solveStep.Row = row;
+                    solveStep.Column = solvedColumn;
 
-//                if (possibleRows.Count == 1)
-//                {
-//                    numberSolved = number;
-//                    rowSolved = possibleRows[0];
-//                    columnSolved = column;
-//                    groupType = Enums.SquareGroupType.Column;
-//                    return true;
-//                }
-//            }
-//        }
+                    for (int column = 0; column < 9; column++)
+                    {
+                        if (column != solvedColumn)
+                        {
+                            solveStep.HighlightedSquares.Add((row, column));
+                        }
+                    }
 
-//        // --- grids ---
-//        for (int boxRow = 0; boxRow < 3; boxRow++)
-//        {
-//            for (int boxCol = 0; boxCol < 3; boxCol++)
-//            {
-//                for (int number = 1; number <= 9; number++)
-//                {
-//                    var possibleSquares = new List<(int r, int c)>();
+                    return solveStep;
+                }
+            }
+        }
 
-//                    for (int r = boxRow * 3; r < boxRow * 3 + 3; r++)
-//                    {
-//                        for (int c = boxCol * 3; c < boxCol * 3 + 3; c++)
-//                        {
-//                            if (grid[r, c].Count > 0 &&
-//                                grid[r, c].Contains(number) &&
-//                                RulesHelper.IsSafe(grid, r, c, number))
-//                            {
-//                                possibleSquares.Add((r, c));
-//                            }
-//                        }
-//                    }
+        // --- columns ---
+        for (int column = 0; column < 9; column++)
+        {
+            for (int number = 1; number <= 9; number++)
+            {
+                var possibleRows = new List<int>();
 
-//                    if (possibleSquares.Count == 1)
-//                    {
-//                        numberSolved = number;
-//                        rowSolved = possibleSquares[0].r;
-//                        columnSolved = possibleSquares[0].c;
-//                        groupType = Enums.SquareGroupType.Grid;
-//                        return true;
-//                    }
-//                }
-//            }
-//        }
+                for (int row = 0; row < 9; row++)
+                {
+                    var square = squares[row, column];
+                    var isSafe = RulesHelper.IsSafe(grid, row, column, number);
 
-//        return false;
-//    }
-//    {
-//        var solveStep = new SolveStep()
-//        {
-//            Row = 0,
-//            Column = 0,
-//            Value = 0,
-//            IsSolved = false,
-//            Method = Common.Enums.SolvingRule.OnlyValue,
-//            HighlightedSquares = new int[9, 9],
-//            Explanation = "This is a placeholder explanation."
-//        };
+                    if (square.PossibleNumbers.Count > 0 &&
+                        square.PossibleNumbers.Contains(number) &&
+                        isSafe)
+                    {
+                        possibleRows.Add(row);
+                    }
+                }
 
-//        return solveStep;
-//    }
-//}
+                if (possibleRows.Count == 1)
+                {
+                    var solvedRow = possibleRows[0];
+
+                    solveStep.Number = number;
+                    solveStep.Row = solvedRow;
+                    solveStep.Column = column;
+
+                    for (int row = 0; row < 9; row++)
+                    {
+                        if (row != solvedRow)
+                        {
+                            solveStep.HighlightedSquares.Add((row, column));
+                        }
+                    }
+
+                    return solveStep;
+                }
+            }
+        }
+
+        // --- grids ---
+        for (int boxRow = 0; boxRow < 3; boxRow++)
+        {
+            for (int boxCol = 0; boxCol < 3; boxCol++)
+            {
+                for (int number = 1; number <= 9; number++)
+                {
+                    var possibleSquares = new List<(int row, int column)>();
+
+                    for (int row = boxRow * 3; row < boxRow * 3 + 3; row++)
+                    {
+                        for (int column = boxCol * 3; column < boxCol * 3 + 3; column++)
+                        {
+                            var square = squares[row, column];
+                            var isSafe = RulesHelper.IsSafe(grid, row, column, number);
+
+                            if (square.PossibleNumbers.Count > 0 &&
+                                square.PossibleNumbers.Contains(number) &&
+                                isSafe)
+                            {
+                                possibleSquares.Add((row, column));
+                            }
+                        }
+                    }
+
+                    if (possibleSquares.Count == 1)
+                    {
+                        var solvedRow = possibleSquares[0].row;
+                        var solvedColumn = possibleSquares[0].column;
+
+                        solveStep.Number = number;
+                        solveStep.Row = solvedRow;
+                        solveStep.Column = solvedColumn;
+
+                        for (int r = 0; r < 9; r++)
+                        {
+                            for (int c = 0; c < 9; c++)
+                            {
+                                if ((r != solvedRow) && (c != solvedColumn))
+                                {
+                                    solveStep.HighlightedSquares.Add((r, c));
+                                }
+                            }
+                        }
+
+                        return solveStep;
+                    }
+                }
+            }
+        }
+
+        return solveStep;
+    }
+}

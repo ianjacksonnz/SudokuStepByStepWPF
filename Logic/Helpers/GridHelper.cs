@@ -6,6 +6,21 @@ namespace SudokuStepByStep.Logic.Helpers;
 
 public static class GridHelper
 {
+    public static HashSet<int>[,] ConvertToHashSetGrid(SudokuSquare[,] squares)
+    {
+        var grid = new HashSet<int>[9, 9];
+
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                grid[row, col] = squares[row, col].PossibleNumbers;
+            }
+        }
+
+        return grid;
+    }
+
     public static void UpdatePossibleValues(SudokuSquare[,] squares, bool show)
     {
         int[,] grid = GetNumbers(squares);

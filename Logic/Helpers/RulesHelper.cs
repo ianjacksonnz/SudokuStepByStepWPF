@@ -4,31 +4,6 @@ namespace SudokuStepByStep.Logic.Helpers;
 
 public static class RulesHelper
 {
-        // Helper to initialize board with all candidates (1-9) for unsolved cells, or single value for solved
-    public static HashSet<int>[,] InitializeBoard(int[,] initial)
-    {
-        var board = new HashSet<int>[9, 9];
-
-        for (int row = 0; row < 9; row++)
-        {
-            for (int column = 0; column < 9; column++)
-            {
-                if (initial[row, column] == 0)
-                {
-                    board[row, column] = [.. Enumerable.Range(1, 9)];
-                }
-                else
-                {
-                    board[row, column] = [initial[row, column]];
-                }
-            }
-        }
-        return board;
-    }
-
-    // Helper to set a cell as solved
-    public static void SetCell(HashSet<int>[,] board, int row, int column, int value) => board[row, column] = [value];
-
     public static void RemoveCandidates(HashSet<int>[,] grid, int row, int column, string? key)
     {
         // key is a string representation of the candidate list, e.g. "[2, 5]"
@@ -63,9 +38,9 @@ public static class RulesHelper
         return possible;
     }
 
-    public static List<int> GetPossibleNumbers(int[,] grid, int row, int col)
+    public static HashSet<int> GetPossibleNumbers(int[,] grid, int row, int col)
     {
-        var possible = new List<int>();
+        var possible = new HashSet<int>();
 
         for (int num = 1; num <= 9; num++)
         {
@@ -255,4 +230,7 @@ public static class RulesHelper
     //    }
     //    return grid;
     //}
+
+    // Helper to set a cell as solved
+    // public static void SetCell(HashSet<int>[,] board, int row, int column, int value) => board[row, column] = [value];
 }
