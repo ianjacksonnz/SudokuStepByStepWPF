@@ -6,7 +6,7 @@ namespace SudokuStepByStep.Logic.Helpers;
 
 public static class GridHelper
 {
-    public static void ShowPossibleValues(SudokuSquare[,] squares, bool show)
+    public static void UpdatePossibleValues(SudokuSquare[,] squares, bool show)
     {
         int[,] grid = GetNumbers(squares);
 
@@ -15,10 +15,10 @@ public static class GridHelper
             for (int c = 0; c < 9; c++)
             {
                 var square = squares[r, c];
+                square.PossibleNumbers = RulesHelper.GetPossibleNumbers(grid, r, c);
 
                 if (show)
-                {
-                    square.PossibleNumbers = RulesHelper.GetPossibleNumbers(grid, r, c);
+                {                 
                     square.CandidatesBlock.Text = string.Join(" ", square.PossibleNumbers);
                     square.CandidatesBlock.Visibility = Visibility.Visible;
                 }
