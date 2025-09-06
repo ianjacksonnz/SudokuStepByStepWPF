@@ -1,4 +1,5 @@
-﻿using System.Windows.Media;
+﻿using SudokuStepByStep.Models;
+using System.Windows.Media;
 
 namespace SudokuStepByStep.Logic.Helpers;
 

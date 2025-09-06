@@ -2,7 +2,7 @@
 
 public class Enums
 {
-    public enum SolvingMethod
+    public enum SolvingRule
     {
         OnlyValue,
         PointingPairs,

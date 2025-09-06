@@ -6,7 +6,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
-using System.Windows.Threading;
 
 namespace SudokuStepByStep;
 
@@ -20,7 +19,7 @@ public partial class MainWindow : Window
     private int _hintNumber = -1;
     private Popup? _hintPopup = null!;
     private TextBox? _prevHintBox = null!;
-    private Enums.SolvingMethod? _currentHintMethod;
+    private Enums.SolvingRule? _currentHintMethod;
     private Enums.SquareGroupType? _currentGroupType;
     private bool _showingPossibleValues = false;
 
@@ -145,16 +144,16 @@ public partial class MainWindow : Window
         if (GridHelper.PuzzleSolved(_squares))
         {
             MessageBox.Show("Puzzle Solved!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Information);
-            ShowPossibleValues(false);
+            GridHelper.ShowPossibleValues(_squares, false);
             return;
         }
 
-        ShowPossibleValues(true);
+        GridHelper.ShowPossibleValues(_squares, true);
     }
 
     private void Clear_Click(object sender, RoutedEventArgs e)
     {
-        ShowPossibleValues(false);
+        GridHelper.ShowPossibleValues(_squares, false);
         ResetHintTracking();
 
         // Clear the hinted pairs/groups tracking
@@ -183,25 +182,53 @@ public partial class MainWindow : Window
 
     private void Solve_Click(object sender, RoutedEventArgs e)
     {
-        int[,] grid = GridHelper.GetNumbers(_squares);
+        // Get the numbers from the UI
+        int[,] initial = GridHelper.GetNumbers(_squares);
 
-        if (GridHelper.SolveCompletePuzzle(grid))
+        // Convert to candidate grid
+        var candidateGrid = RulesHelper.InitializeBoard(initial);
+
+        // Solve using candidate grid
+        if (RulesHelper.SolveCompletePuzzle(candidateGrid))
         {
+            // Update the UI with solved values
             for (int r = 0; r < 9; r++)
             {
                 for (int c = 0; c < 9; c++)
                 {
-                    _squares[r, c].Box.Text = grid[r, c].ToString();
+                    if (candidateGrid[r, c] != null && candidateGrid[r, c].Count == 1)
+                    {
+                        _squares[r, c].Box.Text = candidateGrid[r, c].First().ToString();
+                    }
                 }
             }
         }
         else
         {
-            MessageBox.Show("No solution found!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("No solution found!", "Sudoku Solver",
+                            MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         UpdateCandidates();
     }
+
+
+    private void ShowPossibleValues_Click(object sender, RoutedEventArgs e)
+    {
+        _showingPossibleValues = !_showingPossibleValues; // toggle
+
+        // Change button text accordingly
+        var button = sender as Button;
+
+        if (button != null)
+        {
+            button.Content = _showingPossibleValues ? "Hide Possible Values" : "Show Possible Values";
+        }
+
+        GridHelper.ShowPossibleValues(_squares, _showingPossibleValues);
+    }
+
+
 
     private void UpdateCandidates()
     {
@@ -217,7 +244,7 @@ public partial class MainWindow : Window
 
                 if (grid[r, c] == 0)
                 {
-                    var possibleNumbers = GridHelper.GetPossibleNumbers(grid, r, c);
+                    var possibleNumbers = RulesHelper.GetPossibleNumbers(grid, r, c);
                     square.CandidatesBlock.Text = string.Join(" ", possibleNumbers);
                     square.CandidatesBlock.Visibility = Visibility.Visible;
                 }
@@ -230,232 +257,226 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ShowPossibleValues_Click(object sender, RoutedEventArgs e)
-    {
-        _showingPossibleValues = !_showingPossibleValues; // toggle
+    //private void UpdateCandidates()
+    //{
+    //    if (!_showingPossibleValues) return; // Only update display if toggled on
 
-        // Change button text accordingly
-        var button = sender as Button;
+    //    // Step 1: Get numbers from UI
+    //    int[,] initial = GridHelper.GetNumbers(_squares);
 
-        if (button != null)
-        {
-            button.Content = _showingPossibleValues ? "Hide Possible Values" : "Show Possible Values";
-        }
+    //    // Step 2: Convert to candidate grid
+    //    HashSet<int>[,] candidateGrid = RulesHelper.InitializeBoard(initial);
 
-        ShowPossibleValues(_showingPossibleValues);
-    }
+    //    // Step 3: Update candidate display
+    //    for (int r = 0; r < 9; r++)
+    //    {
+    //        for (int c = 0; c < 9; c++)
+    //        {
+    //            var square = _squares[r, c];
 
-    private void ShowPossibleValues(bool show)
-    {
-        int[,] grid = GridHelper.GetNumbers(_squares);
+    //            if (initial[r, c] == 0) // unsolved square
+    //            {
+    //                // Show remaining candidates
+    //                var candidates = candidateGrid[r, c];
+    //                square.CandidatesBlock.Text = string.Join(" ", candidates);
+    //                square.CandidatesBlock.Visibility = Visibility.Visible;
+    //            }
+    //            else
+    //            {
+    //                // Hide candidates for solved squares
+    //                square.CandidatesBlock.Text = string.Empty;
+    //                square.CandidatesBlock.Visibility = Visibility.Collapsed;
+    //            }
+    //        }
+    //    }
+    //}
 
-        for (int r = 0; r < 9; r++)
-        {
-            for (int c = 0; c < 9; c++)
-            {
-                var square = _squares[r, c];
+    //private void Hint_Click(object sender, RoutedEventArgs e)
+    //{
+    //    if (GridHelper.PuzzleSolved(_squares))
+    //    {
+    //        MessageBox.Show("Puzzle Solved!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Information);
+    //        return;
+    //    }
 
-                if (show && grid[r, c] == 0)
-                {
-                    var possibleNumbers = GridHelper.GetPossibleNumbers(grid, r, c);
-                    square.CandidatesBlock.Text = string.Join(" ", possibleNumbers);
-                    square.CandidatesBlock.Visibility = Visibility.Visible;
-                }
-                else
-                {
-                    square.CandidatesBlock.Text = string.Empty;
-                    square.CandidatesBlock.Visibility = Visibility.Collapsed;
-                }
-            }
-        }
-    }
+    //    int[,] grid = GridHelper.GetNumbers(_squares);
+    //    var candidatesBoard = new HashSet<int>[9, 9];
 
-    private void Hint_Click(object sender, RoutedEventArgs e)
-    {
-        if (GridHelper.PuzzleSolved(_squares))
-        {
-            MessageBox.Show("Puzzle Solved!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
+    //    // Populate candidate sets for empty squares
+    //    for (int r = 0; r < 9; r++)
+    //    {
+    //        for (int c = 0; c < 9; c++)
+    //        {
+    //            candidatesBoard[r, c] = grid[r, c] == 0
+    //                ? new HashSet<int>(RulesHelper.GetPossibleNumbers(grid, r, c))
+    //                : new HashSet<int>();
+    //        }
+    //    }
 
-        int[,] grid = GridHelper.GetNumbers(_squares);
-        var candidatesBoard = new HashSet<int>[9, 9];
+    //    // Detach previous handlers and clear previous highlighting/popup
+    //    if (_prevHintBox != null)
+    //    {
+    //        _prevHintBox.KeyDown -= HintSquare_KeyDown;
+    //        _prevHintBox.TextChanged -= HintSquare_TextChanged;
+    //        _prevHintBox = null;
+    //    }
 
-        // Populate candidate sets for empty squares
-        for (int r = 0; r < 9; r++)
-        {
-            for (int c = 0; c < 9; c++)
-            {
-                candidatesBoard[r, c] = grid[r, c] == 0
-                    ? new HashSet<int>(GridHelper.GetPossibleNumbers(grid, r, c))
-                    : new HashSet<int>();
-            }
-        }
+    //    ClearHighlighting();
 
-        // Detach previous handlers and clear previous highlighting/popup
-        if (_prevHintBox != null)
-        {
-            _prevHintBox.KeyDown -= HintSquare_KeyDown;
-            _prevHintBox.TextChanged -= HintSquare_TextChanged;
-            _prevHintBox = null;
-        }
+    //    bool isMultiHint = false;
+    //    int hintNumber = 0;
+    //    int hintRow = -1, hintCol = -1;
+    //    Enums.SquareGroupType? groupType = null;
+    //    int[] pairValues = Array.Empty<int>();
+    //    (int row, int col)[] pairSquares = Array.Empty<(int, int)>();
+    //    string explanation = null;
 
-        ClearHighlighting();
+    //    // --- OnlyValue hint ---
+    //    if (SolvingRules.OnlyValue(candidatesBoard, out hintNumber, out hintRow, out hintCol, out groupType))
+    //    {
+    //        _currentHintMethod = Enums.SolvingRule.OnlyValue;
+    //        _currentGroupType = groupType;
+    //        _hintNumber = hintNumber;
+    //        _hintRow = hintRow;
+    //        _hintCol = hintCol;
+    //        isMultiHint = false;
 
-        bool isMultiHint = false;
-        int hintNumber = 0;
-        int hintRow = -1, hintCol = -1;
-        Enums.SquareGroupType? groupType = null;
-        int[] pairValues = Array.Empty<int>();
-        (int row, int col)[] pairSquares = Array.Empty<(int, int)>();
-        string explanation = null;
+    //        explanation = $"Number {hintNumber} can only go in this square in its {groupType?.ToString().ToLower()}.";
+    //    }
+    //    // --- Pairs hint (Naked + Pointing) ---
+    //    else
+    //    {
+    //        bool pairFound = false;
 
-        // --- OnlyValue hint ---
-        if (SolvingRules.OnlyValue(candidatesBoard, out hintNumber, out hintRow, out hintCol, out groupType))
-        {
-            _currentHintMethod = Enums.SolvingMethod.OnlyValue;
-            _currentGroupType = groupType;
-            _hintNumber = hintNumber;
-            _hintRow = hintRow;
-            _hintCol = hintCol;
-            isMultiHint = false;
+    //        // First try NakedPairs
+    //        if (SolvingRules.NakedPairs(candidatesBoard, _hintedGroups, out pairValues, out pairSquares, out groupType))
+    //        {
+    //            _currentHintMethod = Enums.SolvingRule.NakedPairs;
+    //            pairFound = true;
+    //        }
+    //        // If no NakedPair, then try PointingPairs
+    //        else if (SolvingRules.ApplyPointingPairs(candidatesBoard, _hintedGroups, out pairValues, out pairSquares, out groupType))
+    //        {
+    //            _currentHintMethod = Enums.SolvingRule.PointingPairs;
+    //            pairFound = true;
+    //        }
 
-            explanation = $"Number {hintNumber} can only go in this square in its {groupType?.ToString().ToLower()}.";
-        }
-        // --- Pairs hint (Naked + Pointing) ---
-        else
-        {
-            bool pairFound = false;
+    //        if (pairFound)
+    //        {
+    //            // Check if this group was already hinted
+    //            if (!_hintedGroups.Any(g => g.SetEquals(pairSquares)))
+    //            {
+    //                var groupSquares = new HashSet<(int row, int col)>(pairSquares);
+    //                _hintedGroups.Add(groupSquares);
 
-            // First try NakedPairs
-            if (SolvingRules.NakedPairs(candidatesBoard, _hintedGroups, out pairValues, out pairSquares, out groupType))
-            {
-                _currentHintMethod = Enums.SolvingMethod.NakedPairs;
-                pairFound = true;
-            }
-            // If no NakedPair, then try PointingPairs
-            else if (SolvingRules.ApplyPointingPairs(candidatesBoard, _hintedGroups, out pairValues, out pairSquares, out groupType))
-            {
-                _currentHintMethod = Enums.SolvingMethod.PointingPairs;
-                pairFound = true;
-            }
+    //                _currentGroupType = groupType;
+    //                isMultiHint = true;
 
-            if (pairFound)
-            {
-                // Check if this group was already hinted
-                if (!_hintedGroups.Any(g => g.SetEquals(pairSquares)))
-                {
-                    var groupSquares = new HashSet<(int row, int col)>(pairSquares);
-                    _hintedGroups.Add(groupSquares);
+    //                string squarePositions = string.Join(" and ", pairSquares.Select(p => $"({p.row + 1},{p.col + 1})"));
+    //                explanation = $"{_currentHintMethod}: {{{string.Join(", ", pairValues)}}} found at {squarePositions}.";
 
-                    _currentGroupType = groupType;
-                    isMultiHint = true;
+    //                // 🔑 Refresh displayed candidates so removals are visible in the UI
+    //                UpdateCandidates(); // TODO this does not include the candidates removes from the pointing pairs rule. It just has all possible values. Fix this
+    //            }
+    //            else
+    //            {
+    //                pairFound = false; // Already hinted, so skip
+    //            }
+    //        }
 
-                    string squarePositions = string.Join(" and ", pairSquares.Select(p => $"({p.row + 1},{p.col + 1})"));
-                    explanation = $"{_currentHintMethod}: {{{string.Join(", ", pairValues)}}} found at {squarePositions}.";
+    //        if (!pairFound)
+    //        {
+    //            MessageBox.Show("No hints available!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Information);
+    //            return;
+    //        }
+    //    }
 
-                    // 🔑 Refresh displayed candidates so removals are visible in the UI
-                    UpdateCandidates(); // TODO this does not include the candidates removes from the pointing pairs rule. It just has all possible values. Fix this
-                }
-                else
-                {
-                    pairFound = false; // Already hinted, so skip
-                }
-            }
+    //    // Determine placement target
+    //    TextBox placementTargetBox = isMultiHint
+    //        ? _squares[pairSquares[0].row, pairSquares[0].col].Box
+    //        : _squares[hintRow, hintCol].Box;
 
-            if (!pairFound)
-            {
-                MessageBox.Show("No hints available!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
-        }
+    //    // --- Build popup and highlight logic ---
+    //    var stack = new StackPanel { Orientation = Orientation.Vertical };
 
-        // Determine placement target
-        TextBox placementTargetBox = isMultiHint
-            ? _squares[pairSquares[0].row, pairSquares[0].col].Box
-            : _squares[hintRow, hintCol].Box;
+    //    var border = new Border
+    //    {
+    //        Background = Brushes.LightYellow,
+    //        BorderBrush = Brushes.Gray,
+    //        BorderThickness = new Thickness(1),
+    //        CornerRadius = new CornerRadius(4),
+    //        Padding = new Thickness(6),
+    //        MinWidth = placementTargetBox.ActualWidth > 0 ? placementTargetBox.ActualWidth : 40,
+    //        Child = new TextBlock
+    //        {
+    //            Text = explanation ?? "Hint",
+    //            Foreground = Brushes.Black,
+    //            FontSize = 11,
+    //            TextAlignment = TextAlignment.Center,
+    //            TextWrapping = TextWrapping.Wrap
+    //        }
+    //    };
 
-        // --- Build popup and highlight logic ---
-        var stack = new StackPanel { Orientation = Orientation.Vertical };
+    //    stack.Children.Add(border);
 
-        var border = new Border
-        {
-            Background = Brushes.LightYellow,
-            BorderBrush = Brushes.Gray,
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(4),
-            Padding = new Thickness(6),
-            MinWidth = placementTargetBox.ActualWidth > 0 ? placementTargetBox.ActualWidth : 40,
-            Child = new TextBlock
-            {
-                Text = explanation ?? "Hint",
-                Foreground = Brushes.Black,
-                FontSize = 11,
-                TextAlignment = TextAlignment.Center,
-                TextWrapping = TextWrapping.Wrap
-            }
-        };
+    //    var arrow = new System.Windows.Shapes.Polygon
+    //    {
+    //        Points = new PointCollection { new Point(0, 0), new Point(12, 0), new Point(6, 8) },
+    //        Fill = Brushes.LightYellow,
+    //        Stroke = Brushes.Gray,
+    //        StrokeThickness = 1,
+    //        Margin = new Thickness(0, -1, 0, 0),
+    //        Width = 12,
+    //        Height = 8
+    //    };
 
-        stack.Children.Add(border);
+    //    stack.Children.Add(arrow);
 
-        var arrow = new System.Windows.Shapes.Polygon
-        {
-            Points = new PointCollection { new Point(0, 0), new Point(12, 0), new Point(6, 8) },
-            Fill = Brushes.LightYellow,
-            Stroke = Brushes.Gray,
-            StrokeThickness = 1,
-            Margin = new Thickness(0, -1, 0, 0),
-            Width = 12,
-            Height = 8
-        };
+    //    var popup = new Popup
+    //    {
+    //        Child = stack,
+    //        PlacementTarget = placementTargetBox,
+    //        Placement = PlacementMode.Top,
+    //        StaysOpen = true,
+    //        AllowsTransparency = true,
+    //        PopupAnimation = PopupAnimation.Fade
+    //    };
 
-        stack.Children.Add(arrow);
+    //    popup.Opened += (s, args) =>
+    //    {
+    //        int colToCheck = isMultiHint ? pairSquares[0].col : hintCol;
 
-        var popup = new Popup
-        {
-            Child = stack,
-            PlacementTarget = placementTargetBox,
-            Placement = PlacementMode.Top,
-            StaysOpen = true,
-            AllowsTransparency = true,
-            PopupAnimation = PopupAnimation.Fade
-        };
+    //        if (colToCheck > 4)
+    //        {
+    //            double tooltipWidth = border.ActualWidth > 0 ? border.ActualWidth : stack.ActualWidth;
+    //            double squareWidth = placementTargetBox.ActualWidth > 0 ? placementTargetBox.ActualWidth : 40;
+    //            popup.HorizontalOffset = squareWidth - tooltipWidth;
+    //        }
+    //    };
 
-        popup.Opened += (s, args) =>
-        {
-            int colToCheck = isMultiHint ? pairSquares[0].col : hintCol;
+    //    _hintPopup = popup;
 
-            if (colToCheck > 4)
-            {
-                double tooltipWidth = border.ActualWidth > 0 ? border.ActualWidth : stack.ActualWidth;
-                double squareWidth = placementTargetBox.ActualWidth > 0 ? placementTargetBox.ActualWidth : 40;
-                popup.HorizontalOffset = squareWidth - tooltipWidth;
-            }
-        };
+    //    Application.Current.Dispatcher.BeginInvoke(
+    //        DispatcherPriority.Background,
+    //        new Action(() =>
+    //        {
+    //            _hintPopup.IsOpen = true;
 
-        _hintPopup = popup;
+    //            if (!isMultiHint)
+    //            {
+    //                HighlightOnlyValueSquare(_hintRow, _hintCol, _currentGroupType.Value);
+    //            }
+    //            else
+    //            {
+    //                HighlightNakedPair(pairSquares, _currentGroupType.Value);
+    //            }
+    //        }));
 
-        Application.Current.Dispatcher.BeginInvoke(
-            DispatcherPriority.Background,
-            new Action(() =>
-            {
-                _hintPopup.IsOpen = true;
-
-                if (!isMultiHint)
-                {
-                    HighlightOnlyValueSquare(_hintRow, _hintCol, _currentGroupType.Value);
-                }
-                else
-                {
-                    HighlightNakedPair(pairSquares, _currentGroupType.Value);
-                }
-            }));
-
-        _prevHintBox = placementTargetBox;
-        _prevHintBox.KeyDown += HintSquare_KeyDown;
-        _prevHintBox.TextChanged += HintSquare_TextChanged;
-        _prevHintBox.Focus();
-    }
+    //    _prevHintBox = placementTargetBox;
+    //    _prevHintBox.KeyDown += HintSquare_KeyDown;
+    //    _prevHintBox.TextChanged += HintSquare_TextChanged;
+    //    _prevHintBox.Focus();
+    //}
 
     private void HighlightOnlyValueSquare(int hintRow, int hintCol, Enums.SquareGroupType groupType)
     {
