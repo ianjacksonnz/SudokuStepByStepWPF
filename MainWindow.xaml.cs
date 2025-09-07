@@ -141,12 +141,12 @@ public partial class MainWindow : Window
 
     private void ClearHighlighting()
     {
-        foreach (var square in _highlightedSquares)
+        foreach (var square in _squares)
         {
-            square.Background = Brushes.White;
+            square.Box.Background = Brushes.White;
         }
 
-        _highlightedSquares.Clear();
+        // _highlightedSquares.Clear();
 
         if (_hintPopup != null)
         {
@@ -167,34 +167,120 @@ public partial class MainWindow : Window
 
         var solveStep = RulesEngine.CalculateNextStep(_squares);
 
-        GridHelper.SetPossibleValues(_squares, true);
+        if (solveStep.IsSolved)
+        {
+            SetSolvedSquare(solveStep);        
+        }
+        else
+        {
+            MessageBox.Show("No further steps can be applied!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        // GridHelper.SetPossibleValues(_squares, true);
+    }
+
+    private void SetSolvedSquare(SolveStep solveStep)
+    {
+        _squares[solveStep.Row, solveStep.Column].Number = solveStep.Number;
+
+        var box = _squares[solveStep.Row, solveStep.Column].Box;
+        box.Text = solveStep.Number.ToString();
+        box.Background = Brushes.LightGreen;
+        SetToolTip(solveStep);
+    }
+
+    private void SetToolTip(SolveStep solveStep)
+    {
+        TextBox placementTargetBox = _squares[solveStep.Row, solveStep.Column].Box;
+
+        var stack = new StackPanel { Orientation = Orientation.Vertical };
+
+        var border = new Border
+        {
+            Background = Brushes.LightYellow,
+            BorderBrush = Brushes.Gray,
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(4),
+            Padding = new Thickness(6),
+            MinWidth = placementTargetBox.ActualWidth > 0 ? placementTargetBox.ActualWidth : 40,
+            Child = new TextBlock
+            {
+                Text = solveStep.Explanation,
+                Foreground = Brushes.Black,
+                FontSize = 11,
+                TextAlignment = TextAlignment.Center,
+                TextWrapping = TextWrapping.Wrap
+            }
+        };
+
+        stack.Children.Add(border);
+
+        var arrow = new System.Windows.Shapes.Polygon
+        {
+            Points = new PointCollection { new Point(0, 0), new Point(12, 0), new Point(6, 8) },
+            Fill = Brushes.LightYellow,
+            Stroke = Brushes.Gray,
+            StrokeThickness = 1,
+            Margin = new Thickness(0, -1, 0, 0),
+            Width = 12,
+            Height = 8
+        };
+
+        stack.Children.Add(arrow);
+
+        var popup = new Popup
+        {
+            Child = stack,
+            PlacementTarget = placementTargetBox,
+            Placement = PlacementMode.Top,
+            StaysOpen = true,
+            AllowsTransparency = true,
+            PopupAnimation = PopupAnimation.Fade
+        };
+
+        popup.Opened += (s, args) =>
+        {
+            double squareWidth = placementTargetBox.ActualWidth > 0 ? placementTargetBox.ActualWidth : 40;
+            double tooltipWidth = border.ActualWidth > 0 ? border.ActualWidth : stack.ActualWidth;
+
+            if (solveStep.Column <= 4)
+            {
+                // Keep tooltip to the left of the square
+                popup.HorizontalOffset = 0;
+
+                // Shift arrow to the right (towards center of square)
+                arrow.HorizontalAlignment = HorizontalAlignment.Left;
+                arrow.Margin = new Thickness(squareWidth / 2, -1, 0, 0);
+            }
+            else
+            {
+                // Keep tooltip to the right of the square
+                popup.HorizontalOffset = squareWidth - tooltipWidth;
+
+                // Shift arrow to the left (towards center of square)
+                arrow.HorizontalAlignment = HorizontalAlignment.Right;
+                arrow.Margin = new Thickness(0, -1, squareWidth / 2, 0);
+            }
+        };
+
+        _hintPopup = popup;
+
+        Application.Current.Dispatcher.BeginInvoke(
+            System.Windows.Threading.DispatcherPriority.Background,
+            new Action(() =>
+            {
+                _hintPopup.IsOpen = true;
+            }));
+
+        _prevHintBox = placementTargetBox;
+        _prevHintBox.KeyDown += HintSquare_KeyDown;
+        _prevHintBox.TextChanged += HintSquare_TextChanged;
+        _prevHintBox.Focus();
     }
 
     private void Clear_Click(object sender, RoutedEventArgs e)
     {
-        GridHelper.SetPossibleValues(_squares, false);
         ResetHintTracking();
-
-        // Clear the hinted pairs/groups tracking
-        _hintedGroups.Clear();        // for both naked pairs and pointing pairs
-        _hintedNakedPairs.Clear();    // if still used separately
-        _prevHintBox = null;          // remove reference to previous hint textbox
-
-        // Close any active hint popup
-        if (_hintPopup != null)
-        {
-            _hintPopup.IsOpen = false;
-            _hintPopup.Child = null;
-            _hintPopup = null;
-        }
-
-        // Reset all hint state variables
-        _currentHintMethod = null;
-        _currentGroupType = null;
-        _hintNumber = 0;
-        _hintRow = -1;
-        _hintCol = -1;
-
         GridHelper.ClearSquares(_squares);
         GridHelper.SetPossibleValues(_squares, false);
     }
@@ -229,21 +315,23 @@ public partial class MainWindow : Window
         GridHelper.SetPossibleValues(_squares, false);
     }
 
+         
 
-    private void ShowPossibleValues_Click(object sender, RoutedEventArgs e)
-    {
-        _showingPossibleValues = !_showingPossibleValues; // toggle
 
-        // Change button text accordingly
-        var button = sender as Button;
+    //private void ShowPossibleValues_Click(object sender, RoutedEventArgs e)
+    //{
+    //    _showingPossibleValues = !_showingPossibleValues; // toggle
 
-        if (button != null)
-        {
-            button.Content = _showingPossibleValues ? "Hide Possible Values" : "Show Possible Values";
-        }
+    //    // Change button text accordingly
+    //    var button = sender as Button;
 
-        GridHelper.SetPossibleValues(_squares, _showingPossibleValues);
-    }
+    //    if (button != null)
+    //    {
+    //        button.Content = _showingPossibleValues ? "Hide Possible Values" : "Show Possible Values";
+    //    }
+
+    //    GridHelper.SetPossibleValues(_squares, _showingPossibleValues);
+    //}
 
     //private void Hint_Click(object sender, RoutedEventArgs e)
     //{
