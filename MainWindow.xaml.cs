@@ -14,12 +14,12 @@ public partial class MainWindow : Window
     private Dictionary<string, int[,]> _puzzles = new Dictionary<string, int[,]>();
     private SudokuSquare[,] _squares = new SudokuSquare[9, 9];
     private readonly List<TextBox> _highlightedSquares = [];
-    private int _hintRow = -1;
-    private int _hintCol = -1;
-    private int _hintNumber = -1;
-    private Popup? _hintPopup = null!;
-    private TextBox? _prevHintBox = null!;
-    private Enums.SolvingRule? _currentHintMethod;
+    private int _stepRow = -1;
+    private int _stepCol = -1;
+    private int _stepNumber = -1;
+    private Popup? _stepPopup = null!;
+    private TextBox? _prevStepBox = null!;
+    private Enums.SolvingRule? _currentStepMethod;
     private Enums.SquareGroupType? _currentGroupType;
     private bool _showingPossibleValues = false;
 
@@ -148,9 +148,9 @@ public partial class MainWindow : Window
 
         // _highlightedSquares.Clear();
 
-        if (_hintPopup != null)
+        if (_stepPopup != null)
         {
-            _hintPopup.IsOpen = false;
+            _stepPopup.IsOpen = false;
         }
     }
 
@@ -167,31 +167,66 @@ public partial class MainWindow : Window
 
         var solveStep = RulesEngine.CalculateNextStep(_squares);
 
-        if (solveStep.IsSolved)
+        if (solveStep.Solved || solveStep.CandidatesRemoved)
         {
-            SetSolvedSquare(solveStep);        
+            UpdateGridSolvedStep(solveStep);        
         }
         else
         {
             MessageBox.Show("No further steps can be applied!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        // GridHelper.SetPossibleValues(_squares, true);
+        GridHelper.ShowPossibleValues(_squares, true);
     }
 
-    private void SetSolvedSquare(SolveStep solveStep)
+    private void UpdateGridSolvedStep(SolveStep solveStep)
     {
         _squares[solveStep.Row, solveStep.Column].Number = solveStep.Number;
+        _stepRow = solveStep.Row;
+        _stepCol = solveStep.Column;
+        _stepNumber = solveStep.Number;
 
-        var box = _squares[solveStep.Row, solveStep.Column].Box;
-        box.Text = solveStep.Number.ToString();
-        box.Background = Brushes.LightGreen;
-        SetToolTip(solveStep);
+        if (solveStep.Solved)
+        {
+            var box = _squares[solveStep.Row, solveStep.Column].Box;
+            box.Text = solveStep.Number.ToString();
+            box.Background = Brushes.LightGreen;
+        }
+
+        foreach (var (r, c) in solveStep.HighlightedSquares)
+        {
+            var square = _squares[r, c];
+            square.CandidatesBlock.Text = string.Join(" ", square.PossibleNumbers);
+
+            square.Box.Background = Brushes.LightYellow;
+        }
+
+        if (solveStep.CandidatesRemoved)
+        {
+            foreach (var (r, c) in solveStep.HighlightedSquares)
+            {
+                //var square = _squares[r, c];
+                //square.PossibleNumbers.Remove(solveStep.Number);
+                //square.CandidatesBlock.Text = string.Join(" ", square.PossibleNumbers);
+            }
+        }
+
+        var squareHighlightedBox = SetToolTip(solveStep);
+
+        _prevStepBox = squareHighlightedBox;
+        _prevStepBox.KeyDown += StepSquare_KeyDown;
+        _prevStepBox.TextChanged += StepSquare_TextChanged;
+        _prevStepBox.Focus();
     }
 
-    private void SetToolTip(SolveStep solveStep)
+    private TextBox SetToolTip(SolveStep solveStep)
     {
-        TextBox placementTargetBox = _squares[solveStep.Row, solveStep.Column].Box;
+        TextBox squareHighlightedBox = _squares[solveStep.Row, solveStep.Column].Box;
+
+        //    // Determine placement target
+        //    TextBox squareHighightedBox = isMultiHint
+        //        ? _squares[pairSquares[0].row, pairSquares[0].col].Box
+        //        : _squares[hintRow, hintCol].Box;
 
         var stack = new StackPanel { Orientation = Orientation.Vertical };
 
@@ -202,7 +237,7 @@ public partial class MainWindow : Window
             BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(4),
             Padding = new Thickness(6),
-            MinWidth = placementTargetBox.ActualWidth > 0 ? placementTargetBox.ActualWidth : 40,
+            MinWidth = squareHighlightedBox.ActualWidth > 0 ? squareHighlightedBox.ActualWidth : 40,
             Child = new TextBlock
             {
                 Text = solveStep.Explanation,
@@ -231,7 +266,7 @@ public partial class MainWindow : Window
         var popup = new Popup
         {
             Child = stack,
-            PlacementTarget = placementTargetBox,
+            PlacementTarget = squareHighlightedBox,
             Placement = PlacementMode.Top,
             StaysOpen = true,
             AllowsTransparency = true,
@@ -240,7 +275,7 @@ public partial class MainWindow : Window
 
         popup.Opened += (s, args) =>
         {
-            double squareWidth = placementTargetBox.ActualWidth > 0 ? placementTargetBox.ActualWidth : 40;
+            double squareWidth = squareHighlightedBox.ActualWidth > 0 ? squareHighlightedBox.ActualWidth : 40;
             double tooltipWidth = border.ActualWidth > 0 ? border.ActualWidth : stack.ActualWidth;
 
             if (solveStep.Column <= 4)
@@ -263,19 +298,79 @@ public partial class MainWindow : Window
             }
         };
 
-        _hintPopup = popup;
+        _stepPopup = popup;
 
         Application.Current.Dispatcher.BeginInvoke(
             System.Windows.Threading.DispatcherPriority.Background,
             new Action(() =>
             {
-                _hintPopup.IsOpen = true;
+                _stepPopup.IsOpen = true;
             }));
 
-        _prevHintBox = placementTargetBox;
-        _prevHintBox.KeyDown += HintSquare_KeyDown;
-        _prevHintBox.TextChanged += HintSquare_TextChanged;
-        _prevHintBox.Focus();
+        return squareHighlightedBox;
+    }
+
+    /// <summary>
+    /// Clicking enter key for the Step square
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void StepSquare_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key == System.Windows.Input.Key.Enter && _stepRow >= 0 && _stepCol >= 0)
+        {
+            var square = _squares[_stepRow, _stepCol];
+
+            if (_prevStepBox != null)
+            {
+                _prevStepBox.KeyDown -= StepSquare_KeyDown;
+                _prevStepBox.TextChanged -= StepSquare_TextChanged;
+                _prevStepBox = null;
+            }
+
+            square.Box.Text = _stepNumber.ToString();
+
+            if (_stepPopup != null)
+            {
+                _stepPopup.IsOpen = false;
+                _stepPopup = null;
+            }
+
+            ClearHighlighting();
+            GridHelper.SetPossibleValues(_squares, true);
+
+            // Move to next step
+            Step_Click(StepButton, new RoutedEventArgs(Button.ClickEvent));
+        }
+    }
+
+    /// <summary>
+    /// Manually entering the step number into the step square
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void StepSquare_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_stepRow < 0 || _stepCol < 0) return;
+
+        var square = _squares[_stepRow, _stepCol];
+
+        if (square.Box.Text == _stepNumber.ToString())
+        {
+            square.Box.TextChanged -= StepSquare_TextChanged;
+
+            if (_stepPopup != null)
+            {
+                _stepPopup.IsOpen = false;
+                _stepPopup = null;
+            }
+
+            ClearHighlighting();
+            GridHelper.SetPossibleValues(_squares, true);
+
+            // Move to next step
+            // Step_Click(StepButton, new RoutedEventArgs(Button.ClickEvent));
+        }
     }
 
     private void Clear_Click(object sender, RoutedEventArgs e)
@@ -520,159 +615,159 @@ public partial class MainWindow : Window
     //    _prevHintBox.Focus();
     //}
 
-    private void HighlightOnlyValueSquare(int hintRow, int hintCol, Enums.SquareGroupType groupType)
-    {
-        switch (groupType)
-        {
-            case Enums.SquareGroupType.Row:
-                for (int c = 0; c < 9; c++)
-                {
-                    var box = _squares[hintRow, c].Box;
-                    box.Background = (c == hintCol) ? Brushes.LightGreen : Brushes.LightYellow;
-                    _highlightedSquares.Add(box);
-                }
-                break;
+    //private void HighlightOnlyValueSquare(int hintRow, int hintCol, Enums.SquareGroupType groupType)
+    //{
+    //    switch (groupType)
+    //    {
+    //        case Enums.SquareGroupType.Row:
+    //            for (int c = 0; c < 9; c++)
+    //            {
+    //                var box = _squares[hintRow, c].Box;
+    //                box.Background = (c == hintCol) ? Brushes.LightGreen : Brushes.LightYellow;
+    //                _highlightedSquares.Add(box);
+    //            }
+    //            break;
 
-            case Enums.SquareGroupType.Column:
-                for (int r = 0; r < 9; r++)
-                {
-                    var box = _squares[r, hintCol].Box;
-                    box.Background = (r == hintRow) ? Brushes.LightGreen : Brushes.LightYellow;
-                    _highlightedSquares.Add(box);
-                }
-                break;
+    //        case Enums.SquareGroupType.Column:
+    //            for (int r = 0; r < 9; r++)
+    //            {
+    //                var box = _squares[r, hintCol].Box;
+    //                box.Background = (r == hintRow) ? Brushes.LightGreen : Brushes.LightYellow;
+    //                _highlightedSquares.Add(box);
+    //            }
+    //            break;
 
-            case Enums.SquareGroupType.Grid:
-                int startRow = (hintRow / 3) * 3;
-                int startCol = (hintCol / 3) * 3;
-                for (int r = startRow; r < startRow + 3; r++)
-                {
-                    for (int c = startCol; c < startCol + 3; c++)
-                    {
-                        var box = _squares[r, c].Box;
-                        box.Background = (r == hintRow && c == hintCol) ? Brushes.LightGreen : Brushes.LightYellow;
-                        _highlightedSquares.Add(box);
-                    }
-                }
-                break;
-        }
-    }
+    //        case Enums.SquareGroupType.Grid:
+    //            int startRow = (hintRow / 3) * 3;
+    //            int startCol = (hintCol / 3) * 3;
+    //            for (int r = startRow; r < startRow + 3; r++)
+    //            {
+    //                for (int c = startCol; c < startCol + 3; c++)
+    //                {
+    //                    var box = _squares[r, c].Box;
+    //                    box.Background = (r == hintRow && c == hintCol) ? Brushes.LightGreen : Brushes.LightYellow;
+    //                    _highlightedSquares.Add(box);
+    //                }
+    //            }
+    //            break;
+    //    }
+    //}
 
-    private void HighlightNakedPair((int row, int col)[] pairSquares, Enums.SquareGroupType groupType)
-    {
-        if (pairSquares.Length < 2) return;
+    //private void HighlightNakedPair((int row, int col)[] pairSquares, Enums.SquareGroupType groupType)
+    //{
+    //    if (pairSquares.Length < 2) return;
 
-        if (groupType == Enums.SquareGroupType.Row)
-        {
-            int r = pairSquares[0].row;
-            for (int c = 0; c < 9; c++)
-            {
-                bool isPairSquare = pairSquares.Any(p => p.row == r && p.col == c);
-                var box = _squares[r, c].Box;
-                box.Background = isPairSquare ? Brushes.LightGreen : Brushes.LightYellow;
-                _highlightedSquares.Add(box);
-            }
-        }
-        else if (groupType == Enums.SquareGroupType.Column)
-        {
-            int c = pairSquares[0].col;
-            for (int r = 0; r < 9; r++)
-            {
-                bool isPairSquare = pairSquares.Any(p => p.row == r && p.col == c);
-                var box = _squares[r, c].Box;
-                box.Background = isPairSquare ? Brushes.LightGreen : Brushes.LightYellow;
-                _highlightedSquares.Add(box);
-            }
-        }
-        else if (groupType == Enums.SquareGroupType.Grid)
-        {
-            int gridStartRow = (pairSquares[0].row / 3) * 3;
-            int gridStartCol = (pairSquares[0].col / 3) * 3;
-            for (int r = gridStartRow; r < gridStartRow + 3; r++)
-            {
-                for (int c = gridStartCol; c < gridStartCol + 3; c++)
-                {
-                    bool isPairSquare = pairSquares.Any(p => p.row == r && p.col == c);
-                    var box = _squares[r, c].Box;
-                    box.Background = isPairSquare ? Brushes.LightGreen : Brushes.LightYellow;
-                    _highlightedSquares.Add(box);
-                }
-            }
-        }
-        else
-        {
-            // fallback: just highlight the pair squares
-            foreach (var pc in pairSquares)
-            {
-                var box = _squares[pc.row, pc.col].Box;
-                box.Background = Brushes.LightGreen;
-                _highlightedSquares.Add(box);
-            }
-        }
-    }
+    //    if (groupType == Enums.SquareGroupType.Row)
+    //    {
+    //        int r = pairSquares[0].row;
+    //        for (int c = 0; c < 9; c++)
+    //        {
+    //            bool isPairSquare = pairSquares.Any(p => p.row == r && p.col == c);
+    //            var box = _squares[r, c].Box;
+    //            box.Background = isPairSquare ? Brushes.LightGreen : Brushes.LightYellow;
+    //            _highlightedSquares.Add(box);
+    //        }
+    //    }
+    //    else if (groupType == Enums.SquareGroupType.Column)
+    //    {
+    //        int c = pairSquares[0].col;
+    //        for (int r = 0; r < 9; r++)
+    //        {
+    //            bool isPairSquare = pairSquares.Any(p => p.row == r && p.col == c);
+    //            var box = _squares[r, c].Box;
+    //            box.Background = isPairSquare ? Brushes.LightGreen : Brushes.LightYellow;
+    //            _highlightedSquares.Add(box);
+    //        }
+    //    }
+    //    else if (groupType == Enums.SquareGroupType.Grid)
+    //    {
+    //        int gridStartRow = (pairSquares[0].row / 3) * 3;
+    //        int gridStartCol = (pairSquares[0].col / 3) * 3;
+    //        for (int r = gridStartRow; r < gridStartRow + 3; r++)
+    //        {
+    //            for (int c = gridStartCol; c < gridStartCol + 3; c++)
+    //            {
+    //                bool isPairSquare = pairSquares.Any(p => p.row == r && p.col == c);
+    //                var box = _squares[r, c].Box;
+    //                box.Background = isPairSquare ? Brushes.LightGreen : Brushes.LightYellow;
+    //                _highlightedSquares.Add(box);
+    //            }
+    //        }
+    //    }
+    //    else
+    //    {
+    //        // fallback: just highlight the pair squares
+    //        foreach (var pc in pairSquares)
+    //        {
+    //            var box = _squares[pc.row, pc.col].Box;
+    //            box.Background = Brushes.LightGreen;
+    //            _highlightedSquares.Add(box);
+    //        }
+    //    }
+    //}
 
-    /// <summary>
-    /// Manually entering the hint number into the hint square
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void HintSquare_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (_hintRow < 0 || _hintCol < 0) return;
+    ///// <summary>
+    ///// Manually entering the hint number into the hint square
+    ///// </summary>
+    ///// <param name="sender"></param>
+    ///// <param name="e"></param>
+    //private void HintSquare_TextChanged(object sender, TextChangedEventArgs e)
+    //{
+    //    if (_hintRow < 0 || _hintCol < 0) return;
 
-        var square = _squares[_hintRow, _hintCol];
+    //    var square = _squares[_hintRow, _hintCol];
 
-        if (square.Box.Text == _hintNumber.ToString())
-        {
-            square.Box.TextChanged -= HintSquare_TextChanged;
+    //    if (square.Box.Text == _hintNumber.ToString())
+    //    {
+    //        square.Box.TextChanged -= HintSquare_TextChanged;
 
-            if (_hintPopup != null)
-            {
-                _hintPopup.IsOpen = false;
-                _hintPopup = null;
-            }
+    //        if (_hintPopup != null)
+    //        {
+    //            _hintPopup.IsOpen = false;
+    //            _hintPopup = null;
+    //        }
 
-            ClearHighlighting();
-            GridHelper.SetPossibleValues(_squares, true);
+    //        ClearHighlighting();
+    //        GridHelper.SetPossibleValues(_squares, true);
 
-            // Move to next hint
-            // Hint_Click(HintButton, new RoutedEventArgs(Button.ClickEvent));
-        }
-    }
+    //        // Move to next hint
+    //        // Hint_Click(HintButton, new RoutedEventArgs(Button.ClickEvent));
+    //    }
+    //}
 
-    /// <summary>
-    /// Clicking enter key for the hint square
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void HintSquare_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-    {
-        if (e.Key == System.Windows.Input.Key.Enter && _hintRow >= 0 && _hintCol >= 0)
-        {
-            var square = _squares[_hintRow, _hintCol];
+    ///// <summary>
+    ///// Clicking enter key for the hint square
+    ///// </summary>
+    ///// <param name="sender"></param>
+    ///// <param name="e"></param>
+    //private void HintSquare_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    //{
+    //    if (e.Key == System.Windows.Input.Key.Enter && _hintRow >= 0 && _hintCol >= 0)
+    //    {
+    //        var square = _squares[_hintRow, _hintCol];
 
-            if (_prevHintBox != null)
-            {
-                _prevHintBox.KeyDown -= HintSquare_KeyDown;
-                _prevHintBox.TextChanged -= HintSquare_TextChanged;
-                _prevHintBox = null;
-            }
+    //        if (_prevHintBox != null)
+    //        {
+    //            _prevHintBox.KeyDown -= HintSquare_KeyDown;
+    //            _prevHintBox.TextChanged -= HintSquare_TextChanged;
+    //            _prevHintBox = null;
+    //        }
 
-            square.Box.Text = _hintNumber.ToString();
+    //        square.Box.Text = _hintNumber.ToString();
 
-            if (_hintPopup != null)
-            {
-                _hintPopup.IsOpen = false;
-                _hintPopup = null;
-            }
+    //        if (_hintPopup != null)
+    //        {
+    //            _hintPopup.IsOpen = false;
+    //            _hintPopup = null;
+    //        }
 
-            ClearHighlighting();
-            GridHelper.SetPossibleValues(_squares, true);
+    //        ClearHighlighting();
+    //        GridHelper.SetPossibleValues(_squares, true);
 
-            // Move to next hint
-            // Hint_Click(HintButton, new RoutedEventArgs(Button.ClickEvent));
-        }
-    }
+    //        // Move to next hint
+    //        // Hint_Click(HintButton, new RoutedEventArgs(Button.ClickEvent));
+    //    }
+    //}
 
     /// <summary>
     /// Handler for clicking outside the grid. Removes the tooltips
@@ -681,7 +776,7 @@ public partial class MainWindow : Window
     /// <param name="e"></param>
     private void MainWindow_PreviewMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
-        if (_hintPopup != null && _hintPopup.IsOpen)
+        if (_stepPopup != null && _stepPopup.IsOpen)
         {
             var clickedElement = e.OriginalSource as DependencyObject;
             bool clickedInsideGrid = false;
@@ -698,8 +793,8 @@ public partial class MainWindow : Window
 
             if (!clickedInsideGrid)
             {
-                _hintPopup.IsOpen = false;
-                _hintPopup = null;
+                _stepPopup.IsOpen = false;
+                _stepPopup = null;
                 ClearHighlighting();
             }
         }

@@ -40,6 +40,21 @@ public static class GridHelper
                     square.PossibleNumbers = new HashSet<int>();
                 }
 
+                ShowPossibleValues(squares, show);
+            }
+        }
+    }
+
+    public static void ShowPossibleValues(SudokuSquare[,] squares, bool show)
+    {
+        int[,] grid = GetNumbers(squares);
+
+        for (int row = 0; row < 9; row++)
+        {
+            for (int column = 0; column < 9; column++)
+            {
+                var square = squares[row, column];
+
                 if (show)
                 {
                     square.CandidatesBlock.Text = string.Join(" ", square.PossibleNumbers);

@@ -37,7 +37,7 @@ public static class OnlyValue
                 {
                     var solvedColumn = possibleColumns[0];
 
-                    solveStep.IsSolved = true;
+                    solveStep.Solved = true;
                     solveStep.Number = number;
                     solveStep.Row = row;
                     solveStep.Column = solvedColumn;
@@ -79,7 +79,7 @@ public static class OnlyValue
                 {
                     var solvedRow = possibleRows[0];
 
-                    solveStep.IsSolved = true;
+                    solveStep.Solved = true;
                     solveStep.Number = number;
                     solveStep.Row = solvedRow;
                     solveStep.Column = column;
@@ -143,7 +143,7 @@ public static class OnlyValue
                             }
                         }
 
-                        solveStep.IsSolved = true;
+                        solveStep.Solved = true;
                         return solveStep;
                     }
                 }

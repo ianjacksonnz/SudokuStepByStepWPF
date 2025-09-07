@@ -20,7 +20,7 @@ public static class RulesEngine
                 _ => throw new ArgumentOutOfRangeException(nameof(rule), rule, null)
             };
 
-            if (step != null && (step.IsSolved || step.CandidatesRemoved))
+            if (step != null && (step.Solved || step.CandidatesRemoved))
             {
                 return step;
             }
