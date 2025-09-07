@@ -26,7 +26,7 @@ public class SolvingRules
                 for (int column = 0; column < 9; column++)
                     if (board[row, column].Count > 0 &&
                         board[row, column].Contains(number) &&
-                        RulesHelper.IsSafe(board, row, column, number))
+                        RulesHelper.IsPossibleNumber(board, row, column, number))
                         possibleColumns.Add(column);
 
                 if (possibleColumns.Count == 1)
@@ -51,7 +51,7 @@ public class SolvingRules
                 {
                     if (board[row, column].Count > 0 &&
                         board[row, column].Contains(number) &&
-                        RulesHelper.IsSafe(board, row, column, number))
+                        RulesHelper.IsPossibleNumber(board, row, column, number))
                     {
                         possibleRows.Add(row);
                     }
@@ -83,7 +83,7 @@ public class SolvingRules
                         {
                             if (board[r, c].Count > 0 &&
                                 board[r, c].Contains(number) &&
-                                RulesHelper.IsSafe(board, r, c, number))
+                                RulesHelper.IsPossibleNumber(board, r, c, number))
                             {
                                 possibleSquares.Add((r, c));
                             }

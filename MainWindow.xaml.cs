@@ -101,7 +101,7 @@ public partial class MainWindow : Window
                 border.Child = grid;
 
                 int r = row, c = col;
-                tb.TextChanged += (s, e) => GridHelper.UpdatePossibleValues(_squares, false);
+                tb.TextChanged += (s, e) => GridHelper.SetPossibleValues(_squares, false);
                 tb.LostFocus += (s, e) => ClearHighlighting();
 
                 _squares[row, col] = new SudokuSquare(tb, candidates, border);
@@ -136,24 +136,43 @@ public partial class MainWindow : Window
         PuzzleLoader.LoadPuzzle(puzzle, _squares);
 
         ClearHighlighting();
-        GridHelper.UpdatePossibleValues(_squares, false);
+        GridHelper.SetPossibleValues(_squares, false);
+    }
+
+    private void ClearHighlighting()
+    {
+        foreach (var square in _highlightedSquares)
+        {
+            square.Background = Brushes.White;
+        }
+
+        _highlightedSquares.Clear();
+
+        if (_hintPopup != null)
+        {
+            _hintPopup.IsOpen = false;
+        }
     }
 
     private void Step_Click(object sender, RoutedEventArgs e)
     {
+        ClearHighlighting();
+
         if (GridHelper.PuzzleSolved(_squares))
         {
             MessageBox.Show("Puzzle Solved!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Information);
-            GridHelper.UpdatePossibleValues(_squares, false);
+            GridHelper.SetPossibleValues(_squares, false);
             return;
         }
 
-        GridHelper.UpdatePossibleValues(_squares, true);
+        var solveStep = RulesEngine.CalculateNextStep(_squares);
+
+        GridHelper.SetPossibleValues(_squares, true);
     }
 
     private void Clear_Click(object sender, RoutedEventArgs e)
     {
-        GridHelper.UpdatePossibleValues(_squares, false);
+        GridHelper.SetPossibleValues(_squares, false);
         ResetHintTracking();
 
         // Clear the hinted pairs/groups tracking
@@ -177,13 +196,13 @@ public partial class MainWindow : Window
         _hintCol = -1;
 
         GridHelper.ClearSquares(_squares);
-        GridHelper.UpdatePossibleValues(_squares, false);
+        GridHelper.SetPossibleValues(_squares, false);
     }
 
     private void Solve_Click(object sender, RoutedEventArgs e)
     {
         // Convert to candidate grid
-        var candidateGrid = GridHelper.ConvertToHashSetGrid(_squares);
+        var candidateGrid = GridHelper.GetPossibleNumbers(_squares);
 
         // Solve using candidate grid
         if (RulesHelper.SolveCompletePuzzle(candidateGrid))
@@ -195,6 +214,7 @@ public partial class MainWindow : Window
                 {
                     if (candidateGrid[r, c] != null && candidateGrid[r, c].Count == 1)
                     {
+                        _squares[r, c].Number = candidateGrid[r, c].First();
                         _squares[r, c].Box.Text = candidateGrid[r, c].First().ToString();
                     }
                 }
@@ -206,7 +226,7 @@ public partial class MainWindow : Window
                             MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
-        GridHelper.UpdatePossibleValues(_squares, false);
+        GridHelper.SetPossibleValues(_squares, false);
     }
 
 
@@ -222,7 +242,7 @@ public partial class MainWindow : Window
             button.Content = _showingPossibleValues ? "Hide Possible Values" : "Show Possible Values";
         }
 
-        GridHelper.UpdatePossibleValues(_squares, _showingPossibleValues);
+        GridHelper.SetPossibleValues(_squares, _showingPossibleValues);
     }
 
     //private void Hint_Click(object sender, RoutedEventArgs e)
@@ -513,6 +533,7 @@ public partial class MainWindow : Window
         if (_hintRow < 0 || _hintCol < 0) return;
 
         var square = _squares[_hintRow, _hintCol];
+
         if (square.Box.Text == _hintNumber.ToString())
         {
             square.Box.TextChanged -= HintSquare_TextChanged;
@@ -524,7 +545,7 @@ public partial class MainWindow : Window
             }
 
             ClearHighlighting();
-            GridHelper.UpdatePossibleValues(_squares, true);
+            GridHelper.SetPossibleValues(_squares, true);
 
             // Move to next hint
             // Hint_Click(HintButton, new RoutedEventArgs(Button.ClickEvent));
@@ -558,25 +579,10 @@ public partial class MainWindow : Window
             }
 
             ClearHighlighting();
-            GridHelper.UpdatePossibleValues(_squares, true);
+            GridHelper.SetPossibleValues(_squares, true);
 
             // Move to next hint
             // Hint_Click(HintButton, new RoutedEventArgs(Button.ClickEvent));
-        }
-    }
-
-    private void ClearHighlighting()
-    {
-        foreach (var square in _highlightedSquares)
-        {
-            square.Background = Brushes.White;
-        }
-
-        _highlightedSquares.Clear();
-
-        if (_hintPopup != null)
-        {
-            _hintPopup.IsOpen = false;
         }
     }
 

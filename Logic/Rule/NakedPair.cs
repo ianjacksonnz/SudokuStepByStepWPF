@@ -5,7 +5,7 @@ namespace SudokuStepByStep.Logic.Rule;
 
 public static class NakedPair
 {
-    public static SolveStep Run()
+    public static SolveStep Run(SudokuSquare[,] squares)
     {
         var solveStep = new SolveStep()
         {

@@ -6,7 +6,7 @@ namespace SudokuStepByStep.Logic.Helpers;
 
 public static class GridHelper
 {
-    public static HashSet<int>[,] ConvertToHashSetGrid(SudokuSquare[,] squares)
+    public static HashSet<int>[,] GetPossibleNumbers(SudokuSquare[,] squares)
     {
         var grid = new HashSet<int>[9, 9];
 
@@ -21,19 +21,27 @@ public static class GridHelper
         return grid;
     }
 
-    public static void UpdatePossibleValues(SudokuSquare[,] squares, bool show)
+    public static void SetPossibleValues(SudokuSquare[,] squares, bool show)
     {
         int[,] grid = GetNumbers(squares);
 
-        for (int r = 0; r < 9; r++)
+        for (int row = 0; row < 9; row++)
         {
-            for (int c = 0; c < 9; c++)
+            for (int column = 0; column < 9; column++)
             {
-                var square = squares[r, c];
-                square.PossibleNumbers = RulesHelper.GetPossibleNumbers(grid, r, c);
+                var square = squares[row, column];
+
+                if (squares[row, column].Number == 0)
+                {
+                    square.PossibleNumbers = RulesHelper.GetPossibleNumbers(grid, row, column);
+                }
+                else
+                {
+                    square.PossibleNumbers = new HashSet<int>();
+                }
 
                 if (show)
-                {                 
+                {
                     square.CandidatesBlock.Text = string.Join(" ", square.PossibleNumbers);
                     square.CandidatesBlock.Visibility = Visibility.Visible;
                 }
@@ -54,7 +62,7 @@ public static class GridHelper
         {
             for (int c = 0; c < 9; c++)
             {
-                grid[r, c] = int.TryParse(squares[r, c].Box.Text, out int val) ? val : 0;
+                grid[r, c] = squares[r, c].Number;
             }
         }
 
@@ -74,6 +82,7 @@ public static class GridHelper
             {
                 if (!squares[r, c].Box.IsReadOnly)
                 {
+                    squares[r, c].Number = 0;
                     squares[r, c].Box.Text = "";
                     squares[r, c].Box.Background = Brushes.White; // reset background highlighting
                 }

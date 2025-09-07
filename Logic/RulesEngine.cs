@@ -1,17 +1,32 @@
 ﻿using SudokuStepByStep.Common;
+using SudokuStepByStep.Logic.Rule;
 using SudokuStepByStep.Models;
 
 namespace SudokuStepByStep.Logic;
 
 public static class RulesEngine
 {
-    public static SolveStep CalculateNextStep()
+    public static SolveStep CalculateNextStep(SudokuSquare[,] squares)
     {
-        var solveStep = new SolveStep()
+        foreach (Enums.SolvingRule rule in Enum.GetValues(typeof(Enums.SolvingRule)))
         {
-            Rule = Enums.SolvingRule.OnlyValue
-        };
+            SolveStep step = rule switch
+            {
+                Enums.SolvingRule.OnlyValue => OnlyValue.Run(squares),
+                Enums.SolvingRule.PointingPairs => PointingPairs.Run(squares),
+                Enums.SolvingRule.PointingTriples => PointingTriples.Run(squares),
+                Enums.SolvingRule.NakedPairs => NakedPair.Run(squares),
+                Enums.SolvingRule.NakedTriples => NakedTriples.Run(squares),
+                _ => throw new ArgumentOutOfRangeException(nameof(rule), rule, null)
+            };
 
-        return solveStep;
+            if (step != null && (step.IsSolved || step.CandidatesRemoved))
+            {
+                return step;
+            }
+        }
+
+        // If no step found, return a default step
+        return null;
     }
 }

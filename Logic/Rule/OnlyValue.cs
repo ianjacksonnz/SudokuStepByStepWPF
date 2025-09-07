@@ -1,8 +1,6 @@
 ﻿using SudokuStepByStep.Common;
 using SudokuStepByStep.Logic.Helpers;
 using SudokuStepByStep.Models;
-using System.Data.Common;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SudokuStepByStep.Logic.Rule;
 
@@ -15,7 +13,7 @@ public static class OnlyValue
             Rule = Enums.SolvingRule.OnlyValue,
         };
 
-        var grid = GridHelper.ConvertToHashSetGrid(squares);
+        var gridPossibleNumbers = GridHelper.GetPossibleNumbers(squares);
 
         // --- rows ---
         for (int row = 0; row < 9; row++)
@@ -27,11 +25,9 @@ public static class OnlyValue
                 for (int column = 0; column < 9; column++)
                 {
                     var square = squares[row, column];
-                    var isSafe = RulesHelper.IsSafe(grid, row, column, number);
 
                     if (square.PossibleNumbers.Count > 0 &&
-                        square.PossibleNumbers.Contains(number) && 
-                        isSafe)
+                        square.PossibleNumbers.Contains(number))
                     {
                         possibleColumns.Add(column);
                     }
@@ -41,9 +37,11 @@ public static class OnlyValue
                 {
                     var solvedColumn = possibleColumns[0];
 
+                    solveStep.IsSolved = true;
                     solveStep.Number = number;
                     solveStep.Row = row;
                     solveStep.Column = solvedColumn;
+                    solveStep.Explanation = $"The number {number} can only fit in this square in row {row + 1}.";
 
                     for (int column = 0; column < 9; column++)
                     {
@@ -68,11 +66,10 @@ public static class OnlyValue
                 for (int row = 0; row < 9; row++)
                 {
                     var square = squares[row, column];
-                    var isSafe = RulesHelper.IsSafe(grid, row, column, number);
+                    var isSafe = RulesHelper.IsPossibleNumber(gridPossibleNumbers, row, column, number);
 
                     if (square.PossibleNumbers.Count > 0 &&
-                        square.PossibleNumbers.Contains(number) &&
-                        isSafe)
+                        square.PossibleNumbers.Contains(number))
                     {
                         possibleRows.Add(row);
                     }
@@ -82,9 +79,11 @@ public static class OnlyValue
                 {
                     var solvedRow = possibleRows[0];
 
+                    solveStep.IsSolved = true;
                     solveStep.Number = number;
                     solveStep.Row = solvedRow;
                     solveStep.Column = column;
+                    solveStep.Explanation = $"The number {number} can only fit in this square in column {column + 1}.";
 
                     for (int row = 0; row < 9; row++)
                     {
@@ -113,11 +112,10 @@ public static class OnlyValue
                         for (int column = boxCol * 3; column < boxCol * 3 + 3; column++)
                         {
                             var square = squares[row, column];
-                            var isSafe = RulesHelper.IsSafe(grid, row, column, number);
+                            var isSafe = RulesHelper.IsPossibleNumber(gridPossibleNumbers, row, column, number);
 
                             if (square.PossibleNumbers.Count > 0 &&
-                                square.PossibleNumbers.Contains(number) &&
-                                isSafe)
+                                square.PossibleNumbers.Contains(number) && isSafe)
                             {
                                 possibleSquares.Add((row, column));
                             }
@@ -132,6 +130,7 @@ public static class OnlyValue
                         solveStep.Number = number;
                         solveStep.Row = solvedRow;
                         solveStep.Column = solvedColumn;
+                        solveStep.Explanation = $"The number {number} can only fit in this square in its 3x3 grid.";
 
                         for (int r = 0; r < 9; r++)
                         {
@@ -144,6 +143,7 @@ public static class OnlyValue
                             }
                         }
 
+                        solveStep.IsSolved = true;
                         return solveStep;
                     }
                 }

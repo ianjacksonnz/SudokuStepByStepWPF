@@ -23,28 +23,13 @@ public static class RulesHelper
         }
     }
 
-    public static List<int> GetPossibleNumbers(HashSet<int>[,] grid, int row, int col)
-    {
-        var possible = new List<int>();
-
-        for (int num = 1; num <= 9; num++)
-        {
-            if (IsSafe(grid, row, col, num))
-            {
-                possible.Add(num);
-            }
-        }
-
-        return possible;
-    }
-
     public static HashSet<int> GetPossibleNumbers(int[,] grid, int row, int col)
     {
         var possible = new HashSet<int>();
 
         for (int num = 1; num <= 9; num++)
         {
-            if (IsSafe(grid, row, col, num))
+            if (NumberNotInRowColumnGrid(grid, row, col, num))
             {
                 possible.Add(num);
             }
@@ -53,12 +38,21 @@ public static class RulesHelper
         return possible;
     }
 
-    public static bool IsSafe(HashSet<int>[,] grid, int row, int column, int number)
+    /// <summary>
+    /// Checks if a number can be placed in a given cell without violating rules
+    /// that the number is not in the same row, column or grid
+    /// </summary>
+    /// <param name="grid"></param>
+    /// <param name="row"></param>
+    /// <param name="col"></param>
+    /// <param name="number"></param>
+    /// <returns></returns>
+    public static bool NumberNotInRowColumnGrid(int[,] grid, int row, int col, int number)
     {
         // Check row
         for (int c = 0; c < 9; c++)
         {
-            if (c != column && grid[row, c]?.Count == 1 && grid[row, c].Contains(number))
+            if (grid[row, c] == number)
             {
                 return false;
             }
@@ -67,45 +61,7 @@ public static class RulesHelper
         // Check column
         for (int r = 0; r < 9; r++)
         {
-            if (r != row && grid[r, column]?.Count == 1 && grid[r, column].Contains(number))
-            {
-                return false;
-            }
-        }
-
-        // Check 3x3 box
-        int startRow = row - row % 3;
-        int startCol = column - column % 3;
-
-        for (int r = startRow; r < startRow + 3; r++)
-        {
-            for (int c = startCol; c < startCol + 3; c++)
-            {
-                if ((r != row || c != column) && grid[r, c]?.Count == 1 && grid[r, c].Contains(number))
-                {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    public static bool IsSafe(int[,] board, int row, int col, int num)
-    {
-        // Check row
-        for (int c = 0; c < 9; c++)
-        {
-            if (board[row, c] == num)
-            {
-                return false;
-            }
-        }
-
-        // Check column
-        for (int r = 0; r < 9; r++)
-        {
-            if (board[r, col] == num)
+            if (grid[r, col] == number)
             {
                 return false;
             }
@@ -119,7 +75,7 @@ public static class RulesHelper
         {
             for (int c = startCol; c < startCol + 3; c++)
             {
-                if (board[r, c] == num)
+                if (grid[r, c] == number)
                 {
                     return false;
                 }
@@ -128,6 +84,53 @@ public static class RulesHelper
 
         return true;
     }
+
+    /// <summary>
+    /// Checks if a number can be placed in a given cell using PossibleNumbers 
+    /// </summary>
+    /// <param name="gridPossibleNumbers"></param>
+    /// <param name="row"></param>
+    /// <param name="column"></param>
+    /// <param name="number"></param>
+    /// <returns></returns>
+    public static bool IsPossibleNumber(HashSet<int>[,] gridPossibleNumbers, int row, int column, int number)
+    {
+        // Check row
+        for (int c = 0; c < 9; c++)
+        {
+            if (c != column && gridPossibleNumbers[row, c]?.Count == 1 && gridPossibleNumbers[row, c].Contains(number))
+            {
+                return false;
+            }
+        }
+
+        // Check column
+        for (int r = 0; r < 9; r++)
+        {
+            if (r != row && gridPossibleNumbers[r, column]?.Count == 1 && gridPossibleNumbers[r, column].Contains(number))
+            {
+                return false;
+            }
+        }
+
+        // Check 3x3 box
+        int startRow = row - row % 3;
+        int startCol = column - column % 3;
+
+        for (int r = startRow; r < startRow + 3; r++)
+        {
+            for (int c = startCol; c < startCol + 3; c++)
+            {
+                if ((r != row || c != column) && gridPossibleNumbers[r, c]?.Count == 1 && gridPossibleNumbers[r, c].Contains(number))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
 
     public static bool SolveCompletePuzzle(HashSet<int>[,] grid)
     {
@@ -139,7 +142,7 @@ public static class RulesHelper
                 {
                     for (int num = 1; num <= 9; num++)
                     {
-                        if (IsSafe(grid, row, col, num))
+                        if (IsPossibleNumber(grid, row, col, num))
                         {
                             grid[row, col] = new HashSet<int> { num };
 

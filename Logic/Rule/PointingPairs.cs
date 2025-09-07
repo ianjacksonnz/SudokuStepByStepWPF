@@ -4,7 +4,7 @@ namespace SudokuStepByStep.Logic.Rule;
 
 public static class PointingPairs
 {
-    public static SolveStep Run()
+    public static SolveStep Run(SudokuSquare[,] squares)
     {
         var solveStep = new SolveStep()
         {
