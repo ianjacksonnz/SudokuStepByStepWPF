@@ -27,8 +27,8 @@ public partial class MainWindow : Window
     private List<(int row, int col)> _shownOnlyValueSquares = new();
 
     // Tracks NakedPairs that have already been hinted
-    private List<(int row1, int col1, int row2, int col2)> _hintedNakedPairs = new();
-    private List<HashSet<(int row, int col)>> _hintedGroups = new();
+    // private List<(int row1, int col1, int row2, int col2)> _hintedNakedPairs = new();
+    // private List<HashSet<(int row, int col)>> _hintedGroups = new();
     
 
     public MainWindow()
@@ -113,7 +113,7 @@ public partial class MainWindow : Window
 
     private void PuzzleSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        ResetHintTracking();
+        // ResetHintTracking();
 
         if (PuzzleSelector.SelectedItem == null) { return; }
 
@@ -125,11 +125,11 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ResetHintTracking()
-    {
-        _hintedNakedPairs.Clear();
-        _shownOnlyValueSquares.Clear();
-    }
+    //private void ResetHintTracking()
+    //{
+    //    //_hintedNakedPairs.Clear();
+    //    _shownOnlyValueSquares.Clear();
+    //}
 
     private void LoadPuzzle(int[,] puzzle)
     {
@@ -375,42 +375,41 @@ public partial class MainWindow : Window
 
     private void Clear_Click(object sender, RoutedEventArgs e)
     {
-        ResetHintTracking();
+        // ResetHintTracking();
         GridHelper.ClearSquares(_squares);
         GridHelper.SetPossibleValues(_squares, false);
     }
 
-    private void Solve_Click(object sender, RoutedEventArgs e)
+    /// <summary>
+    /// Handler for clicking outside the grid. Removes the tooltips
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void MainWindow_PreviewMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
-        // Convert to candidate grid
-        var candidateGrid = GridHelper.GetPossibleNumbers(_squares);
-
-        // Solve using candidate grid
-        if (RulesHelper.SolveCompletePuzzle(candidateGrid))
+        if (_stepPopup != null && _stepPopup.IsOpen)
         {
-            // Update the UI with solved values
-            for (int r = 0; r < 9; r++)
+            var clickedElement = e.OriginalSource as DependencyObject;
+            bool clickedInsideGrid = false;
+
+            while (clickedElement != null)
             {
-                for (int c = 0; c < 9; c++)
+                if (clickedElement == SudokuGrid)
                 {
-                    if (candidateGrid[r, c] != null && candidateGrid[r, c].Count == 1)
-                    {
-                        _squares[r, c].Number = candidateGrid[r, c].First();
-                        _squares[r, c].Box.Text = candidateGrid[r, c].First().ToString();
-                    }
+                    clickedInsideGrid = true;
+                    break;
                 }
+                clickedElement = VisualTreeHelper.GetParent(clickedElement);
+            }
+
+            if (!clickedInsideGrid)
+            {
+                _stepPopup.IsOpen = false;
+                _stepPopup = null;
+                ClearHighlighting();
             }
         }
-        else
-        {
-            MessageBox.Show("No solution found!", "Sudoku Solver",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
-        }
-
-        GridHelper.SetPossibleValues(_squares, false);
     }
-
-         
 
 
     //private void ShowPossibleValues_Click(object sender, RoutedEventArgs e)
@@ -769,34 +768,5 @@ public partial class MainWindow : Window
     //    }
     //}
 
-    /// <summary>
-    /// Handler for clicking outside the grid. Removes the tooltips
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void MainWindow_PreviewMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-    {
-        if (_stepPopup != null && _stepPopup.IsOpen)
-        {
-            var clickedElement = e.OriginalSource as DependencyObject;
-            bool clickedInsideGrid = false;
 
-            while (clickedElement != null)
-            {
-                if (clickedElement == SudokuGrid)
-                {
-                    clickedInsideGrid = true;
-                    break;
-                }
-                clickedElement = VisualTreeHelper.GetParent(clickedElement);
-            }
-
-            if (!clickedInsideGrid)
-            {
-                _stepPopup.IsOpen = false;
-                _stepPopup = null;
-                ClearHighlighting();
-            }
-        }
-    }
 }
