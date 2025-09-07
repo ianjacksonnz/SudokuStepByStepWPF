@@ -84,6 +84,7 @@ public partial class MainWindow : Window
                     Margin = new Thickness(2),
                     IsHitTestVisible = false,
                     Visibility = Visibility.Collapsed, // hide initially
+                    Background = Brushes.Transparent,
                     Text = string.Empty
                 };
 
@@ -215,7 +216,7 @@ public partial class MainWindow : Window
 
         _prevStepBox = squareHighlightedBox;
         _prevStepBox.KeyDown += StepSquare_KeyDown;
-        _prevStepBox.TextChanged += StepSquare_TextChanged;
+        // _prevStepBox.TextChanged += StepSquare_TextChanged;
         _prevStepBox.Focus();
     }
 
@@ -324,7 +325,7 @@ public partial class MainWindow : Window
             if (_prevStepBox != null)
             {
                 _prevStepBox.KeyDown -= StepSquare_KeyDown;
-                _prevStepBox.TextChanged -= StepSquare_TextChanged;
+                //_prevStepBox.TextChanged -= StepSquare_TextChanged;
                 _prevStepBox = null;
             }
 
@@ -344,34 +345,34 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>
-    /// Manually entering the step number into the step square
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void StepSquare_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (_stepRow < 0 || _stepCol < 0) return;
+    ///// <summary>
+    ///// Manually entering the step number into the step square
+    ///// </summary>
+    ///// <param name="sender"></param>
+    ///// <param name="e"></param>
+    //private void StepSquare_TextChanged(object sender, TextChangedEventArgs e)
+    //{
+    //    if (_stepRow < 0 || _stepCol < 0) return;
 
-        var square = _squares[_stepRow, _stepCol];
+    //    var square = _squares[_stepRow, _stepCol];
 
-        if (square.Box.Text == _stepNumber.ToString())
-        {
-            square.Box.TextChanged -= StepSquare_TextChanged;
+    //    if (square.Box.Text == _stepNumber.ToString())
+    //    {
+    //        square.Box.TextChanged -= StepSquare_TextChanged;
 
-            if (_stepPopup != null)
-            {
-                _stepPopup.IsOpen = false;
-                _stepPopup = null;
-            }
+    //        if (_stepPopup != null)
+    //        {
+    //            _stepPopup.IsOpen = false;
+    //            _stepPopup = null;
+    //        }
 
-            ClearHighlighting();
-            GridHelper.SetPossibleValues(_squares, true);
+    //        ClearHighlighting();
+    //        GridHelper.SetPossibleValues(_squares, true);
 
-            // Move to next step
-            // Step_Click(StepButton, new RoutedEventArgs(Button.ClickEvent));
-        }
-    }
+    //        // Move to next step
+    //        // Step_Click(StepButton, new RoutedEventArgs(Button.ClickEvent));
+    //    }
+    //}
 
     private void Clear_Click(object sender, RoutedEventArgs e)
     {
