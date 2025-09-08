@@ -120,7 +120,7 @@ public partial class MainWindow : Window
         PuzzleLoader.LoadPuzzle(puzzle, _squares);
 
         ClearHighlighting();
-        GridHelper.SetPossibleValues(_squares, false);
+        GridHelper.SetPossibleValues(_squares, true);
     }
 
     private void ClearHighlighting()
@@ -151,13 +151,13 @@ public partial class MainWindow : Window
 
         var solveStep = RulesEngine.CalculateNextStep(_squares);
 
-        if (solveStep.Solved || solveStep.CandidatesRemoved)
+        if ((solveStep != null) && (solveStep.Solved || solveStep.CandidatesRemoved))
         {
             UpdateGridSolvedStep(solveStep);        
         }
         else
         {
-            MessageBox.Show("No further steps can be applied!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("The puzzle can not be solved!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         GridHelper.ShowPossibleValues(_squares, true);

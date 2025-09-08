@@ -66,7 +66,6 @@ public static class OnlyValue
                 for (int row = 0; row < 9; row++)
                 {
                     var square = squares[row, column];
-                    var isSafe = RulesHelper.IsPossibleNumber(gridPossibleNumbers, row, column, number);
 
                     if (square.PossibleNumbers.Count > 0 &&
                         square.PossibleNumbers.Contains(number))
@@ -112,10 +111,9 @@ public static class OnlyValue
                         for (int column = boxCol * 3; column < boxCol * 3 + 3; column++)
                         {
                             var square = squares[row, column];
-                            var isSafe = RulesHelper.IsPossibleNumber(gridPossibleNumbers, row, column, number);
 
                             if (square.PossibleNumbers.Count > 0 &&
-                                square.PossibleNumbers.Contains(number) && isSafe)
+                                square.PossibleNumbers.Contains(number))
                             {
                                 possibleSquares.Add((row, column));
                             }
@@ -132,11 +130,13 @@ public static class OnlyValue
                         solveStep.Column = solvedColumn;
                         solveStep.Explanation = $"The number {number} can only fit in this square in its 3x3 grid.";
 
-                        for (int r = 0; r < 9; r++)
+                        int startRow = (solvedRow / 3) * 3;
+                        int startCol = (solvedColumn / 3) * 3;
+                        for (int r = startRow; r < startRow + 3; r++)
                         {
-                            for (int c = 0; c < 9; c++)
+                            for (int c = startCol; c < startCol + 3; c++)
                             {
-                                if ((r != solvedRow) && (c != solvedColumn))
+                                if (r != solvedRow || c != solvedColumn)
                                 {
                                     solveStep.HighlightedSquares.Add((r, c));
                                 }
