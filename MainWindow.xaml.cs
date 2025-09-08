@@ -5,6 +5,7 @@ using SudokuStepByStep.Models;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace SudokuStepByStep;
@@ -146,6 +147,10 @@ public partial class MainWindow : Window
         {
             MessageBox.Show("Puzzle Solved!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Information);
             GridHelper.SetPossibleValues(_squares, false);
+
+            // Remove focus from the solved cell
+            Keyboard.ClearFocus();
+
             return;
         }
 
@@ -205,7 +210,6 @@ public partial class MainWindow : Window
 
     private void SetHighlighting(SolveStep solveStep)
     {
-        // OnlyValue: single solved cell, rest highlighted
         if (solveStep.HighlightedSquares.Count == 0)
         {
             var box = _squares[solveStep.Row, solveStep.Column].Box;
@@ -216,6 +220,7 @@ public partial class MainWindow : Window
             // Highlight solved cell
             var solvedBox = _squares[solveStep.Row, solveStep.Column].Box;
             solvedBox.Background = Brushes.LightGreen;
+
             // Highlight other squares
             foreach (var (r, c) in solveStep.HighlightedSquares)
             {

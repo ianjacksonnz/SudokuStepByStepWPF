@@ -4,13 +4,16 @@ using SudokuStepByStep.Models;
 
 namespace SudokuStepByStep.Logic.Rule;
 
-public static class OnlyValue
+/// <summary>
+/// The number can go in only on place in the row, column or grid
+/// </summary>
+public static class OnlyInOnePlace
 {
     public static SolveStep Run(SudokuSquare[,] squares)
     {
         var solveStep = new SolveStep()
         {
-            Rule = Enums.SolvingRule.OnlyValue,
+            Rule = Enums.SolvingRule.OnlyInOnePlace,
         };
 
         var gridPossibleNumbers = GridHelper.GetPossibleNumbers(squares);
