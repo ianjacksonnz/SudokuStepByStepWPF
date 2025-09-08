@@ -12,8 +12,8 @@ public static class RulesEngine
         {
             SolveStep step = rule switch
             {
-                Enums.SolvingRule.OnlyValueInSquare => OnlyValueInSquare.Run(squares),
-                Enums.SolvingRule.OnlyInOnePlace => OnlyInOnePlace.Run(squares),
+                Enums.SolvingRule.NakedSingle => NakedSingle.Run(squares),
+                Enums.SolvingRule.HiddenSingle => HiddenSingle.Run(squares),
                 Enums.SolvingRule.PointingPairs => PointingPairs.Run(squares),
                 Enums.SolvingRule.PointingTriples => PointingTriples.Run(squares),
                 Enums.SolvingRule.NakedPairs => NakedPair.Run(squares),

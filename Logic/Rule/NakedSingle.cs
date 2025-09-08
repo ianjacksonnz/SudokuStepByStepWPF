@@ -7,13 +7,13 @@ namespace SudokuStepByStep.Logic.Rule;
 /// <summary>
 /// Only one possible number can appear in the square
 /// </summary>
-public static class OnlyValueInSquare
+public static class NakedSingle
 {
     public static SolveStep Run(SudokuSquare[,] squares)
     {
         var solveStep = new SolveStep()
         {
-            Rule = Enums.SolvingRule.OnlyInOnePlace,
+            Rule = Enums.SolvingRule.NakedSingle,
         };
 
         var gridPossibleNumbers = GridHelper.GetPossibleNumbers(squares);

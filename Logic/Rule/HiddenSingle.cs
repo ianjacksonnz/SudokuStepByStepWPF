@@ -7,13 +7,13 @@ namespace SudokuStepByStep.Logic.Rule;
 /// <summary>
 /// The number can go in only on place in the row, column or grid
 /// </summary>
-public static class OnlyInOnePlace
+public static class HiddenSingle
 {
     public static SolveStep Run(SudokuSquare[,] squares)
     {
         var solveStep = new SolveStep()
         {
-            Rule = Enums.SolvingRule.OnlyInOnePlace,
+            Rule = Enums.SolvingRule.HiddenSingle,
         };
 
         var gridPossibleNumbers = GridHelper.GetPossibleNumbers(squares);

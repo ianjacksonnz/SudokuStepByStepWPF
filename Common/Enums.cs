@@ -4,8 +4,8 @@ public class Enums
 {
     public enum SolvingRule
     {
-        OnlyValueInSquare,
-        OnlyInOnePlace,
+        NakedSingle,
+        HiddenSingle,
         PointingPairs,
         PointingTriples,
         NakedPairs,
