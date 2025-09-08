@@ -121,7 +121,7 @@ public partial class MainWindow : Window
         PuzzleLoader.LoadPuzzle(puzzle, _squares);
 
         ClearHighlighting();
-        RulesHelper.SetPossibleValues(_squares, true);
+        RulesHelper.SetPossibleNumbers(_squares, true);
     }
 
     private void ClearHighlighting()
@@ -146,7 +146,7 @@ public partial class MainWindow : Window
         if (RulesHelper.PuzzleSolved(_squares))
         {
             MessageBox.Show("Puzzle Solved!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Information);
-            RulesHelper.SetPossibleValues(_squares, false);
+            RulesHelper.SetPossibleNumbers(_squares, false);
 
             // Remove focus from the solved cell
             Keyboard.ClearFocus();
@@ -170,7 +170,10 @@ public partial class MainWindow : Window
 
     private void UpdateGridSolvedStep(SolveStep solveStep)
     {
-        _squares[solveStep.Row, solveStep.Column].Number = solveStep.Number;
+        var square = _squares[solveStep.Row, solveStep.Column];
+        square.Number = solveStep.Number;
+        square.PossibleNumbers.Clear();
+
         _stepRow = solveStep.Row;
         _stepCol = solveStep.Column;
         _stepNumber = solveStep.Number;
@@ -181,14 +184,15 @@ public partial class MainWindow : Window
             box.Text = solveStep.Number.ToString();
             box.Background = Brushes.LightGreen;
 
-            RulesHelper.SetPossibleValues(_squares, true);
+            // RulesHelper.SetPossibleValues(_squares, true);
+            RulesHelper.RemoveGridPossibleNumbersAfterStep(_squares, solveStep);
         }
 
         foreach (var (r, c) in solveStep.HighlightedSquares)
         {
-            var square = _squares[r, c];
-            square.CandidatesBlock.Text = string.Join(" ", square.PossibleNumbers);
-            square.Box.Background = Brushes.LightYellow;
+            var highlightedSquare = _squares[r, c];
+            highlightedSquare.CandidatesBlock.Text = string.Join(" ", highlightedSquare.PossibleNumbers);
+            highlightedSquare.Box.Background = Brushes.LightYellow;
         }
 
         var squareHighlightedBox = SetToolTip(solveStep);
@@ -371,7 +375,7 @@ public partial class MainWindow : Window
     {
         // ResetHintTracking();
         GridHelper.ClearSquares(_squares);
-        RulesHelper.SetPossibleValues(_squares, false);
+        RulesHelper.SetPossibleNumbers(_squares, true);
     }
 
     /// <summary>

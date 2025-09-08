@@ -24,8 +24,7 @@ public static class RulesHelper
         }
     }
 
-
-    public static void SetPossibleValues(SudokuSquare[,] squares, bool show)
+    public static void SetPossibleNumbers(SudokuSquare[,] squares, bool show)
     {
         int[,] grid = GetNumbers(squares);
 
@@ -45,6 +44,34 @@ public static class RulesHelper
                 }
 
                 ShowPossibleValues(squares, show);
+            }
+        }
+    }
+
+    public static void RemoveGridPossibleNumbersAfterStep(SudokuSquare[,] squares, SolveStep solveStep)
+    {
+        int startRow = solveStep.Row - solveStep.Row % 3;
+        int startCol = solveStep.Column - solveStep.Column % 3;
+
+        for (int row = 0; row < 9; row++)
+        {
+            for (int column = 0; column < 9; column++)
+            {
+                var square = squares[row, column];
+
+                bool sameRow = row == solveStep.Row;
+                bool sameCol = column == solveStep.Column;
+                bool sameBox = row >= startRow && row < startRow + 3 && column >= startCol && column < startCol + 3;
+
+                if (sameRow || sameCol || sameBox)
+                {
+                    if (square.PossibleNumbers.Contains(solveStep.Number))
+                    {
+                        square.PossibleNumbers.Remove(solveStep.Number);
+                    }
+                }
+
+                ShowPossibleValues(squares, true);
             }
         }
     }
@@ -244,48 +271,6 @@ public static class RulesHelper
         }
 
         return true;
-    }
-
-    public static bool NumberOnlyInOnePlaceOnRow(HashSet<int>[,] grid, int row, int number)
-    {
-        for (int column = 0; column < 9; column++)
-        {
-            if (grid[row, column]?.Count == 1 && grid[row, column].Contains(number))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public static bool NumberOnlyInOnePlaceOnColumn(HashSet<int>[,] grid, int column, int number)
-    {
-        for (int row = 0; row < 9; row++)
-        {
-            if (grid[row, column]?.Count == 1 && grid[row, column].Contains(number))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public static bool NumberOnlyInOnePlaceOnGrid(HashSet<int>[,] grid, int boxRow, int boxColumn, int number)
-    {
-        for (int row = boxRow * 3; row < boxRow * 3 + 3; row++)
-        {
-            for (int column = boxColumn * 3; column < boxColumn * 3 + 3; column++)
-            {
-                if (grid[row, column]?.Count == 1 && grid[row, column].Contains(number))
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
 
