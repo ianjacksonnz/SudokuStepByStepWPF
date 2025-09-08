@@ -48,7 +48,7 @@ public static class RulesHelper
         }
     }
 
-    public static void RemoveGridPossibleNumbersAfterStep(SudokuSquare[,] squares, SolveStep solveStep)
+    public static void RemovePossibleNumbersFromGridAfterSolvedSquare(SudokuSquare[,] squares, SolveStep solveStep)
     {
         int startRow = solveStep.Row - solveStep.Row % 3;
         int startCol = solveStep.Column - solveStep.Column % 3;
@@ -74,6 +74,16 @@ public static class RulesHelper
                 ShowPossibleValues(squares, true);
             }
         }
+    }
+
+    public static void RemovePossibleNumbersFromSquare(SudokuSquare[,] squares, SudokuSquare square, int number)
+    {
+        if (square.PossibleNumbers.Contains(number))
+        {
+            square.PossibleNumbers.Remove(number);
+        }
+
+        ShowPossibleValues(squares, true);
     }
 
     public static void ShowPossibleValues(SudokuSquare[,] squares, bool show)

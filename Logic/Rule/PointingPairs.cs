@@ -11,7 +11,7 @@ namespace SudokuStepByStep.Logic.Rule
             {
                 Rule = Enums.SolvingRule.PointingPairs,
                 HighlightedSquares = new HashSet<(int row, int col)>(),
-                CandidatesRemovedSquares = new HashSet<(int row, int col)>() // Initialize CandidatesRemovedSquares
+                CandidatesRemovedSquares = new HashSet<(int row, int col)>()
             };
 
             // loop through each 3x3 box

@@ -21,9 +21,6 @@ public static class GridHelper
         return grid;
     }
 
-
-
-
     /// <summary>
     /// Clear the numbers entered in the grid
     /// </summary>
@@ -44,6 +41,4 @@ public static class GridHelper
             }
         }
     }
-
-
 }

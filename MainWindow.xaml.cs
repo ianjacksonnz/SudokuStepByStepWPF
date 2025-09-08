@@ -14,12 +14,12 @@ public partial class MainWindow : Window
 {
     private Dictionary<string, int[,]> _puzzles = new Dictionary<string, int[,]>();
     private SudokuSquare[,] _squares = new SudokuSquare[9, 9];
-    private int _stepRow = -1;
-    private int _stepCol = -1;
-    private int _stepNumber = -1;
     private Popup? _stepPopup = null!;
-    private TextBox? _prevStepBox = null!;
-  
+    private TextBox? _previousStepBox = null!;
+    private int _previousStepSolvedNumber = 0;
+    private bool _previousStepCandidatesRemoved = false;
+    private HashSet<(int row, int col)> _previousStepCandidatesRemovedSquares = new();
+    
 
     public MainWindow()
     {
@@ -41,7 +41,7 @@ public partial class MainWindow : Window
             PuzzleSelector.Items.Add(key);
         }
 
-        PuzzleSelector.SelectedIndex = 1; // Puzzle 2
+        PuzzleSelector.SelectedIndex = 3; // Puzzle 4
     }
 
     private void InitializeGrid()
@@ -124,6 +124,13 @@ public partial class MainWindow : Window
         RulesHelper.SetPossibleNumbers(_squares, true);
     }
 
+    private void Clear_Click(object sender, RoutedEventArgs e)
+    {
+        // ResetHintTracking();
+        GridHelper.ClearSquares(_squares);
+        RulesHelper.SetPossibleNumbers(_squares, false);
+    }
+
     private void ClearHighlighting()
     {
         foreach (var square in _squares)
@@ -150,8 +157,16 @@ public partial class MainWindow : Window
 
             // Remove focus from the solved cell
             Keyboard.ClearFocus();
-
             return;
+        }
+
+        if (_previousStepCandidatesRemoved)
+        {
+            foreach (var (r, c) in _previousStepCandidatesRemovedSquares)
+            {
+                var squareRemoveCandidates = _squares[r, c];
+                RulesHelper.RemovePossibleNumbersFromSquare(_squares, squareRemoveCandidates, _previousStepSolvedNumber);
+            }
         }
 
         var solveStep = RulesEngine.CalculateNextStep(_squares);
@@ -171,34 +186,34 @@ public partial class MainWindow : Window
     private void UpdateGridSolvedStep(SolveStep solveStep)
     {
         var square = _squares[solveStep.Row, solveStep.Column];
-        square.Number = solveStep.Number;
-        square.PossibleNumbers.Clear();
-
-        _stepRow = solveStep.Row;
-        _stepCol = solveStep.Column;
-        _stepNumber = solveStep.Number;
+        _previousStepSolvedNumber = solveStep.Number;
+        _previousStepCandidatesRemoved = solveStep.CandidatesRemoved;
+        _previousStepCandidatesRemovedSquares = new HashSet<(int row, int col)>(solveStep.CandidatesRemovedSquares);
 
         if (solveStep.Solved)
         {
+            square.Number = solveStep.Number;
+            square.PossibleNumbers.Clear();
+
             var box = _squares[solveStep.Row, solveStep.Column].Box;
             box.Text = solveStep.Number.ToString();
-            box.Background = Brushes.LightGreen;
 
-            // RulesHelper.SetPossibleValues(_squares, true);
-            RulesHelper.RemoveGridPossibleNumbersAfterStep(_squares, solveStep);
-        }
+            RulesHelper.RemovePossibleNumbersFromGridAfterSolvedSquare(_squares, solveStep);
 
-        foreach (var (r, c) in solveStep.HighlightedSquares)
-        {
-            var highlightedSquare = _squares[r, c];
-            highlightedSquare.CandidatesBlock.Text = string.Join(" ", highlightedSquare.PossibleNumbers);
-            highlightedSquare.Box.Background = Brushes.LightYellow;
+            if (_previousStepCandidatesRemoved)
+            {
+                foreach (var (r, c) in _previousStepCandidatesRemovedSquares)
+                {
+                    var squareRemoveCandidates = _squares[r, c];
+                    RulesHelper.RemovePossibleNumbersFromSquare(_squares, squareRemoveCandidates, solveStep.Number);
+                }
+            }
         }
 
         var squareHighlightedBox = SetToolTip(solveStep);
 
         // Remove focus from the solved cell and do not attach key handlers
-        _prevStepBox = squareHighlightedBox;
+        _previousStepBox = squareHighlightedBox;
         //_prevStepBox.KeyDown += StepSquare_KeyDown;
         //_prevStepBox.TextChanged += StepSquare_TextChanged;
         // Do not set focus
@@ -207,29 +222,44 @@ public partial class MainWindow : Window
 
     private void SetHighlighting(SolveStep solveStep)
     {
-        if (solveStep.HighlightedSquares.Count == 0)
+        if (solveStep.Solved)
         {
             var box = _squares[solveStep.Row, solveStep.Column].Box;
             box.Background = Brushes.LightGreen;
         }
-        else
-        {
-            // Highlight solved cell
-            var solvedBox = _squares[solveStep.Row, solveStep.Column].Box;
-            solvedBox.Background = Brushes.LightGreen;
 
-            // Highlight other squares
-            foreach (var (r, c) in solveStep.HighlightedSquares)
-            {
-                var box = _squares[r, c].Box;
-                box.Background = Brushes.LightYellow;
-            }
+        // Highlighted squares
+        foreach (var (r, c) in solveStep.HighlightedSquares)
+        {
+            var box = _squares[r, c].Box;
+            box.Background = Brushes.LightYellow;
+        }
+
+        // Candidates removed squares
+        foreach (var (r, c) in solveStep.CandidatesRemovedSquares)
+        {
+            var box = _squares[r, c].Box;
+            box.Background = Brushes.LightBlue;
+
         }
     }
 
     private TextBox SetToolTip(SolveStep solveStep)
     {
-        TextBox squareHighlightedBox = _squares[solveStep.Row, solveStep.Column].Box;
+        TextBox squareHighlightedBox;
+        int toolTipColumn = 0;
+
+        if (solveStep.Solved)
+        {
+            squareHighlightedBox = _squares[solveStep.Row, solveStep.Column].Box;
+            toolTipColumn = solveStep.Column;
+        }
+        else
+        {
+            var firstHighlightedSquare = solveStep.HighlightedSquares.FirstOrDefault();
+            squareHighlightedBox = _squares[firstHighlightedSquare.row, firstHighlightedSquare.col].Box;
+            toolTipColumn = firstHighlightedSquare.col;
+        }
 
         var stack = new StackPanel { Orientation = Orientation.Vertical };
 
@@ -281,7 +311,7 @@ public partial class MainWindow : Window
             double squareWidth = squareHighlightedBox.ActualWidth > 0 ? squareHighlightedBox.ActualWidth : 40;
             double tooltipWidth = border.ActualWidth > 0 ? border.ActualWidth : stack.ActualWidth;
 
-            if (solveStep.Column <= 4)
+            if (toolTipColumn <= 4)
             {
                 popup.HorizontalOffset = 0;
                 arrow.HorizontalAlignment = HorizontalAlignment.Left;
@@ -306,76 +336,6 @@ public partial class MainWindow : Window
             }));
 
         return squareHighlightedBox;
-    }
-
-    ///// <summary>
-    ///// Clicking enter key for the Step square
-    ///// </summary>
-    ///// <param name="sender"></param>
-    ///// <param name="e"></param>
-    //private void StepSquare_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-    //{
-    //    if (e.Key == System.Windows.Input.Key.Enter && _stepRow >= 0 && _stepCol >= 0)
-    //    {
-    //        var square = _squares[_stepRow, _stepCol];
-
-    //        if (_prevStepBox != null)
-    //        {
-    //            _prevStepBox.KeyDown -= StepSquare_KeyDown;
-    //            //_prevStepBox.TextChanged -= StepSquare_TextChanged;
-    //            _prevStepBox = null;
-    //        }
-
-    //        square.Box.Text = _stepNumber.ToString();
-
-    //        if (_stepPopup != null)
-    //        {
-    //            _stepPopup.IsOpen = false;
-    //            _stepPopup = null;
-    //        }
-
-    //        ClearHighlighting();
-    //        RulesHelper.SetPossibleValues(_squares, true);
-
-    //        // Move to next step
-    //        Step_Click(StepButton, new RoutedEventArgs(Button.ClickEvent));
-    //    }
-    //}
-
-    ///// <summary>
-    ///// Manually entering the step number into the step square
-    ///// </summary>
-    ///// <param name="sender"></param>
-    ///// <param name="e"></param>
-    //private void StepSquare_TextChanged(object sender, TextChangedEventArgs e)
-    //{
-    //    if (_stepRow < 0 || _stepCol < 0) return;
-
-    //    var square = _squares[_stepRow, _stepCol];
-
-    //    if (square.Box.Text == _stepNumber.ToString())
-    //    {
-    //        square.Box.TextChanged -= StepSquare_TextChanged;
-
-    //        if (_stepPopup != null)
-    //        {
-    //            _stepPopup.IsOpen = false;
-    //            _stepPopup = null;
-    //        }
-
-    //        ClearHighlighting();
-    //        GridHelper.SetPossibleValues(_squares, true);
-
-    //        // Move to next step
-    //        // Step_Click(StepButton, new RoutedEventArgs(Button.ClickEvent));
-    //    }
-    //}
-
-    private void Clear_Click(object sender, RoutedEventArgs e)
-    {
-        // ResetHintTracking();
-        GridHelper.ClearSquares(_squares);
-        RulesHelper.SetPossibleNumbers(_squares, true);
     }
 
     /// <summary>
