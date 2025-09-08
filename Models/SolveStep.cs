@@ -9,6 +9,7 @@ public class SolveStep
     public bool CandidatesRemoved { get; set; } = false;
     public Common.Enums.SolvingRule Rule { get; set; }
     public HashSet<(int row, int col)> HighlightedSquares { get; set; } = new();
+    public HashSet<(int row, int col)> CandidatesRemovedSquares { get; set; } = new();
 
     public string Explanation { get; set; } = string.Empty;
 }
