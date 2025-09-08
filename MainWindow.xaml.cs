@@ -92,7 +92,7 @@ public partial class MainWindow : Window
                 border.Child = grid;
 
                 int r = row, c = col;
-                tb.TextChanged += (s, e) => RulesHelper.SetPossibleValues(_squares, false);
+                // tb.TextChanged += (s, e) => RulesHelper.SetPossibleValues(_squares, false);
                 tb.LostFocus += (s, e) => ClearHighlighting();
 
                 _squares[row, col] = new SudokuSquare(tb, candidates, border);
@@ -180,32 +180,25 @@ public partial class MainWindow : Window
             var box = _squares[solveStep.Row, solveStep.Column].Box;
             box.Text = solveStep.Number.ToString();
             box.Background = Brushes.LightGreen;
+
+            RulesHelper.SetPossibleValues(_squares, true);
         }
 
         foreach (var (r, c) in solveStep.HighlightedSquares)
         {
             var square = _squares[r, c];
             square.CandidatesBlock.Text = string.Join(" ", square.PossibleNumbers);
-
             square.Box.Background = Brushes.LightYellow;
-        }
-
-        if (solveStep.CandidatesRemoved)
-        {
-            foreach (var (r, c) in solveStep.HighlightedSquares)
-            {
-                //var square = _squares[r, c];
-                //square.PossibleNumbers.Remove(solveStep.Number);
-                //square.CandidatesBlock.Text = string.Join(" ", square.PossibleNumbers);
-            }
         }
 
         var squareHighlightedBox = SetToolTip(solveStep);
 
+        // Remove focus from the solved cell and do not attach key handlers
         _prevStepBox = squareHighlightedBox;
-        _prevStepBox.KeyDown += StepSquare_KeyDown;
-        // _prevStepBox.TextChanged += StepSquare_TextChanged;
-        _prevStepBox.Focus();
+        //_prevStepBox.KeyDown += StepSquare_KeyDown;
+        //_prevStepBox.TextChanged += StepSquare_TextChanged;
+        // Do not set focus
+        Keyboard.ClearFocus();
     }
 
     private void SetHighlighting(SolveStep solveStep)
@@ -311,39 +304,39 @@ public partial class MainWindow : Window
         return squareHighlightedBox;
     }
 
-    /// <summary>
-    /// Clicking enter key for the Step square
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void StepSquare_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-    {
-        if (e.Key == System.Windows.Input.Key.Enter && _stepRow >= 0 && _stepCol >= 0)
-        {
-            var square = _squares[_stepRow, _stepCol];
+    ///// <summary>
+    ///// Clicking enter key for the Step square
+    ///// </summary>
+    ///// <param name="sender"></param>
+    ///// <param name="e"></param>
+    //private void StepSquare_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    //{
+    //    if (e.Key == System.Windows.Input.Key.Enter && _stepRow >= 0 && _stepCol >= 0)
+    //    {
+    //        var square = _squares[_stepRow, _stepCol];
 
-            if (_prevStepBox != null)
-            {
-                _prevStepBox.KeyDown -= StepSquare_KeyDown;
-                //_prevStepBox.TextChanged -= StepSquare_TextChanged;
-                _prevStepBox = null;
-            }
+    //        if (_prevStepBox != null)
+    //        {
+    //            _prevStepBox.KeyDown -= StepSquare_KeyDown;
+    //            //_prevStepBox.TextChanged -= StepSquare_TextChanged;
+    //            _prevStepBox = null;
+    //        }
 
-            square.Box.Text = _stepNumber.ToString();
+    //        square.Box.Text = _stepNumber.ToString();
 
-            if (_stepPopup != null)
-            {
-                _stepPopup.IsOpen = false;
-                _stepPopup = null;
-            }
+    //        if (_stepPopup != null)
+    //        {
+    //            _stepPopup.IsOpen = false;
+    //            _stepPopup = null;
+    //        }
 
-            ClearHighlighting();
-            RulesHelper.SetPossibleValues(_squares, true);
+    //        ClearHighlighting();
+    //        RulesHelper.SetPossibleValues(_squares, true);
 
-            // Move to next step
-            Step_Click(StepButton, new RoutedEventArgs(Button.ClickEvent));
-        }
-    }
+    //        // Move to next step
+    //        Step_Click(StepButton, new RoutedEventArgs(Button.ClickEvent));
+    //    }
+    //}
 
     ///// <summary>
     ///// Manually entering the step number into the step square
