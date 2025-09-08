@@ -92,7 +92,7 @@ public partial class MainWindow : Window
                 border.Child = grid;
 
                 int r = row, c = col;
-                tb.TextChanged += (s, e) => GridHelper.SetPossibleValues(_squares, false);
+                tb.TextChanged += (s, e) => RulesHelper.SetPossibleValues(_squares, false);
                 tb.LostFocus += (s, e) => ClearHighlighting();
 
                 _squares[row, col] = new SudokuSquare(tb, candidates, border);
@@ -121,7 +121,7 @@ public partial class MainWindow : Window
         PuzzleLoader.LoadPuzzle(puzzle, _squares);
 
         ClearHighlighting();
-        GridHelper.SetPossibleValues(_squares, true);
+        RulesHelper.SetPossibleValues(_squares, true);
     }
 
     private void ClearHighlighting()
@@ -143,10 +143,10 @@ public partial class MainWindow : Window
     {
         ClearHighlighting();
 
-        if (GridHelper.PuzzleSolved(_squares))
+        if (RulesHelper.PuzzleSolved(_squares))
         {
             MessageBox.Show("Puzzle Solved!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Information);
-            GridHelper.SetPossibleValues(_squares, false);
+            RulesHelper.SetPossibleValues(_squares, false);
 
             // Remove focus from the solved cell
             Keyboard.ClearFocus();
@@ -165,7 +165,7 @@ public partial class MainWindow : Window
             MessageBox.Show("The puzzle can not be solved!", "Sudoku Solver", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        GridHelper.ShowPossibleValues(_squares, true);
+        RulesHelper.ShowPossibleValues(_squares, true);
     }
 
     private void UpdateGridSolvedStep(SolveStep solveStep)
@@ -338,7 +338,7 @@ public partial class MainWindow : Window
             }
 
             ClearHighlighting();
-            GridHelper.SetPossibleValues(_squares, true);
+            RulesHelper.SetPossibleValues(_squares, true);
 
             // Move to next step
             Step_Click(StepButton, new RoutedEventArgs(Button.ClickEvent));
@@ -378,7 +378,7 @@ public partial class MainWindow : Window
     {
         // ResetHintTracking();
         GridHelper.ClearSquares(_squares);
-        GridHelper.SetPossibleValues(_squares, false);
+        RulesHelper.SetPossibleValues(_squares, false);
     }
 
     /// <summary>
