@@ -3,6 +3,10 @@ using SudokuStepByStep.Models;
 
 namespace SudokuStepByStep.Logic.Rule
 {
+    /// <summary>
+    /// If a number is present in only two sqaures of a box, then it must be the solution for one of these two squares. 
+    /// If these two squares belong to the same row or column, then this candidate can not be the solution in any other square of the same row or column, respectively.
+    /// </summary>
     public static class PointingPairs
     {
         public static SolveStep Run(SudokuSquare[,] squares)

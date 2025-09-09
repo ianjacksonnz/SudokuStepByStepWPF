@@ -8,6 +8,7 @@ public class Enums
         HiddenSingle,
         PointingPairs,
         HiddenPairs,
+        NakedQuads,
         XWing
     }
 

@@ -16,6 +16,7 @@ public static class RulesEngine
                 Enums.SolvingRule.HiddenSingle => HiddenSingle.Run(squares),
                 Enums.SolvingRule.PointingPairs => PointingPairs.Run(squares),
                 Enums.SolvingRule.HiddenPairs => HiddenPairs.Run(squares),
+                Enums.SolvingRule.NakedQuads => NakedQuads.Run(squares),
                 Enums.SolvingRule.XWing => XWing.Run(squares),
                 _ => throw new ArgumentOutOfRangeException(nameof(rule), rule, null)
             };
