@@ -16,6 +16,6 @@ public class Enums
     {
         Column,
         Row,
-        Grid
+        Box
     }
 }
