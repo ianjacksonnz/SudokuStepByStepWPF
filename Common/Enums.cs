@@ -7,6 +7,7 @@ public class Enums
         NakedSingle,
         HiddenSingle,
         PointingPairs,
+        HiddenPairs,
         PointingTriples,
         NakedPairs,
         NakedTriples

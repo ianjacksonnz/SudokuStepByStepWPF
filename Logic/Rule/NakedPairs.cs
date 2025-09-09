@@ -3,7 +3,7 @@ using SudokuStepByStep.Models;
 
 namespace SudokuStepByStep.Logic.Rule;
 
-public static class NakedPair
+public static class NakedPairs
 {
     public static SolveStep Run(SudokuSquare[,] squares)
     {

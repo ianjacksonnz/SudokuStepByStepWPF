@@ -6,10 +6,12 @@ public class SolveStep
     public int Column { get; set; } = 0;
     public int Number { get; set; } = 0;
     public bool Solved { get; set; } = false;
-    public bool CandidatesRemoved { get; set; } = false;
+    public bool CandidatesRemovedInHighlightedSquares { get; set; } = false;
+    public bool CandidatesRemovedInNonHighlightedSquares { get; set; } = false;
     public Common.Enums.SolvingRule Rule { get; set; }
     public HashSet<(int row, int col)> HighlightedSquares { get; set; } = new();
     public HashSet<(int row, int col)> CandidatesRemovedSquares { get; set; } = new();
+    public List<int> CandidatesRemovedNumbers { get; set; } = new();
 
     public string Explanation { get; set; } = string.Empty;
 }

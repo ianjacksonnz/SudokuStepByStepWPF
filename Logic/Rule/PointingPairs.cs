@@ -17,10 +17,10 @@ namespace SudokuStepByStep.Logic.Rule
             // loop through each 3x3 box
             for (int boxRow = 0; boxRow < 3; boxRow++)
             {
-                for (int boxCol = 0; boxCol < 3; boxCol++)
+                for (int boxColumn = 0; boxColumn < 3; boxColumn++)
                 {
                     int startRow = boxRow * 3;
-                    int startCol = boxCol * 3;
+                    int startColumn = boxColumn * 3;
 
                     for (int number = 1; number <= 9; number++)
                     {
@@ -29,7 +29,7 @@ namespace SudokuStepByStep.Logic.Rule
                         // collect all positions inside the box that can contain the number
                         for (int r = startRow; r < startRow + 3; r++)
                         {
-                            for (int c = startCol; c < startCol + 3; c++)
+                            for (int c = startColumn; c < startColumn + 3; c++)
                             {
                                 var square = squares[r, c];
 
@@ -54,7 +54,7 @@ namespace SudokuStepByStep.Logic.Rule
 
                             for (int c = 0; c < 9; c++)
                             {
-                                if (c >= startCol && c < startCol + 3)
+                                if (c >= startColumn && c < startColumn + 3)
                                 {
                                     continue; // skip the box
                                 }
@@ -67,9 +67,9 @@ namespace SudokuStepByStep.Logic.Rule
 
                             if (eliminations.Count > 0)
                             {
-                                solveStep.CandidatesRemoved = true;
-                                solveStep.Number = number;
                                 solveStep.Explanation = $"Pointing Pair: {number}s in the box are all in row {row + 1}, so remove {number} from that row.";
+                                solveStep.CandidatesRemovedInNonHighlightedSquares = true;
+                                solveStep.CandidatesRemovedNumbers.Add(number);
 
                                 foreach (var position in positions)
                                 {
@@ -80,18 +80,17 @@ namespace SudokuStepByStep.Logic.Rule
                                 {
                                     solveStep.CandidatesRemovedSquares.Add(candidateRemovedSquare);
                                 }
-
-                                
+                               
                                 return solveStep;
                             }
                         }
 
                         // check if all positions are in the same column
-                        bool sameCol = positions.All(p => p.col == positions[0].col);
+                        bool sameColumn = positions.All(p => p.col == positions[0].col);
 
-                        if (sameCol)
+                        if (sameColumn)
                         {
-                            int col = positions[0].col;
+                            int column = positions[0].col;
 
                             // eliminate this number from the rest of the column outside the box
                             var eliminations = new List<(int row, int col)>();
@@ -103,17 +102,17 @@ namespace SudokuStepByStep.Logic.Rule
                                     continue; // skip the box
                                 }
 
-                                if (squares[r, col].PossibleNumbers.Contains(number))
+                                if (squares[r, column].PossibleNumbers.Contains(number))
                                 {
-                                    eliminations.Add((r, col));
+                                    eliminations.Add((r, column));
                                 }
                             }
 
                             if (eliminations.Count > 0)
                             {
-                                solveStep.CandidatesRemoved = true;
-                                solveStep.Number = number;
-                                solveStep.Explanation = $"Pointing Pair: {number}s in the box are all in column {col + 1}, so remove {number} from that column.";
+                                solveStep.Explanation = $"Pointing Pair: {number}s in the box are all in column {column + 1}, so remove {number} from that column.";
+                                solveStep.CandidatesRemovedInNonHighlightedSquares = true;               
+                                solveStep.CandidatesRemovedNumbers.Add(number);                               
 
                                 foreach (var position in positions)
                                 {

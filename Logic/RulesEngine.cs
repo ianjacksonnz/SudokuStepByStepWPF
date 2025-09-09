@@ -15,13 +15,14 @@ public static class RulesEngine
                 Enums.SolvingRule.NakedSingle => NakedSingle.Run(squares),
                 Enums.SolvingRule.HiddenSingle => HiddenSingle.Run(squares),
                 Enums.SolvingRule.PointingPairs => PointingPairs.Run(squares),
+                Enums.SolvingRule.HiddenPairs => HiddenPairs.Run(squares),
                 Enums.SolvingRule.PointingTriples => PointingTriples.Run(squares),
-                Enums.SolvingRule.NakedPairs => NakedPair.Run(squares),
+                Enums.SolvingRule.NakedPairs => NakedPairs.Run(squares),
                 Enums.SolvingRule.NakedTriples => NakedTriples.Run(squares),
                 _ => throw new ArgumentOutOfRangeException(nameof(rule), rule, null)
             };
 
-            if (step != null && (step.Solved || step.CandidatesRemoved))
+            if (step != null && (step.Solved || step.CandidatesRemovedInNonHighlightedSquares || step.CandidatesRemovedInHighlightedSquares))
             {
                 return step;
             }

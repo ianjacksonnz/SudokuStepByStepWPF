@@ -16,7 +16,7 @@ public partial class MainWindow : Window
     private SudokuSquare[,] _squares = new SudokuSquare[9, 9];
     private Popup? _stepPopup = null!;
     private TextBox? _previousStepBox = null!;
-    private int _previousStepSolvedNumber = 0;
+    private List<int> _previousStepCandidatesRemovedNumbers = [];
     private bool _previousStepCandidatesRemoved = false;
     private HashSet<(int row, int col)> _previousStepCandidatesRemovedSquares = new();
     
@@ -41,7 +41,7 @@ public partial class MainWindow : Window
             PuzzleSelector.Items.Add(key);
         }
 
-        PuzzleSelector.SelectedIndex = 3; // Puzzle 4
+        PuzzleSelector.SelectedIndex = 8; // Puzzle 9
     }
 
     private void InitializeGrid()
@@ -165,13 +165,17 @@ public partial class MainWindow : Window
             foreach (var (r, c) in _previousStepCandidatesRemovedSquares)
             {
                 var squareRemoveCandidates = _squares[r, c];
-                RulesHelper.RemovePossibleNumbersFromSquare(_squares, squareRemoveCandidates, _previousStepSolvedNumber);
+
+                foreach (var number in _previousStepCandidatesRemovedNumbers)
+                {
+                    RulesHelper.RemovePossibleNumbersFromSquare(_squares, squareRemoveCandidates, number);
+                }          
             }
         }
 
         var solveStep = RulesEngine.CalculateNextStep(_squares);
 
-        if ((solveStep != null) && (solveStep.Solved || solveStep.CandidatesRemoved))
+        if ((solveStep != null) && (solveStep.Solved || solveStep.CandidatesRemovedInHighlightedSquares || solveStep.CandidatesRemovedInNonHighlightedSquares))
         {
             UpdateGridSolvedStep(solveStep);        
         }
@@ -186,9 +190,18 @@ public partial class MainWindow : Window
     private void UpdateGridSolvedStep(SolveStep solveStep)
     {
         var square = _squares[solveStep.Row, solveStep.Column];
-        _previousStepSolvedNumber = solveStep.Number;
-        _previousStepCandidatesRemoved = solveStep.CandidatesRemoved;
-        _previousStepCandidatesRemovedSquares = new HashSet<(int row, int col)>(solveStep.CandidatesRemovedSquares);
+        _previousStepCandidatesRemovedNumbers = solveStep.CandidatesRemovedNumbers;
+        _previousStepCandidatesRemoved = solveStep.CandidatesRemovedInHighlightedSquares || solveStep.CandidatesRemovedInNonHighlightedSquares;
+
+        // Replace this line wherever you need the described logic
+        _previousStepCandidatesRemovedSquares =
+            solveStep.CandidatesRemovedInHighlightedSquares
+                ? new HashSet<(int row, int col)>(solveStep.HighlightedSquares)
+                : solveStep.CandidatesRemovedInNonHighlightedSquares
+                    ? new HashSet<(int row, int col)>(solveStep.CandidatesRemovedSquares)
+                    : new HashSet<(int row, int col)>();
+
+        // _previousStepCandidatesRemovedSquares = new HashSet<(int row, int col)>(solveStep.CandidatesRemovedSquares);
 
         if (solveStep.Solved)
         {
