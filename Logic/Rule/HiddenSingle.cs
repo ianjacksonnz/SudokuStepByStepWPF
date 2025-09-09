@@ -103,7 +103,7 @@ public static class HiddenSingle
         // --- grids ---
         for (int boxRow = 0; boxRow < 3; boxRow++)
         {
-            for (int boxCol = 0; boxCol < 3; boxCol++)
+            for (int boxColumn = 0; boxColumn < 3; boxColumn++)
             {
                 for (int number = 1; number <= 9; number++)
                 {
@@ -111,7 +111,7 @@ public static class HiddenSingle
 
                     for (int row = boxRow * 3; row < boxRow * 3 + 3; row++)
                     {
-                        for (int column = boxCol * 3; column < boxCol * 3 + 3; column++)
+                        for (int column = boxColumn * 3; column < boxColumn * 3 + 3; column++)
                         {
                             var square = squares[row, column];
 
@@ -134,10 +134,11 @@ public static class HiddenSingle
                         solveStep.Explanation = $"The number {number} can only fit in this square in its 3x3 grid.";
 
                         int startRow = (solvedRow / 3) * 3;
-                        int startCol = (solvedColumn / 3) * 3;
+                        int startColumn = (solvedColumn / 3) * 3;
+
                         for (int r = startRow; r < startRow + 3; r++)
                         {
-                            for (int c = startCol; c < startCol + 3; c++)
+                            for (int c = startColumn; c < startColumn + 3; c++)
                             {
                                 if (r != solvedRow || c != solvedColumn)
                                 {

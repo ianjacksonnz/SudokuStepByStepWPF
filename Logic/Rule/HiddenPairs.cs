@@ -1,4 +1,5 @@
 ﻿using SudokuStepByStep.Common;
+using SudokuStepByStep.Logic.Helpers;
 using SudokuStepByStep.Models;
 
 namespace SudokuStepByStep.Logic.Rule;
@@ -81,7 +82,7 @@ public static class HiddenPairs
 
                             if (hiddenPairFound)
                             {
-                                solveStep.CandidatesRemovedNumbers = RemoveOtherNumbers(firstNumber, secondNumber);
+                                solveStep.CandidatesRemovedNumbers = RulesHelper.RemoveOtherNumbers(firstNumber, secondNumber);
                                 return solveStep;
                             }
 
@@ -150,7 +151,7 @@ public static class HiddenPairs
 
                             if (hiddenPairFound)
                             {
-                                solveStep.CandidatesRemovedNumbers = RemoveOtherNumbers(firstNumber, secondNumber);
+                                solveStep.CandidatesRemovedNumbers = RulesHelper.RemoveOtherNumbers(firstNumber, secondNumber);
                                 return solveStep;
                             }
                         }
@@ -231,7 +232,7 @@ public static class HiddenPairs
 
                                 if (hiddenPairFound)
                                 {
-                                    solveStep.CandidatesRemovedNumbers = RemoveOtherNumbers(firstNumber, secondNumber);
+                                    solveStep.CandidatesRemovedNumbers = RulesHelper.RemoveOtherNumbers(firstNumber, secondNumber);
                                     return solveStep;
                                 }
 
@@ -244,20 +245,6 @@ public static class HiddenPairs
 
         // No hidden pair found
         return solveStep;
-    }
-
-    private static List<int> RemoveOtherNumbers(int firstNumber, int secondNumber)
-    {
-        var result = new List<int>();
-
-        for (int number = 1; number <= 9; number++)
-        {
-            if (number != firstNumber && number != secondNumber)
-            {
-                result.Add(number);
-            }
-        }
-        return result;
     }
 }
 

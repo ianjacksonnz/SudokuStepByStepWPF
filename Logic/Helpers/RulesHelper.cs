@@ -283,6 +283,36 @@ public static class RulesHelper
         return true;
     }
 
+    public static List<int> RemoveOtherNumbers(int numberToRemove)
+    {
+        var result = new List<int>();
+
+        for (int number = 1; number <= 9; number++)
+        {
+            if (number != numberToRemove)
+            {
+                result.Add(number);
+            }
+        }
+
+        return result;
+    }
+
+    public static List<int> RemoveOtherNumbers(int firstNumberToRemove, int secondNumberToRemove)
+    {
+        var result = new List<int>();
+
+        for (int number = 1; number <= 9; number++)
+        {
+            if (number != firstNumberToRemove && number != secondNumberToRemove)
+            {
+                result.Add(number);
+            }
+        }
+
+        return result;
+    }
+
 
     //// Helper to set a square as solved
     //public static void SetSquare(HashSet<int>[,] grid, int row, int column, int value)

@@ -104,7 +104,7 @@ public partial class MainWindow : Window
 
     private void PuzzleSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        // ResetHintTracking();
+        ResetPreviousStepStoredValues();
 
         if (PuzzleSelector.SelectedItem == null) { return; }
 
@@ -121,15 +121,24 @@ public partial class MainWindow : Window
         PuzzleLoader.LoadPuzzle(puzzle, _squares);
 
         ClearHighlighting();
-        RulesHelper.SetPossibleNumbers(_squares, true);
+        RulesHelper.SetPossibleNumbers(_squares, false);
     }
 
     private void Clear_Click(object sender, RoutedEventArgs e)
     {
-        // ResetHintTracking();
+        ResetPreviousStepStoredValues();
         GridHelper.ClearSquares(_squares);
         RulesHelper.SetPossibleNumbers(_squares, false);
     }
+
+    private void ResetPreviousStepStoredValues()
+    {
+        _previousStepBox = null!;
+        _previousStepCandidatesRemovedNumbers = [];
+        _previousStepCandidatesRemoved = false;
+        _previousStepCandidatesRemovedSquares = new();
+    }
+
 
     private void ClearHighlighting()
     {
