@@ -1,14 +1,15 @@
-﻿using SudokuStepByStep.Models;
+﻿using SudokuStepByStep.Common;
+using SudokuStepByStep.Models;
 
 namespace SudokuStepByStep.Logic.Rule;
 
-public static class PointingTriples
+public static class XWing
 {
     public static SolveStep Run(SudokuSquare[,] squares)
     {
         var solveStep = new SolveStep()
         {
-            Rule = Common.Enums.SolvingRule.PointingTriples
+            Rule = Enums.SolvingRule.XWing
         };
 
         return solveStep;

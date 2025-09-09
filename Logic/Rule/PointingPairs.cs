@@ -14,116 +14,200 @@ namespace SudokuStepByStep.Logic.Rule
                 CandidatesRemovedSquares = new HashSet<(int row, int col)>()
             };
 
-            // loop through each 3x3 box
-            for (int boxRow = 0; boxRow < 3; boxRow++)
+            // Precompute candidate positions for each number in boxes, rows, and columns
+            var boxCandidates = new List<(int row, int col)>[9, 9]; // boxIndex, number-1
+            var rowCandidates = new List<(int row, int col)>[9, 9];
+            var colCandidates = new List<(int row, int col)>[9, 9];
+
+            for (int i = 0; i < 9; i++)
             {
-                for (int boxColumn = 0; boxColumn < 3; boxColumn++)
+                for (int n = 0; n < 9; n++)
                 {
-                    int startRow = boxRow * 3;
-                    int startColumn = boxColumn * 3;
+                    boxCandidates[i, n] = new List<(int row, int col)>();
+                    rowCandidates[i, n] = new List<(int row, int col)>();
+                    colCandidates[i, n] = new List<(int row, int col)>();
+                }
+            }
 
-                    for (int number = 1; number <= 9; number++)
+            for (int r = 0; r < 9; r++)
+            {
+                for (int c = 0; c < 9; c++)
+                {
+                    foreach (var number in squares[r, c].PossibleNumbers)
                     {
-                        var positions = new List<(int row, int col)>();
+                        int nIndex = number - 1;
+                        int boxIndex = (r / 3) * 3 + (c / 3);
 
-                        // collect all positions inside the box that can contain the number
-                        for (int r = startRow; r < startRow + 3; r++)
+                        boxCandidates[boxIndex, nIndex].Add((r, c));
+                        rowCandidates[r, nIndex].Add((r, c));
+                        colCandidates[c, nIndex].Add((r, c));
+                    }
+                }
+            }
+
+            // --- Classic Box → Row/Column elimination ---
+            for (int boxIndex = 0; boxIndex < 9; boxIndex++)
+            {
+                for (int n = 0; n < 9; n++)
+                {
+                    var positions = boxCandidates[boxIndex, n];
+
+                    if (positions.Count < 2)
+                    {
+                        continue;
+                    }
+
+                    // All in same row?
+                    if (positions.All(p => p.row == positions[0].row))
+                    {
+                        int row = positions[0].row;
+                        var eliminations = new List<(int row, int col)>();
+                        int startColumn = (boxIndex % 3) * 3;
+
+                        for (int c = 0; c < 9; c++)
                         {
-                            for (int c = startColumn; c < startColumn + 3; c++)
+                            if (c >= startColumn && c < startColumn + 3)
                             {
-                                var square = squares[r, c];
+                                continue;
+                            }
 
-                                if (square.PossibleNumbers.Contains(number))
-                                {
-                                    positions.Add((r, c));
-                                }
+                            if (squares[row, c].PossibleNumbers.Contains(n + 1))
+                            {
+                                eliminations.Add((row, c));
                             }
                         }
 
-                        if (positions.Count < 2) continue; // need at least 2 to form a pointing pair
-
-                        // check if all positions are in the same row
-                        bool sameRow = positions.All(p => p.row == positions[0].row);
-
-                        if (sameRow)
+                        if (eliminations.Count > 0)
                         {
-                            int row = positions[0].row;
+                            solveStep.Explanation = $"Pointing Pair: {n + 1}s in box are all in row {row + 1}, remove from row.";
+                            solveStep.CandidatesRemovedInNonHighlightedSquares = true;
+                            solveStep.CandidatesRemovedNumbers.Add(n + 1);
+                            positions.ForEach(p => solveStep.HighlightedSquares.Add(p));
+                            eliminations.ForEach(e => solveStep.CandidatesRemovedSquares.Add(e));
+                            return solveStep;
+                        }
+                    }
 
-                            // eliminate this number from the rest of the row outside the box
-                            var eliminations = new List<(int row, int col)>();
+                    // All in same column?
+                    if (positions.All(p => p.col == positions[0].col))
+                    {
+                        int col = positions[0].col;
+                        var eliminations = new List<(int row, int col)>();
+                        int startRow = (boxIndex / 3) * 3;
 
-                            for (int c = 0; c < 9; c++)
+                        for (int r = 0; r < 9; r++)
+                        {
+                            if (r >= startRow && r < startRow + 3)
                             {
-                                if (c >= startColumn && c < startColumn + 3)
-                                {
-                                    continue; // skip the box
-                                }
+                                continue;
+                            }
 
-                                if (squares[row, c].PossibleNumbers.Contains(number))
+                            if (squares[r, col].PossibleNumbers.Contains(n + 1))
+                            {
+                                eliminations.Add((r, col));
+                            }
+                        }
+
+                        if (eliminations.Count > 0)
+                        {
+                            solveStep.Explanation = $"Pointing Pair: {n + 1}s in box are all in column {col + 1}, remove from column.";
+                            solveStep.CandidatesRemovedInNonHighlightedSquares = true;
+                            solveStep.CandidatesRemovedNumbers.Add(n + 1);
+                            positions.ForEach(p => solveStep.HighlightedSquares.Add(p));
+                            eliminations.ForEach(e => solveStep.CandidatesRemovedSquares.Add(e));
+                            return solveStep;
+                        }
+                    }
+                }
+            }
+
+            // --- Extended Row → Box / Column → Box elimination ---
+            for (int n = 0; n < 9; n++)
+            {
+                // Rows
+                for (int r = 0; r < 9; r++)
+                {
+                    var positions = rowCandidates[r, n];
+
+                    if (positions.Count == 2)
+                    {
+                        int boxRow = positions[0].row / 3;
+                        int boxCol = positions[0].col / 3;
+
+                        if (positions.All(p => p.row / 3 == boxRow && p.col / 3 == boxCol))
+                        {
+                            var eliminations = new List<(int row, int col)>();
+                            int startR = boxRow * 3;
+                            int startC = boxCol * 3;
+
+                            for (int rr = startR; rr < startR + 3; rr++)
+                            {
+                                for (int cc = startC; cc < startC + 3; cc++)
                                 {
-                                    eliminations.Add((row, c));
+                                    if (positions.Contains((rr, cc)))
+                                    {
+                                        continue;
+                                    }
+
+                                    if (squares[rr, cc].PossibleNumbers.Contains(n + 1))
+                                    {
+                                        eliminations.Add((rr, cc));
+                                    }
                                 }
                             }
 
                             if (eliminations.Count > 0)
                             {
-                                solveStep.Explanation = $"Pointing Pair: {number}s in the box are all in row {row + 1}, so remove {number} from that row.";
+                                solveStep.Explanation = $"Pointing Pair: {n + 1}s in row {r + 1} are in same box, remove from other squares in box.";
                                 solveStep.CandidatesRemovedInNonHighlightedSquares = true;
-                                solveStep.CandidatesRemovedNumbers.Add(number);
-
-                                foreach (var position in positions)
-                                {
-                                    solveStep.HighlightedSquares.Add(position);
-                                }
-
-                                foreach (var candidateRemovedSquare in eliminations)
-                                {
-                                    solveStep.CandidatesRemovedSquares.Add(candidateRemovedSquare);
-                                }
-                               
+                                solveStep.CandidatesRemovedNumbers.Add(n + 1);
+                                positions.ForEach(p => solveStep.HighlightedSquares.Add(p));
+                                eliminations.ForEach(e => solveStep.CandidatesRemovedSquares.Add(e));
                                 return solveStep;
                             }
                         }
+                    }
+                }
 
-                        // check if all positions are in the same column
-                        bool sameColumn = positions.All(p => p.col == positions[0].col);
+                // Columns
+                for (int c = 0; c < 9; c++)
+                {
+                    var positions = colCandidates[c, n];
 
-                        if (sameColumn)
+                    if (positions.Count == 2)
+                    {
+                        int boxRow = positions[0].row / 3;
+                        int boxCol = positions[0].col / 3;
+
+                        if (positions.All(p => p.row / 3 == boxRow && p.col / 3 == boxCol))
                         {
-                            int column = positions[0].col;
-
-                            // eliminate this number from the rest of the column outside the box
                             var eliminations = new List<(int row, int col)>();
+                            int startR = boxRow * 3;
+                            int startC = boxCol * 3;
 
-                            for (int r = 0; r < 9; r++)
+                            for (int rr = startR; rr < startR + 3; rr++)
                             {
-                                if (r >= startRow && r < startRow + 3)
+                                for (int cc = startC; cc < startC + 3; cc++)
                                 {
-                                    continue; // skip the box
-                                }
+                                    if (positions.Contains((rr, cc)))
+                                    {
+                                        continue;
+                                    }
 
-                                if (squares[r, column].PossibleNumbers.Contains(number))
-                                {
-                                    eliminations.Add((r, column));
+                                    if (squares[rr, cc].PossibleNumbers.Contains(n + 1))
+                                    {
+                                        eliminations.Add((rr, cc));
+                                    }
                                 }
                             }
 
                             if (eliminations.Count > 0)
                             {
-                                solveStep.Explanation = $"Pointing Pair: {number}s in the box are all in column {column + 1}, so remove {number} from that column.";
-                                solveStep.CandidatesRemovedInNonHighlightedSquares = true;               
-                                solveStep.CandidatesRemovedNumbers.Add(number);                               
-
-                                foreach (var position in positions)
-                                {
-                                    solveStep.HighlightedSquares.Add(position);
-                                }
-
-                                foreach (var candidateRemovedSquare in eliminations)
-                                {
-                                    solveStep.CandidatesRemovedSquares.Add(candidateRemovedSquare);
-                                }
-                            
+                                solveStep.Explanation = $"Pointing Pair: {n + 1}s in column {c + 1} are in same box, remove from other squares in box.";
+                                solveStep.CandidatesRemovedInNonHighlightedSquares = true;
+                                solveStep.CandidatesRemovedNumbers.Add(n + 1);
+                                positions.ForEach(p => solveStep.HighlightedSquares.Add(p));
+                                eliminations.ForEach(e => solveStep.CandidatesRemovedSquares.Add(e));
                                 return solveStep;
                             }
                         }

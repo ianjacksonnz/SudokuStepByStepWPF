@@ -8,9 +8,7 @@ public class Enums
         HiddenSingle,
         PointingPairs,
         HiddenPairs,
-        PointingTriples,
-        NakedPairs,
-        NakedTriples
+        XWing
     }
 
     public enum SquareGroupType
