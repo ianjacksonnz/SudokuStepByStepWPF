@@ -94,33 +94,11 @@ namespace SudokuStepByStep.Logic.Rule
             return solveStep;
         }
 
-        private static void PopulateHighlightedSquares(Enums.SquareGroupType groupType,
-                                                       HashSet<(int row, int col)> candidatesRemovedSquares,
-                                                       SolveStep solveStep, int groupIndexRow = 0, int groupIndexCol = 0)
+        private static void PopulateHighlightedSquares(List<(int row, int col)> cells, SolveStep solveStep)
         {
-            switch (groupType)
+            foreach (var cell in cells)
             {
-                case Enums.SquareGroupType.Row:
-                    for (int column = 0; column < 9; column++)
-                        if (!candidatesRemovedSquares.Contains((groupIndexRow, column)))
-                            solveStep.HighlightedSquares.Add((groupIndexRow, column));
-                    break;
-
-                case Enums.SquareGroupType.Column:
-                    for (int row = 0; row < 9; row++)
-                        if (!candidatesRemovedSquares.Contains((row, groupIndexCol)))
-                            solveStep.HighlightedSquares.Add((row, groupIndexCol));
-                    break;
-
-                case Enums.SquareGroupType.Box:
-                    int startRow = groupIndexRow * 3;
-                    int startColumn = groupIndexCol * 3;
-
-                    for (int r = startRow; r < startRow + 3; r++)
-                        for (int c = startColumn; c < startColumn + 3; c++)
-                            if (!candidatesRemovedSquares.Contains((r, c)))
-                                solveStep.HighlightedSquares.Add((r, c));
-                    break;
+                solveStep.HighlightedSquares.Add(cell);
             }
         }
 
@@ -156,7 +134,8 @@ namespace SudokuStepByStep.Logic.Rule
 
                 if (solveStep.CandidatesRemovedSquares.Count > 0)
                 {
-                    PopulateHighlightedSquares(groupType, solveStep.CandidatesRemovedSquares, solveStep, groupIndexRow, groupIndexCol);
+                    PopulateHighlightedSquares(cells, solveStep);
+
                     solveStep.CandidatesRemovedInNonHighlightedSquares = true;
 
                     string groupName = groupSize == 2 ? "pair" : groupSize == 3 ? "triple" : "quad";
