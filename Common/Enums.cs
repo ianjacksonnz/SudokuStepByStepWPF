@@ -10,6 +10,7 @@ public class Enums
         PointingPairs,
         HiddenPairs,
         NakedTriples,
+        HiddenTriples,
         NakedQuads,
         XWing
     }

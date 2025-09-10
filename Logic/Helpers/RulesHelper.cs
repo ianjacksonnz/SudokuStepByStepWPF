@@ -313,6 +313,21 @@ public static class RulesHelper
         return result;
     }
 
+    public static List<int> RemoveOtherNumbers(int firstNumberToRemove, int secondNumberToRemove, int thirdNumberToRemove)
+    {
+        var result = new List<int>();
+
+        for (int number = 1; number <= 9; number++)
+        {
+            if (number != firstNumberToRemove && number != secondNumberToRemove && number != thirdNumberToRemove)
+            {
+                result.Add(number);
+            }
+        }
+
+        return result;
+    }
+
 
     //// Helper to set a square as solved
     //public static void SetSquare(HashSet<int>[,] grid, int row, int column, int value)
