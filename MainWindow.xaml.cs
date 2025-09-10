@@ -41,7 +41,7 @@ public partial class MainWindow : Window
             PuzzleSelector.Items.Add(key);
         }
 
-        PuzzleSelector.SelectedIndex = 10; // Puzzle 11
+        PuzzleSelector.SelectedIndex = 4; // Puzzle 5
     }
 
     private void InitializeGrid()
@@ -121,7 +121,7 @@ public partial class MainWindow : Window
         PuzzleLoader.LoadPuzzle(puzzle, _squares);
 
         ClearHighlighting();
-        RulesHelper.SetPossibleNumbers(_squares, false);
+        RulesHelper.SetPossibleNumbers(_squares, true);
     }
 
     private void Clear_Click(object sender, RoutedEventArgs e)

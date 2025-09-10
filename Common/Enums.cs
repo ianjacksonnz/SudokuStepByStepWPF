@@ -6,8 +6,10 @@ public class Enums
     {
         NakedSingle,
         HiddenSingle,
+        NakedPairs,
         PointingPairs,
         HiddenPairs,
+        NakedTriples,
         NakedQuads,
         XWing
     }
