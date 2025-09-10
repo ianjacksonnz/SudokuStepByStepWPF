@@ -407,21 +407,23 @@ public partial class MainWindow : Window
                 {
                     for (int col = 0; col < 9; col++)
                     {
-                        if (_squares[row, col].Box == tb)
+                        var square = _squares[row, col];
+
+                        if (square.Box == tb)
                         {
                             if (int.TryParse(tb.Text, out int value) && value >= 1 && value <= 9)
                             {
-                                _squares[row, col].Number = value;
-                                _squares[row, col].PossibleNumbers.Clear();
+                                square.Number = value;
+                                square.PossibleNumbers.Clear();
                             }
                             else
                             {
-                                _squares[row, col].Number = 0;
-                                _squares[row, col].PossibleNumbers.Clear();
+                                square.Number = 0;
+                                square.PossibleNumbers.Clear();
                             }
 
                             Keyboard.ClearFocus();
-                            // RulesHelper.SetPossibleNumbers(_squares, true);
+                            RulesHelper.SetPossibleNumbers(_squares, true);
                             return;
                         }
                     }

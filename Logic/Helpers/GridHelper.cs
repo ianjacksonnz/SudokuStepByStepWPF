@@ -1,5 +1,6 @@
 ﻿using SudokuStepByStep.Models;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace SudokuStepByStep.Logic.Helpers;
