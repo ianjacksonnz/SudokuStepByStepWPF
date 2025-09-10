@@ -86,13 +86,15 @@ public partial class MainWindow : Window
                     Background = Brushes.White
                 };
 
+                // Wire up the KeyDown event to handle Enter key
+                tb.KeyDown += SudokuSquare_EnterKeyPressed;
+
                 grid.Children.Add(tb);
                 grid.Children.Add(candidates);
 
                 border.Child = grid;
 
                 int r = row, c = col;
-                // tb.TextChanged += (s, e) => RulesHelper.SetPossibleValues(_squares, false);
                 tb.LostFocus += (s, e) => ClearHighlighting();
 
                 _squares[row, col] = new SudokuSquare(tb, candidates, border);
@@ -234,11 +236,7 @@ public partial class MainWindow : Window
 
         var squareHighlightedBox = SetToolTip(solveStep);
 
-        // Remove focus from the solved cell and do not attach key handlers
         _previousStepBox = squareHighlightedBox;
-        //_prevStepBox.KeyDown += StepSquare_KeyDown;
-        //_prevStepBox.TextChanged += StepSquare_TextChanged;
-        // Do not set focus
         Keyboard.ClearFocus();
     }
 
@@ -395,5 +393,40 @@ public partial class MainWindow : Window
     {
         _isNew = true;
         GridHelper.ClearSquaresNewPuzzle(_squares);
+        RulesHelper.SetPossibleNumbers(_squares, false);
+    }
+
+    private void SudokuSquare_EnterKeyPressed(object sender, KeyEventArgs e)
+    {    
+        if (e.Key == Key.Enter)
+        {
+            if (sender is TextBox tb)
+            {
+                // Find the square's position in the grid
+                for (int row = 0; row < 9; row++)
+                {
+                    for (int col = 0; col < 9; col++)
+                    {
+                        if (_squares[row, col].Box == tb)
+                        {
+                            if (int.TryParse(tb.Text, out int value) && value >= 1 && value <= 9)
+                            {
+                                _squares[row, col].Number = value;
+                                _squares[row, col].PossibleNumbers.Clear();
+                            }
+                            else
+                            {
+                                _squares[row, col].Number = 0;
+                                _squares[row, col].PossibleNumbers.Clear();
+                            }
+
+                            Keyboard.ClearFocus();
+                            // RulesHelper.SetPossibleNumbers(_squares, true);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
     }
 }
