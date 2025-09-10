@@ -19,7 +19,7 @@ public partial class MainWindow : Window
     private List<int> _previousStepCandidatesRemovedNumbers = [];
     private bool _previousStepCandidatesRemoved = false;
     private HashSet<(int row, int col)> _previousStepCandidatesRemovedSquares = new();
-    
+    private bool _isNew = false;
 
     public MainWindow()
     {
@@ -118,8 +118,8 @@ public partial class MainWindow : Window
 
     private void LoadPuzzle(int[,] puzzle)
     {
+        _isNew = false;
         PuzzleLoader.LoadPuzzle(puzzle, _squares);
-
         ClearHighlighting();
         RulesHelper.SetPossibleNumbers(_squares, false);
     }
@@ -393,6 +393,7 @@ public partial class MainWindow : Window
 
     private void NewPuzzle_Click(object sender, RoutedEventArgs e)
     {
-
+        _isNew = true;
+        GridHelper.ClearSquaresNewPuzzle(_squares);
     }
 }
