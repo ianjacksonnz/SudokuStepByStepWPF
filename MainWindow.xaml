@@ -5,36 +5,74 @@
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <!-- Title -->
             <RowDefinition Height="Auto"/>
-            <!-- ComboBox -->
             <RowDefinition Height="*"/>
-            <!-- Sudoku grid -->
             <RowDefinition Height="Auto"/>
-            <!-- Buttons -->
         </Grid.RowDefinitions>
 
         <!-- Title and Description -->
         <StackPanel Grid.Row="0" Margin="0,0,0,15">
             <TextBlock Text="Sudoku Step By Step" FontSize="24" FontWeight="Bold" 
-                   HorizontalAlignment="Center"/>
+                       HorizontalAlignment="Center"/>
             <TextBlock Text="Step through the rules for solving each square in the puzzle" 
-                   FontSize="14" Foreground="Gray" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                       FontSize="14" Foreground="Gray" HorizontalAlignment="Center" Margin="0,5,0,0"/>
         </StackPanel>
 
-        <!-- Puzzle selector -->
-        <ComboBox x:Name="PuzzleSelector" Grid.Row="1" Width="200" Margin="0,0,0,10"
-                  SelectionChanged="PuzzleSelector_SelectionChanged"/>
+        <!-- Puzzle selector and New Puzzle button in a Grid for alignment -->
+        <Grid Grid.Row="1" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <!-- left spacer -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- ComboBox -->
+                <ColumnDefinition Width="*"/>
+                <!-- middle spacer -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- New Puzzle button -->
+            </Grid.ColumnDefinitions>
+
+            <!-- ComboBox centered -->
+            <ComboBox x:Name="PuzzleSelector" Width="200"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      SelectionChanged="PuzzleSelector_SelectionChanged"
+                      Grid.Column="1"/>
+
+            <!-- Button right aligned -->
+            <Button Content="New Puzzle" Width="100" Margin="10,0,0,0" 
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Click="NewPuzzle_Click"
+                    Grid.Column="3"/>
+        </Grid>
 
         <!-- Sudoku grid -->
         <UniformGrid x:Name="SudokuGrid" Grid.Row="2" Rows="9" Columns="9" Margin="5"/>
 
-        <!-- Buttons -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
-            <!--<Button Content="Show Possible Values" Width="130" Margin="5" Click="ShowPossibleValues_Click"/>-->
-            <Button x:Name="StepButton" Content="Step" Width="130" Margin="5" Click="Step_Click"/>
-            <!--<Button Content="Solve Puzzle" Width="100" Margin="5" Click="Solve_Click"/>-->
-            <Button Content="Clear" Width="100" Margin="5" Click="Clear_Click"/>
-        </StackPanel>
+        <!-- Buttons row -->
+        <Grid Grid.Row="3" Margin="5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <!-- left spacer -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- Step button -->
+                <ColumnDefinition Width="*"/>
+                <!-- middle spacer -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- Clear button -->
+            </Grid.ColumnDefinitions>
+
+            <!-- Centered Step button -->
+            <Button x:Name="StepButton" Content="Step" Width="130" Margin="5"
+                    HorizontalAlignment="Center"
+                    Click="Step_Click"
+                    Grid.Column="1"/>
+
+            <!-- Right-aligned Clear button -->
+            <Button Content="Clear" Width="100" Margin="5"
+                    HorizontalAlignment="Right"
+                    Click="Clear_Click"
+                    Grid.Column="3"/>
+        </Grid>
     </Grid>
 </Window>

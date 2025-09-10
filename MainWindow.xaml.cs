@@ -391,4 +391,8 @@ public partial class MainWindow : Window
         }
     }
 
+    private void NewPuzzle_Click(object sender, RoutedEventArgs e)
+    {
+
+    }
 }
