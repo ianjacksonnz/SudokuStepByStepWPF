@@ -283,13 +283,14 @@ public static class RulesHelper
         return true;
     }
 
-    public static List<int> RemoveOtherNumbers(int numberToRemove)
+    public static List<int> RemoveOtherNumbers(params int[] numbersToRemove)
     {
         var result = new List<int>();
+        var toRemove = new HashSet<int>(numbersToRemove);
 
         for (int number = 1; number <= 9; number++)
         {
-            if (number != numberToRemove)
+            if (!toRemove.Contains(number))
             {
                 result.Add(number);
             }
@@ -297,66 +298,4 @@ public static class RulesHelper
 
         return result;
     }
-
-    public static List<int> RemoveOtherNumbers(int firstNumberToRemove, int secondNumberToRemove)
-    {
-        var result = new List<int>();
-
-        for (int number = 1; number <= 9; number++)
-        {
-            if (number != firstNumberToRemove && number != secondNumberToRemove)
-            {
-                result.Add(number);
-            }
-        }
-
-        return result;
-    }
-
-    public static List<int> RemoveOtherNumbers(int firstNumberToRemove, int secondNumberToRemove, int thirdNumberToRemove)
-    {
-        var result = new List<int>();
-
-        for (int number = 1; number <= 9; number++)
-        {
-            if (number != firstNumberToRemove && number != secondNumberToRemove && number != thirdNumberToRemove)
-            {
-                result.Add(number);
-            }
-        }
-
-        return result;
-    }
-
-
-    //// Helper to set a square as solved
-    //public static void SetSquare(HashSet<int>[,] grid, int row, int column, int value)
-    //{
-    //    grid[row, column] = new HashSet<int> { value };
-    //}
-
-    //// Helper to initialize grid with all candidates (1-9) for unsolved squares, or single value for solved
-    //public static HashSet<int>[,] InitializeBoard(int[,] initial)
-    //{
-    //    var grid = new HashSet<int>[9, 9];
-
-    //    for (int row = 0; row < 9; row++)
-    //    {
-    //        for (int column = 0; column < 9; column++)
-    //        {
-    //            if (initial[row, column] == 0)
-    //            {
-    //                grid[row, column] = new HashSet<int>(Enumerable.Range(1, 9));
-    //            }
-    //            else
-    //            {
-    //                grid[row, column] = new HashSet<int> { initial[row, column] };
-    //            }
-    //        }
-    //    }
-    //    return grid;
-    //}
-
-    // Helper to set a cell as solved
-    // public static void SetCell(HashSet<int>[,] board, int row, int column, int value) => board[row, column] = [value];
 }
