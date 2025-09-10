@@ -66,7 +66,7 @@ public static class PuzzleLoader
                 }
             },
             //{
-            //    // Contains X-Wing
+            //    // Contains Pointing Pair, Hidden Pair, Naked Triple, X-Wing
             //    "Genius Puzzle 1", new int[9,9]
             //    {
             //        {0,0,0,0,0,0,0,0,0},
@@ -80,7 +80,7 @@ public static class PuzzleLoader
             //        {0,0,0,0,0,0,0,0,0}
             //    }
             //},
-            {  // X-Wing
+            {  // Pointing Pair, Hidden Pair, Naked Triple, X-Wing
                 "Genius Puzzle 1", new int[9,9]
                 {
                     {0,0,0,0,0,0,9,0,1},

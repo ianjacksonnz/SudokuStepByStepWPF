@@ -247,4 +247,3 @@ public static class HiddenPairs
         return solveStep;
     }
 }
-
