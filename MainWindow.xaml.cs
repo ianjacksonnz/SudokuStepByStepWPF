@@ -397,7 +397,7 @@ public partial class MainWindow : Window
     }
 
     private void SudokuSquare_EnterKeyPressed(object sender, KeyEventArgs e)
-    {    
+    {
         if (e.Key == Key.Enter)
         {
             if (sender is TextBox tb)
@@ -411,19 +411,34 @@ public partial class MainWindow : Window
 
                         if (square.Box == tb)
                         {
-                            if (int.TryParse(tb.Text, out int value) && value >= 1 && value <= 9)
+                            if (!tb.IsReadOnly)
                             {
-                                square.Number = value;
-                                square.PossibleNumbers.Clear();
-                            }
-                            else
-                            {
-                                square.Number = 0;
-                                square.PossibleNumbers.Clear();
+                                if (int.TryParse(tb.Text, out int value) && value >= 1 && value <= 9)
+                                {
+                                    if (!RulesHelper.IsSafe(_squares, row, col, value))
+                                    {
+                                        MessageBox.Show($"Number {value} cannot be placed here due to Sudoku rules.", "Invalid Entry", MessageBoxButton.OK, MessageBoxImage.Warning);
+                                        tb.Text = "";
+                                        return;
+                                    }
+
+                                    square.Number = value;
+                                    square.PossibleNumbers.Clear();
+                                    square.Box.Text = value.ToString();
+                                    square.Box.IsReadOnly = true;
+                                }
+                                else
+                                {
+                                    square.Number = 0;
+                                    square.PossibleNumbers.Clear();
+                                    square.Box.Text = "";
+                                    square.Box.IsReadOnly = false;
+                                }
+
+                                Keyboard.ClearFocus();
+                                RulesHelper.SetPossibleNumbers(_squares, true);
                             }
 
-                            Keyboard.ClearFocus();
-                            RulesHelper.SetPossibleNumbers(_squares, true);
                             return;
                         }
                     }

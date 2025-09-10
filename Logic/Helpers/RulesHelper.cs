@@ -5,6 +5,30 @@ namespace SudokuStepByStep.Logic.Helpers;
 
 public static class RulesHelper
 {
+    public static bool IsSafe(SudokuSquare[,] squares, int row, int column, int number)
+    {
+        // Check row and column
+        for (int i = 0; i < 9; i++)
+        {
+            if (squares[row, i].Number == number) return false;
+            if (squares[i, column].Number == number) return false;
+        }
+
+        // Check 3x3 box
+        int startRow = row - row % 3;
+        int startCol = column - column % 3;
+
+        for (int r = startRow; r < startRow + 3; r++)
+        {
+            for (int c = startCol; c < startCol + 3; c++)
+            {
+                if (squares[r, c].Number == number) return false;
+            }
+        }
+
+        return true;
+    }
+
     public static void RemoveCandidates(HashSet<int>[,] grid, int row, int column, string? key)
     {
         // key is a string representation of the candidate list, e.g. "[2, 5]"
