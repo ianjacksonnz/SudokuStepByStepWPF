@@ -41,7 +41,7 @@ public partial class MainWindow : Window
             PuzzleSelector.Items.Add(key);
         }
 
-        PuzzleSelector.SelectedIndex = 4; // Genius Puzzle 1
+        PuzzleSelector.SelectedIndex = 10; // Genius Puzzle 7
     }
 
     private void InitializeGrid()
@@ -394,6 +394,9 @@ public partial class MainWindow : Window
         _isNew = true;
         GridHelper.ClearSquaresNewPuzzle(_squares);
         RulesHelper.SetPossibleNumbers(_squares, false);
+
+        // Deselect the ComboBox
+        PuzzleSelector.SelectedIndex = -1;
     }
 
     private void SudokuSquare_EnterKeyPressed(object sender, KeyEventArgs e)

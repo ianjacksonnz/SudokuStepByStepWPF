@@ -129,6 +129,7 @@ public static class HiddenTriples
                                 if (!tripleRows.Contains(row))
                                 {
                                     var square = squares[row, column];
+
                                     if (square.PossibleNumbers.Contains(firstNumber) ||
                                         square.PossibleNumbers.Contains(secondNumber) ||
                                         square.PossibleNumbers.Contains(thirdNumber))
