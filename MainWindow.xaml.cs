@@ -41,7 +41,7 @@ public partial class MainWindow : Window
             PuzzleSelector.Items.Add(key);
         }
 
-        PuzzleSelector.SelectedIndex = 10; // Genius Puzzle 7
+        PuzzleSelector.SelectedIndex = 4; // Genius Puzzle 1
     }
 
     private void InitializeGrid()

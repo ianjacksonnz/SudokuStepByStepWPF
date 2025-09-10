@@ -37,8 +37,8 @@ public static class HiddenTriples
                         {
                             var square = squares[row, column];
 
-                            if (square.PossibleNumbers.Contains(firstNumber) ||
-                                square.PossibleNumbers.Contains(secondNumber) ||
+                            if (square.PossibleNumbers.Contains(firstNumber) &&
+                                square.PossibleNumbers.Contains(secondNumber) &&
                                 square.PossibleNumbers.Contains(thirdNumber))
                             {
                                 tripleColumns.Add(column);
@@ -112,8 +112,8 @@ public static class HiddenTriples
                         {
                             var square = squares[row, column];
 
-                            if (square.PossibleNumbers.Contains(firstNumber) ||
-                                square.PossibleNumbers.Contains(secondNumber) ||
+                            if (square.PossibleNumbers.Contains(firstNumber) &&
+                                square.PossibleNumbers.Contains(secondNumber) &&
                                 square.PossibleNumbers.Contains(thirdNumber))
                             {
                                 tripleRows.Add(row);
@@ -193,8 +193,8 @@ public static class HiddenTriples
                                 for (int c = startColumn; c < startColumn + 3; c++)
                                 {
                                     var square = squares[r, c];
-                                    if (square.PossibleNumbers.Contains(firstNumber) ||
-                                        square.PossibleNumbers.Contains(secondNumber) ||
+                                    if (square.PossibleNumbers.Contains(firstNumber) &&
+                                        square.PossibleNumbers.Contains(secondNumber) &&
                                         square.PossibleNumbers.Contains(thirdNumber))
                                     {
                                         tripleCells.Add((r, c));

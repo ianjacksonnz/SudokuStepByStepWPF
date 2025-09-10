@@ -192,7 +192,7 @@ public static class PuzzleLoader
             //        {0,0,8,0,0,0,0,0,0}
             //    }
             //},
-            { // Naked Triples?
+            { // X-Wing
                 "Genius Puzzle 7", new int[9,9]
                 {
                     {5,9,1,0,0,7,0,0,0},
