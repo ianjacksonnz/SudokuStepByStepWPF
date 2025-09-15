@@ -6,7 +6,7 @@ namespace SudokuStepByStep.Logic;
 
 public static class RulesEngine
 {
-    public static SolveStep CalculateNextStep(SudokuSquare[,] squares)
+    public static SolveStep CalculateNextStep(SudokuSquareModel[,] squares)
     {
         foreach (Enums.SolvingRule rule in Enum.GetValues(typeof(Enums.SolvingRule)))
         {

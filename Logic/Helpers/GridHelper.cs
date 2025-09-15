@@ -1,13 +1,46 @@
 ﻿using SudokuStepByStep.Models;
-using System.Windows;
-using System.Windows.Input;
-using System.Windows.Media;
+using System.Collections.Generic;
 
 namespace SudokuStepByStep.Logic.Helpers;
 
 public static class GridHelper
 {
-    public static HashSet<int>[,] GetPossibleNumbers(SudokuSquare[,] squares)
+    // Get current numbers as int[,] from the model grid
+    public static int[,] GetNumbers(SudokuSquareModel[,] squares)
+    {
+        int[,] grid = new int[9, 9];
+
+        for (int r = 0; r < 9; r++)
+        {
+            for (int c = 0; c < 9; c++)
+            {
+                grid[r, c] = squares[r, c].Number;
+            }
+        }
+
+        return grid;
+    }
+
+    // Clear numbers for a normal reset (does not affect UI directly)
+    public static void ClearSquares(SudokuSquareModel[,] squares)
+    {
+        for (int r = 0; r < 9; r++)
+        {
+            for (int c = 0; c < 9; c++)
+            {
+                squares[r, c].Number = 0;
+                squares[r, c].PossibleNumbers.Clear();
+            }
+        }
+    }
+
+    // Clear numbers for a new puzzle
+    public static void ClearSquaresNewPuzzle(SudokuSquareModel[,] squares)
+    {
+        ClearSquares(squares);
+    }
+
+    public static HashSet<int>[,] GetPossibleNumbers(SudokuSquareModel[,] squares)
     {
         var grid = new HashSet<int>[9, 9];
 
@@ -15,50 +48,11 @@ public static class GridHelper
         {
             for (int col = 0; col < 9; col++)
             {
-                grid[row, col] = squares[row, col].PossibleNumbers;
+                // Make a copy of the possible numbers
+                grid[row, col] = new HashSet<int>(squares[row, col].PossibleNumbers);
             }
         }
 
         return grid;
-    }
-
-    /// <summary>
-    /// Clear the numbers entered in the grid
-    /// </summary>
-    /// <param name="squares"></param>
-    public static void ClearSquares(SudokuSquare[,] squares)
-    {
-        // --- Clear the grid squares for editable squares ---
-        for (int r = 0; r < 9; r++)
-        {
-            for (int c = 0; c < 9; c++)
-            {
-                if (!squares[r, c].Box.IsReadOnly)
-                {
-                    squares[r, c].Number = 0;
-                    squares[r, c].Box.Text = "";
-                    squares[r, c].Box.Background = Brushes.White;
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// Clear the numbers entered in the grid
-    /// </summary>
-    /// <param name="squares"></param>
-    public static void ClearSquaresNewPuzzle(SudokuSquare[,] squares)
-    {
-        // --- Clear the grid squares for editable squares ---
-        for (int r = 0; r < 9; r++)
-        {
-            for (int c = 0; c < 9; c++)
-            {
-                squares[r, c].Box.IsReadOnly = false;
-                squares[r, c].Number = 0;
-                squares[r, c].Box.Text = "";
-                squares[r, c].Box.Background = Brushes.White;
-            }
-        }
     }
 }

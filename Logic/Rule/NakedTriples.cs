@@ -5,7 +5,7 @@ namespace SudokuStepByStep.Logic.Rule
 {
     public static class NakedTriples
     {
-        public static SolveStep Run(SudokuSquare[,] squares)
+        public static SolveStep Run(SudokuSquareModel[,] squares)
         {
             return NakedGroup.Run(squares, 3, Enums.SolvingRule.NakedTriples);
         }

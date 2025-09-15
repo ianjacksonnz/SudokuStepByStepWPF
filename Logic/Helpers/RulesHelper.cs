@@ -1,154 +1,58 @@
 ﻿using SudokuStepByStep.Models;
-using System.Windows;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SudokuStepByStep.Logic.Helpers;
 
 public static class RulesHelper
 {
-    public static bool IsSafe(SudokuSquare[,] squares, int row, int column, int number)
+    // Check if a number can be placed without breaking Sudoku rules
+    public static bool IsSafe(SudokuSquareModel[,] squares, int row, int col, int number)
     {
-        // Check row and column
+        // Row & Column
         for (int i = 0; i < 9; i++)
         {
             if (squares[row, i].Number == number) return false;
-            if (squares[i, column].Number == number) return false;
+            if (squares[i, col].Number == number) return false;
         }
 
-        // Check 3x3 box
+        // 3x3 box
         int startRow = row - row % 3;
-        int startCol = column - column % 3;
+        int startCol = col - col % 3;
 
         for (int r = startRow; r < startRow + 3; r++)
-        {
             for (int c = startCol; c < startCol + 3; c++)
-            {
                 if (squares[r, c].Number == number) return false;
-            }
-        }
 
         return true;
     }
 
-    public static void RemoveCandidates(HashSet<int>[,] grid, int row, int column, string? key)
+    // Set PossibleNumbers for each square
+    public static void SetPossibleNumbers(SudokuSquareModel[,] squares)
     {
-        // key is a string representation of the candidate list, e.g. "[2, 5]"
-        if (string.IsNullOrEmpty(key) || grid[row, column] == null || grid[row, column].Count == 1)
-        {
-            return;
-        }
-
-        var trimmed = key.Trim('[', ']', ' ');
-
-        foreach (var part in trimmed.Split(','))
-        {
-            if (int.TryParse(part.Trim(), out int num))
-            {
-                grid[row, column].Remove(num);
-            }
-        }
-    }
-
-    public static void SetPossibleNumbers(SudokuSquare[,] squares, bool show)
-    {
-        int[,] grid = GetNumbers(squares);
-
-        for (int row = 0; row < 9; row++)
-        {
-            for (int column = 0; column < 9; column++)
-            {
-                var square = squares[row, column];
-
-                if (squares[row, column].Number == 0)
-                {
-                    square.PossibleNumbers = RulesHelper.GetPossibleNumbers(grid, row, column);
-                }
-                else
-                {
-                    square.PossibleNumbers = new HashSet<int>();
-                }
-
-                ShowPossibleValues(squares, show);
-            }
-        }
-    }
-
-    public static void RemovePossibleNumbersFromGridAfterSolvedSquare(SudokuSquare[,] squares, SolveStep solveStep)
-    {
-        int startRow = solveStep.Row - solveStep.Row % 3;
-        int startCol = solveStep.Column - solveStep.Column % 3;
-
-        for (int row = 0; row < 9; row++)
-        {
-            for (int column = 0; column < 9; column++)
-            {
-                var square = squares[row, column];
-
-                bool sameRow = row == solveStep.Row;
-                bool sameCol = column == solveStep.Column;
-                bool sameBox = row >= startRow && row < startRow + 3 && column >= startCol && column < startCol + 3;
-
-                if (sameRow || sameCol || sameBox)
-                {
-                    if (square.PossibleNumbers.Contains(solveStep.Number))
-                    {
-                        square.PossibleNumbers.Remove(solveStep.Number);
-                    }
-                }
-
-                ShowPossibleValues(squares, true);
-            }
-        }
-    }
-
-    public static void RemovePossibleNumbersFromSquare(SudokuSquare[,] squares, SudokuSquare square, int number)
-    {
-        if (square.PossibleNumbers.Contains(number))
-        {
-            square.PossibleNumbers.Remove(number);
-        }
-
-        ShowPossibleValues(squares, true);
-    }
-
-    public static void ShowPossibleValues(SudokuSquare[,] squares, bool show)
-    {
-        int[,] grid = GetNumbers(squares);
-
-        for (int row = 0; row < 9; row++)
-        {
-            for (int column = 0; column < 9; column++)
-            {
-                var square = squares[row, column];
-
-                if (show)
-                {
-                    square.CandidatesBlock.Text = string.Join(" ", square.PossibleNumbers);
-                    square.CandidatesBlock.Visibility = Visibility.Visible;
-                }
-                else
-                {
-                    square.CandidatesBlock.Text = string.Empty;
-                    square.CandidatesBlock.Visibility = Visibility.Collapsed;
-                }
-            }
-        }
-    }
-
-    public static int[,] GetNumbers(SudokuSquare[,] squares)
-    {
-        int[,] grid = new int[9, 9];
+        int[,] grid = GridHelper.GetNumbers(squares);
 
         for (int r = 0; r < 9; r++)
         {
             for (int c = 0; c < 9; c++)
             {
-                grid[r, c] = squares[r, c].Number;
+                var square = squares[r, c];
+
+                square.PossibleNumbers.Clear();
+
+                if (square.Number == 0)
+                {
+                    foreach (var num in GetPossibleNumbers(grid, r, c))
+                    {
+                        square.PossibleNumbers.Add(num);
+                    }
+                }
             }
         }
-
-        return grid;
     }
 
+    // Get possible numbers for a cell based on current grid
     public static HashSet<int> GetPossibleNumbers(int[,] grid, int row, int col)
     {
         var possible = new HashSet<int>();
@@ -156,170 +60,54 @@ public static class RulesHelper
         for (int num = 1; num <= 9; num++)
         {
             if (NumberNotInRowColumnGrid(grid, row, col, num))
-            {
                 possible.Add(num);
-            }
         }
 
         return possible;
     }
 
-    /// <summary>
-    /// Checks if a number can be placed in a given cell without violating rules
-    /// that the number is not in the same row, column or grid
-    /// </summary>
-    /// <param name="grid"></param>
-    /// <param name="row"></param>
-    /// <param name="col"></param>
-    /// <param name="number"></param>
-    /// <returns></returns>
-    public static bool NumberNotInRowColumnGrid(int[,] grid, int row, int col, int number)
+    private static bool NumberNotInRowColumnGrid(int[,] grid, int row, int col, int number)
     {
-        // Check row
-        for (int c = 0; c < 9; c++)
-        {
-            if (grid[row, c] == number)
-            {
-                return false;
-            }
-        }
+        for (int c = 0; c < 9; c++) if (grid[row, c] == number) return false;
+        for (int r = 0; r < 9; r++) if (grid[r, col] == number) return false;
 
-        // Check column
-        for (int r = 0; r < 9; r++)
-        {
-            if (grid[r, col] == number)
-            {
-                return false;
-            }
-        }
-
-        // Check 3x3 box
         int startRow = row - row % 3;
         int startCol = col - col % 3;
 
         for (int r = startRow; r < startRow + 3; r++)
-        {
             for (int c = startCol; c < startCol + 3; c++)
-            {
-                if (grid[r, c] == number)
-                {
-                    return false;
-                }
-            }
-        }
+                if (grid[r, c] == number) return false;
 
         return true;
     }
 
-    /// <summary>
-    /// Checks if a number can be placed in a given cell using PossibleNumbers 
-    /// </summary>
-    /// <param name="gridPossibleNumbers"></param>
-    /// <param name="row"></param>
-    /// <param name="column"></param>
-    /// <param name="number"></param>
-    /// <returns></returns>
-    public static bool IsPossibleNumber(HashSet<int>[,] gridPossibleNumbers, int row, int column, int number)
+    public static bool PuzzleSolved(SudokuSquareModel[,] squares)
     {
-        // Check row
-        for (int c = 0; c < 9; c++)
-        {
-            if (c != column && gridPossibleNumbers[row, c]?.Count == 1 && gridPossibleNumbers[row, c].Contains(number))
-            {
-                return false;
-            }
-        }
-
-        // Check column
-        for (int r = 0; r < 9; r++)
-        {
-            if (r != row && gridPossibleNumbers[r, column]?.Count == 1 && gridPossibleNumbers[r, column].Contains(number))
-            {
-                return false;
-            }
-        }
-
-        // Check 3x3 box
-        int startRow = row - row % 3;
-        int startCol = column - column % 3;
-
-        for (int r = startRow; r < startRow + 3; r++)
-        {
-            for (int c = startCol; c < startCol + 3; c++)
-            {
-                if ((r != row || c != column) && gridPossibleNumbers[r, c]?.Count == 1 && gridPossibleNumbers[r, c].Contains(number))
-                {
-                    return false;
-                }
-            }
-        }
-
-        return true;
+        return !squares.Cast<SudokuSquareModel>().Any(s => s.Number == 0);
     }
 
-
-    public static bool SolveCompletePuzzle(HashSet<int>[,] grid)
+    // Remove a number from possible candidates
+    public static void RemovePossibleNumber(SudokuSquareModel square, int number)
     {
-        for (int row = 0; row < 9; row++)
-        {
-            for (int col = 0; col < 9; col++)
-            {
-                if (grid[row, col] == null || grid[row, col].Count == 0)
-                {
-                    for (int num = 1; num <= 9; num++)
-                    {
-                        if (IsPossibleNumber(grid, row, col, num))
-                        {
-                            grid[row, col] = new HashSet<int> { num };
-
-                            if (SolveCompletePuzzle(grid))
-                            {
-                                return true;
-                            }
-
-                            grid[row, col] = null; // backtrack
-                        }
-                    }
-
-                    return false; // no valid number found
-                }
-            }
-        }
-
-        return true; // solved
+        if (square.PossibleNumbers.Contains(number))
+            square.PossibleNumbers.Remove(number);
     }
 
-    public static bool PuzzleSolved(SudokuSquare[,] squares)
-    {
-        int[,] grid = GetNumbers(squares);
-
-        for (int r = 0; r < 9; r++)
-        {
-            for (int c = 0; c < 9; c++)
-            {
-                if (grid[r, c] == 0)
-                {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    public static List<int> RemoveOtherNumbers(params int[] numbersToRemove)
+    public static List<int> RemoveOtherNumbers(params int[] numbersToKeep)
     {
         var result = new List<int>();
-        var toRemove = new HashSet<int>(numbersToRemove);
 
-        for (int number = 1; number <= 9; number++)
+        var keepSet = new HashSet<int>(numbersToKeep);
+
+        for (int num = 1; num <= 9; num++)
         {
-            if (!toRemove.Contains(number))
+            if (!keepSet.Contains(num))
             {
-                result.Add(number);
+                result.Add(num);
             }
         }
 
         return result;
     }
+
 }

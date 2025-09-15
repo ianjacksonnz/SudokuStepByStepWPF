@@ -11,7 +11,7 @@ namespace SudokuStepByStep.Logic.Rule;
 /// </summary>
 public static class HiddenTriples
 {
-    public static SolveStep Run(SudokuSquare[,] squares)
+    public static SolveStep Run(SudokuSquareModel[,] squares)
     {
         bool hiddenTripleFound = false;
 

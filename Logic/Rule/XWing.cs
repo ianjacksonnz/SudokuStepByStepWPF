@@ -8,7 +8,7 @@ namespace SudokuStepByStep.Logic.Rule;
 
 public static class XWing
 {
-    public static SolveStep Run(SudokuSquare[,] squares)
+    public static SolveStep Run(SudokuSquareModel[,] squares)
     {
         var solveStep = new SolveStep()
         {
