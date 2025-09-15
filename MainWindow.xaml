@@ -53,8 +53,36 @@
                     Grid.Column="3"/>
         </Grid>
 
-        <!-- Sudoku grid -->
-        <UniformGrid x:Name="SudokuGrid" Grid.Row="2" Rows="9" Columns="9" Margin="5"/>
+        <!-- Sudoku grid using MVVM binding -->
+        <ItemsControl Grid.Row="2" ItemsSource="{Binding Grid}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Vertical"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <ItemsControl ItemsSource="{Binding}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Rows="1" Columns="9"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding Number, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         IsReadOnly="{Binding IsReadOnly}"
+                                         Background="{Binding BackgroundColor}"
+                                         FontSize="20"
+                                         HorizontalContentAlignment="Center"
+                                         VerticalContentAlignment="Center"
+                                         Margin="2"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
 
         <!-- Buttons row -->
         <Grid Grid.Row="3" Margin="5,25,5,5">
