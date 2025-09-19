@@ -47,41 +47,43 @@
                     Grid.Column="3"/>
         </Grid>
 
-        <!-- Sudoku grid using nested ItemsControls for 2D display, with no space between cells -->
-        <Border Grid.Row="2" Margin="5" BorderBrush="Black" BorderThickness="1">
-            <ItemsControl ItemsSource="{Binding Grid}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <UniformGrid Rows="9" Columns="1"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <ItemsControl ItemsSource="{Binding}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal" IsItemsHost="True" Margin="0"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBox Text="{Binding Number, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                             IsReadOnly="{Binding IsReadOnly}"
-                                             Background="{Binding BackgroundColor}"
-                                             FontSize="20"
-                                             HorizontalContentAlignment="Center"
-                                             VerticalContentAlignment="Center"
-                                             BorderThickness="0.5"
-                                             BorderBrush="Black"
-                                             Padding="0"
-                                             Margin="0"
-                                             Width="48" Height="48"/>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+        <!-- Sudoku grid using nested ItemsControls for 2D display, with square aspect ratio -->
+        <Border Grid.Row="2" Margin="5" BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Grid Width="432" Height="432">
+                <ItemsControl ItemsSource="{Binding Grid}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Rows="9" Columns="1"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <ItemsControl ItemsSource="{Binding}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" IsItemsHost="True" Margin="0"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding Number, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 IsReadOnly="{Binding IsReadOnly}"
+                                                 Background="{Binding BackgroundColor}"
+                                                 FontSize="20"
+                                                 HorizontalContentAlignment="Center"
+                                                 VerticalContentAlignment="Center"
+                                                 BorderThickness="0.5"
+                                                 BorderBrush="Black"
+                                                 Padding="0"
+                                                 Margin="0"
+                                                 Width="48" Height="48"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
         </Border>
 
         <!-- Buttons row -->
