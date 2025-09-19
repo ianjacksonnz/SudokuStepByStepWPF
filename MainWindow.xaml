@@ -27,16 +27,11 @@
         <Grid Grid.Row="1" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <!-- left spacer -->
                 <ColumnDefinition Width="Auto"/>
-                <!-- ComboBox -->
                 <ColumnDefinition Width="*"/>
-                <!-- middle spacer -->
                 <ColumnDefinition Width="Auto"/>
-                <!-- New Puzzle button -->
             </Grid.ColumnDefinitions>
 
-            <!-- ComboBox centered -->
             <ComboBox x:Name="PuzzleSelector" Width="200"
                       HorizontalAlignment="Left"
                       Margin="110,0,0,0" 
@@ -45,7 +40,6 @@
                       SelectedItem="{Binding SelectedPuzzle, Mode=TwoWay}"
                       Grid.Column="1"/>
 
-            <!-- Button right aligned -->
             <Button Content="New Puzzle" Width="100" Margin="10,0,0,0" 
                     HorizontalAlignment="Right"
                     VerticalAlignment="Center"
@@ -53,58 +47,58 @@
                     Grid.Column="3"/>
         </Grid>
 
-        <!-- Sudoku grid using MVVM binding -->
-        <ItemsControl Grid.Row="2" ItemsSource="{Binding Grid}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <StackPanel Orientation="Vertical"/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <ItemsControl ItemsSource="{Binding}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <UniformGrid Rows="1" Columns="9"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <TextBox Text="{Binding Number, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                         IsReadOnly="{Binding IsReadOnly}"
-                                         Background="{Binding BackgroundColor}"
-                                         FontSize="20"
-                                         HorizontalContentAlignment="Center"
-                                         VerticalContentAlignment="Center"
-                                         Margin="2"/>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <!-- Sudoku grid using nested ItemsControls for 2D display, with no space between cells -->
+        <Border Grid.Row="2" Margin="5" BorderBrush="Black" BorderThickness="1">
+            <ItemsControl ItemsSource="{Binding Grid}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="9" Columns="1"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <ItemsControl ItemsSource="{Binding}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Rows="1" Columns="9"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding Number, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             IsReadOnly="{Binding IsReadOnly}"
+                                             Background="{Binding BackgroundColor}"
+                                             FontSize="20"
+                                             HorizontalContentAlignment="Center"
+                                             VerticalContentAlignment="Center"
+                                             BorderThickness="0.5"
+                                             BorderBrush="Black"
+                                             Padding="0"
+                                             Margin="0"
+                                             Width="48" Height="48"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Border>
 
         <!-- Buttons row -->
         <Grid Grid.Row="3" Margin="5,25,5,5">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <!-- left spacer -->
                 <ColumnDefinition Width="Auto"/>
-                <!-- Step button -->
                 <ColumnDefinition Width="*"/>
-                <!-- middle spacer -->
                 <ColumnDefinition Width="Auto"/>
-                <!-- Clear button -->
             </Grid.ColumnDefinitions>
 
-            <!-- Centered Step button -->
             <Button x:Name="StepButton" Content="Step" Width="130"
                     HorizontalAlignment="Left"
                     Margin="110,0,0,0" 
                     Command="{Binding StepCommand}"
                     Grid.Column="1"/>
 
-            <!-- Right-aligned Clear button -->
             <Button Content="Clear" Width="100" 
                     HorizontalAlignment="Right"
                     Command="{Binding ClearCommand}"
