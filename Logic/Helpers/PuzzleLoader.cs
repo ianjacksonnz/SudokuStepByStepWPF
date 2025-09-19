@@ -208,29 +208,4 @@ public static class PuzzleLoader
             },
         };
     }
-
-    public static void LoadPuzzle(int[,] puzzle, SudokuSquare[,] squares)
-    {
-        for (int r = 0; r < 9; r++)
-        {
-            for (int c = 0; c < 9; c++)
-            {
-                if (puzzle[r, c] != 0)
-                {
-                    squares[r, c].Number = puzzle[r, c];
-                    squares[r, c].Box.Text = puzzle[r, c].ToString();
-                    squares[r, c].Box.IsReadOnly = true;
-                    squares[r, c].Box.Foreground = Brushes.DarkBlue;
-                    squares[r, c].CandidatesBlock.Text = "";
-                }
-                else
-                {
-                    squares[r, c].Number = 0;
-                    squares[r, c].Box.Text = "";
-                    squares[r, c].Box.IsReadOnly = false;
-                    squares[r, c].Box.Foreground = Brushes.Black;
-                }
-            }
-        }
-    }
 }
