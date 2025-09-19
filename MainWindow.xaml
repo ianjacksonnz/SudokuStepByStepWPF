@@ -31,20 +31,46 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Left-aligned ComboBox -->
-            <ComboBox x:Name="PuzzleSelector" Width="200"
+            <!-- Left-aligned ComboBox with professional styling -->
+            <ComboBox x:Name="PuzzleSelector" Width="200" Height="36"
                       HorizontalAlignment="Left"
                       VerticalAlignment="Center"
                       ItemsSource="{Binding PuzzleNames}"
                       SelectedItem="{Binding SelectedPuzzle, Mode=TwoWay}"
-                      Grid.Column="0"/>
+                      Grid.Column="0"
+                      FontSize="15"
+                      Padding="8,2"
+                      Background="#F3F3F3"
+                      BorderBrush="#C8C8C8"
+                      BorderThickness="1"
+                      Foreground="#222"
+                      Margin="0,0,0,0"/>
 
-            <!-- Right-aligned New Puzzle button -->
-            <Button Content="New Puzzle" Width="100"
+            <!-- Right-aligned New Puzzle button with professional styling -->
+            <Button Content="New Puzzle" Width="100" Height="36"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Center"
                     Command="{Binding NewPuzzleCommand}"
-                    Grid.Column="2"/>
+                    Grid.Column="2"
+                    Background="#0078D7"
+                    Foreground="White"
+                    FontWeight="SemiBold"
+                    FontSize="16"
+                    BorderThickness="0"
+                    Padding="0,4"
+                    Margin="0,0,0,0">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="4"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Content="{TemplateBinding Content}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
         </Grid>
 
         <!-- Sudoku grid using nested ItemsControls for 2D display, with square aspect ratio -->
@@ -94,24 +120,62 @@
         </Border>
 
         <!-- Buttons row -->
-        <Grid Grid.Row="3" Margin="5,25,5,5" Width="432" HorizontalAlignment="Center">
+        <Grid Grid.Row="3" Margin="0,10,0,0" Width="432" HorizontalAlignment="Center">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Left-aligned Step button -->
-            <Button x:Name="StepButton" Content="Step" Width="130"
+            <!-- Left-aligned Step button with professional styling -->
+            <Button x:Name="StepButton" Content="Step" Width="130" Height="36"
                     HorizontalAlignment="Left"
                     Command="{Binding StepCommand}"
-                    Grid.Column="0"/>
+                    Grid.Column="0"
+                    Background="#0078D7"
+                    Foreground="White"
+                    FontWeight="SemiBold"
+                    FontSize="16"
+                    BorderThickness="0"
+                    Padding="0,4"
+                    Margin="0,0,0,0">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="4"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Content="{TemplateBinding Content}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
 
-            <!-- Right-aligned Clear button -->
-            <Button Content="Clear" Width="100"
+            <!-- Right-aligned Clear button with professional styling -->
+            <Button Content="Clear" Width="100" Height="36"
                     HorizontalAlignment="Right"
                     Command="{Binding ClearCommand}"
-                    Grid.Column="2"/>
+                    Grid.Column="2"
+                    Background="#E81123"
+                    Foreground="White"
+                    FontWeight="SemiBold"
+                    FontSize="16"
+                    BorderThickness="0"
+                    Padding="0,4"
+                    Margin="0,0,0,0">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="4"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Content="{TemplateBinding Content}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
         </Grid>
     </Grid>
     <Window.Resources>
