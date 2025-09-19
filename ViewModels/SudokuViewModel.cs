@@ -84,7 +84,6 @@ public class SudokuViewModel : INotifyPropertyChanged
             PuzzleNames.Add(key);
         }
 
-        // Read default puzzle name from appSettings
         var defaultPuzzleName = ConfigurationManager.AppSettings["DefaultPuzzleName"];
 
         if (!string.IsNullOrEmpty(defaultPuzzleName) && PuzzleNames.Contains(defaultPuzzleName))
@@ -181,6 +180,9 @@ public class SudokuViewModel : INotifyPropertyChanged
             square.Number = solveStep.Number;
             square.PossibleNumbers.Clear();
             square.BackgroundColor = System.Windows.Media.Brushes.LightGreen;
+
+            var sodukoSquares = GridToSquaresArray();
+            RulesHelper.RemovePossibleNumbersAfterSolveStep(sodukoSquares, solveStep);
         }
 
         // Highlight other squares

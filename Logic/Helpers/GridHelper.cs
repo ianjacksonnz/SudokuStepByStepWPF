@@ -5,7 +5,9 @@ namespace SudokuStepByStep.Logic.Helpers;
 
 public static class GridHelper
 {
-    // Get current numbers as int[,] from the model grid
+    /// <summary>
+    /// Get current numbers as int[,] from the model grid
+    /// </summary>
     public static int[,] GetNumbers(SudokuSquare[,] squares)
     {
         int[,] grid = new int[9, 9];
@@ -24,7 +26,6 @@ public static class GridHelper
     /// <summary>
     /// Clear the numbers entered in the grid
     /// </summary>
-    /// <param name="squares"></param>
     public static void ClearSquares(SudokuSquare[,] squares)
     {
         // --- Clear the grid squares for editable squares ---
@@ -46,7 +47,6 @@ public static class GridHelper
     /// <summary>
     /// Clear the numbers entered in the grid
     /// </summary>
-    /// <param name="squares"></param>
     public static void ClearSquaresNewPuzzle(SudokuSquare[,] squares)
     {
         // --- Clear the grid squares for editable squares ---
@@ -61,6 +61,11 @@ public static class GridHelper
         }
     }
 
+    /// <summary>
+    /// Generates a grid of possible numbers for each cell in a Sudoku puzzle.
+    /// </summary>
+    /// <remarks>The returned grid is a deep copy of the possible numbers from the input grid. Modifying the
+    /// returned grid does not affect the original <paramref name="squares"/> grid.</remarks>
     public static HashSet<int>[,] GetPossibleNumbers(SudokuSquare[,] squares)
     {
         var grid = new HashSet<int>[9, 9];
