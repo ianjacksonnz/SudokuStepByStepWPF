@@ -6,5 +6,6 @@
     <Application.Resources>
         <converters:ZeroToEmptyStringConverter x:Key="ZeroToEmptyStringConverter"/>
         <converters:SudokuBorderThicknessConverter x:Key="SudokuBorderThicknessConverter"/>
+        <converters:PossibleNumbersToStringConverter x:Key="PossibleNumbersToStringConverter"/>
     </Application.Resources>
 </Application>

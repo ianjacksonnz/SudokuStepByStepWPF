@@ -144,24 +144,36 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Width="48" Height="48" BorderBrush="Black">
-                                            <Border.BorderThickness>
-                                                <MultiBinding Converter="{StaticResource SudokuBorderThicknessConverter}">
-                                                    <Binding Path="Column"/>
-                                                    <Binding Path="Row"/>
-                                                </MultiBinding>
-                                            </Border.BorderThickness>
-                                            <TextBox Text="{Binding Number, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource ZeroToEmptyStringConverter}}"
-                                                     IsReadOnly="{Binding IsReadOnly}"
-                                                     Background="{Binding BackgroundColor}"
-                                                     FontSize="20"
-                                                     HorizontalContentAlignment="Center"
-                                                     VerticalContentAlignment="Center"
-                                                     BorderThickness="0"
-                                                     Padding="0"
-                                                     Margin="0"
-                                                     Width="48" Height="48"/>
-                                        </Border>
+                                        <Grid Width="48" Height="48">
+                                            <!-- Possible numbers in top-left corner -->
+                                            <TextBlock Text="{Binding PossibleNumbers, Converter={StaticResource PossibleNumbersToStringConverter}}"
+                                                       Foreground="Red"
+                                                       FontSize="10"
+                                                       FontWeight="Bold"
+                                                       HorizontalAlignment="Left"
+                                                       VerticalAlignment="Top"
+                                                       Margin="2,2,0,0"
+                                                       TextWrapping="Wrap"
+                                                       />
+                                            <Border BorderBrush="Black">
+                                                <Border.BorderThickness>
+                                                    <MultiBinding Converter="{StaticResource SudokuBorderThicknessConverter}">
+                                                        <Binding Path="Column"/>
+                                                        <Binding Path="Row"/>
+                                                    </MultiBinding>
+                                                </Border.BorderThickness>
+                                                <TextBox Text="{Binding Number, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource ZeroToEmptyStringConverter}}"
+                                                         IsReadOnly="{Binding IsReadOnly}"
+                                                         Background="{Binding BackgroundColor}"
+                                                         FontSize="20"
+                                                         HorizontalContentAlignment="Center"
+                                                         VerticalContentAlignment="Center"
+                                                         BorderThickness="0"
+                                                         Padding="0"
+                                                         Margin="0"
+                                                         Width="48" Height="48"/>
+                                            </Border>
+                                        </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
@@ -233,5 +245,6 @@
     <Window.Resources>
         <converters:SudokuBorderThicknessConverter x:Key="SudokuBorderThicknessConverter"/>
         <converters:ZeroToEmptyStringConverter x:Key="ZeroToEmptyStringConverter"/>
+        <converters:PossibleNumbersToStringConverter x:Key="PossibleNumbersToStringConverter"/>
     </Window.Resources>
 </Window>
