@@ -7,5 +7,6 @@
         <converters:ZeroToEmptyStringConverter x:Key="ZeroToEmptyStringConverter"/>
         <converters:SudokuBorderThicknessConverter x:Key="SudokuBorderThicknessConverter"/>
         <converters:PossibleNumbersToStringConverter x:Key="PossibleNumbersToStringConverter"/>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
     </Application.Resources>
 </Application>

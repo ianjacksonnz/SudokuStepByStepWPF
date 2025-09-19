@@ -173,7 +173,8 @@
                                                        VerticalAlignment="Top"
                                                        Margin="2,2,0,0"
                                                        TextWrapping="Wrap"
-                                                       Panel.ZIndex="2"/>
+                                                       Panel.ZIndex="2"
+                                                       Visibility="{Binding DataContext.ShowPossibleNumbers, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}"/>
                                         </Grid>
 
                                     </DataTemplate>
@@ -248,5 +249,6 @@
         <converters:SudokuBorderThicknessConverter x:Key="SudokuBorderThicknessConverter"/>
         <converters:ZeroToEmptyStringConverter x:Key="ZeroToEmptyStringConverter"/>
         <converters:PossibleNumbersToStringConverter x:Key="PossibleNumbersToStringConverter"/>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
     </Window.Resources>
 </Window>

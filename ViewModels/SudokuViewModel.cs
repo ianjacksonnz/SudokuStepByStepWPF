@@ -30,6 +30,20 @@ public class SudokuViewModel : INotifyPropertyChanged
     public ICommand NewPuzzleCommand { get; }
     public ICommand LoadPuzzleCommand { get; }
 
+    private bool _showPossibleNumbers;
+    public bool ShowPossibleNumbers
+    {
+        get => _showPossibleNumbers;
+        set
+        {
+            if (_showPossibleNumbers != value)
+            {
+                _showPossibleNumbers = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
     public SudokuViewModel()
     {
         InitializeGrid();
@@ -61,7 +75,7 @@ public class SudokuViewModel : INotifyPropertyChanged
 
     private void LoadPuzzles()
     {
-        var puzzles = PuzzleLoader.GetPuzzles();
+        var puzzles = Logic.Helpers.PuzzleLoader.GetPuzzles();
 
         PuzzleNames.Clear();
 
@@ -81,6 +95,8 @@ public class SudokuViewModel : INotifyPropertyChanged
         {
             SelectedPuzzle = PuzzleNames.Count > 0 ? PuzzleNames[0] : null!;
         }
+
+        ShowPossibleNumbers = false; // Hide possible numbers after loading puzzle
     }
 
     private void LoadSelectedPuzzle()
@@ -121,6 +137,8 @@ public class SudokuViewModel : INotifyPropertyChanged
             // Update Grid with step result
             UpdateGridFromSolveStep(solveStep);
         }
+
+        ShowPossibleNumbers = true; // Show possible numbers after stepping
     }
 
     private void Clear()
