@@ -33,17 +33,19 @@ public static class RulesHelper
     {
         int[,] grid = GridHelper.GetNumbers(squares);
 
-        for (int r = 0; r < 9; r++)
+        for (int row = 0; row < 9; row++)
         {
-            for (int c = 0; c < 9; c++)
+            for (int column = 0; column < 9; column++)
             {
-                var square = squares[r, c];
+                var square = squares[row, column];
 
                 square.PossibleNumbers.Clear();
 
                 if (square.Number == 0)
                 {
-                    foreach (var num in GetPossibleNumbers(grid, r, c))
+                    var possibleNumbers = GetPossibleNumbers(grid, row, column);
+
+                    foreach (var num in possibleNumbers)
                     {
                         square.PossibleNumbers.Add(num);
                     }

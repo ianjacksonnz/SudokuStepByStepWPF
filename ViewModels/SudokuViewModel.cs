@@ -104,7 +104,8 @@ public class SudokuViewModel : INotifyPropertyChanged
         }
 
         // Initialize candidates
-        Logic.Helpers.RulesHelper.SetPossibleNumbers(GridToSquaresArray());
+        var sodukoSquares = GridToSquaresArray();
+        Logic.Helpers.RulesHelper.SetPossibleNumbers(sodukoSquares);
     }
 
     private void Step()
@@ -142,23 +143,24 @@ public class SudokuViewModel : INotifyPropertyChanged
 
     private SudokuSquare[,] GridToSquaresArray()
     {
-        var arr = new SudokuSquare[9, 9];
+        var sodukoSquares = new SudokuSquare[9, 9];
 
         for (int row = 0; row < 9; row++)
         {
-            for (int col = 0; col < 9; col++)
+            for (int column = 0; column < 9; column++)
             {
-                var cell = Grid[row][col];
+                var cell = Grid[row][column];
+                var possibleNumbers = new ObservableCollection<int>(cell.PossibleNumbers);
 
-                arr[row, col] = new SudokuSquare
+                sodukoSquares[row, column] = new SudokuSquare
                 {
                     Number = cell.Number,
-                    PossibleNumbers = new ObservableCollection<int>(cell.PossibleNumbers)
+                    PossibleNumbers = possibleNumbers,
                 };
             }
         }
 
-        return arr;
+        return sodukoSquares;
     }
 
     private void UpdateGridFromSolveStep(SolveStep solveStep)
