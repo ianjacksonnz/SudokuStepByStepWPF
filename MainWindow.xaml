@@ -24,27 +24,27 @@
         </StackPanel>
 
         <!-- Puzzle selector and New Puzzle button in a Grid for alignment -->
-        <Grid Grid.Row="1" Margin="0,0,0,10">
+        <Grid Grid.Row="1" Margin="0,0,0,10" Width="432" HorizontalAlignment="Center">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
+            <!-- Left-aligned ComboBox -->
             <ComboBox x:Name="PuzzleSelector" Width="200"
                       HorizontalAlignment="Left"
-                      Margin="110,0,0,0" 
                       VerticalAlignment="Center"
                       ItemsSource="{Binding PuzzleNames}"
                       SelectedItem="{Binding SelectedPuzzle, Mode=TwoWay}"
-                      Grid.Column="1"/>
+                      Grid.Column="0"/>
 
-            <Button Content="New Puzzle" Width="100" Margin="10,0,0,0" 
+            <!-- Right-aligned New Puzzle button -->
+            <Button Content="New Puzzle" Width="100"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Center"
                     Command="{Binding NewPuzzleCommand}"
-                    Grid.Column="3"/>
+                    Grid.Column="2"/>
         </Grid>
 
         <!-- Sudoku grid using nested ItemsControls for 2D display, with square aspect ratio -->
@@ -94,24 +94,24 @@
         </Border>
 
         <!-- Buttons row -->
-        <Grid Grid.Row="3" Margin="5,25,5,5">
+        <Grid Grid.Row="3" Margin="5,25,5,5" Width="432" HorizontalAlignment="Center">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
+            <!-- Left-aligned Step button -->
             <Button x:Name="StepButton" Content="Step" Width="130"
                     HorizontalAlignment="Left"
-                    Margin="110,0,0,0" 
                     Command="{Binding StepCommand}"
-                    Grid.Column="1"/>
+                    Grid.Column="0"/>
 
-            <Button Content="Clear" Width="100" 
+            <!-- Right-aligned Clear button -->
+            <Button Content="Clear" Width="100"
                     HorizontalAlignment="Right"
                     Command="{Binding ClearCommand}"
-                    Grid.Column="3"/>
+                    Grid.Column="2"/>
         </Grid>
     </Grid>
     <Window.Resources>
