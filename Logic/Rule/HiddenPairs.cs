@@ -11,7 +11,7 @@ namespace SudokuStepByStep.Logic.Rule;
 /// </summary>
 public static class HiddenPairs
 {
-    public static SolveStep Run(SudokuSquareModel[,] squares)
+    public static SolveStep Run(SudokuSquare[,] squares)
     {
         bool hiddenPairFound = false;
 

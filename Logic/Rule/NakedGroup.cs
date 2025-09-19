@@ -7,7 +7,7 @@ namespace SudokuStepByStep.Logic.Rule
 {
     public static class NakedGroup
     {
-        public static SolveStep Run(SudokuSquareModel[,] squares, int groupSize, Enums.SolvingRule rule)
+        public static SolveStep Run(SudokuSquare[,] squares, int groupSize, Enums.SolvingRule rule)
         {
             var solveStep = new SolveStep()
             {
@@ -105,7 +105,7 @@ namespace SudokuStepByStep.Logic.Rule
         private static void CheckGroup(List<(int row, int col)> cells,
                                        List<(int row, int col)> allCells,
                                        Enums.SquareGroupType groupType,
-                                       SudokuSquareModel[,] squares,
+                                       SudokuSquare[,] squares,
                                        SolveStep solveStep,
                                        int groupSize,
                                        int groupIndexRow = 0, int groupIndexCol = 0)

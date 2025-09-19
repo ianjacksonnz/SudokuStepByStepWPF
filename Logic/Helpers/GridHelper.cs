@@ -6,7 +6,7 @@ namespace SudokuStepByStep.Logic.Helpers;
 public static class GridHelper
 {
     // Get current numbers as int[,] from the model grid
-    public static int[,] GetNumbers(SudokuSquareModel[,] squares)
+    public static int[,] GetNumbers(SudokuSquare[,] squares)
     {
         int[,] grid = new int[9, 9];
 
@@ -22,7 +22,7 @@ public static class GridHelper
     }
 
     // Clear numbers for a normal reset (does not affect UI directly)
-    public static void ClearSquares(SudokuSquareModel[,] squares)
+    public static void ClearSquares(SudokuSquare[,] squares)
     {
         for (int r = 0; r < 9; r++)
         {
@@ -35,12 +35,12 @@ public static class GridHelper
     }
 
     // Clear numbers for a new puzzle
-    public static void ClearSquaresNewPuzzle(SudokuSquareModel[,] squares)
+    public static void ClearSquaresNewPuzzle(SudokuSquare[,] squares)
     {
         ClearSquares(squares);
     }
 
-    public static HashSet<int>[,] GetPossibleNumbers(SudokuSquareModel[,] squares)
+    public static HashSet<int>[,] GetPossibleNumbers(SudokuSquare[,] squares)
     {
         var grid = new HashSet<int>[9, 9];
 

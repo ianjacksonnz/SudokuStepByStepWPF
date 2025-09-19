@@ -7,7 +7,7 @@ namespace SudokuStepByStep.ViewModels;
 
 public class SudokuViewModel : INotifyPropertyChanged
 {
-    public ObservableCollection<ObservableCollection<SudokuSquareModel>> Grid { get; set; } = new();
+    public ObservableCollection<ObservableCollection<SudokuSquare>> Grid { get; set; } = new();
     public ObservableCollection<string> PuzzleNames { get; set; } = new();
     private string _selectedPuzzle;
 
@@ -44,10 +44,10 @@ public class SudokuViewModel : INotifyPropertyChanged
         Grid.Clear();
         for (int row = 0; row < 9; row++)
         {
-            var rowList = new ObservableCollection<SudokuSquareModel>();
+            var rowList = new ObservableCollection<SudokuSquare>();
             for (int col = 0; col < 9; col++)
             {
-                rowList.Add(new SudokuSquareModel { Row = row, Column = col });
+                rowList.Add(new SudokuSquare { Row = row, Column = col });
             }
             Grid.Add(rowList);
         }
@@ -116,15 +116,15 @@ public class SudokuViewModel : INotifyPropertyChanged
         SelectedPuzzle = null!;
     }
 
-    private SudokuStepByStep.Models.SudokuSquareModel[,] GridToSquaresArray()
+    private SudokuStepByStep.Models.SudokuSquare[,] GridToSquaresArray()
     {
-        var arr = new SudokuSquareModel[9, 9];
+        var arr = new SudokuSquare[9, 9];
 
         for (int row = 0; row < 9; row++)
             for (int col = 0; col < 9; col++)
             {
                 var m = Grid[row][col];
-                arr[row, col] = new SudokuSquareModel
+                arr[row, col] = new SudokuSquare
                 {
                     Number = m.Number,
                     PossibleNumbers = new System.Collections.ObjectModel.ObservableCollection<int>(m.PossibleNumbers)

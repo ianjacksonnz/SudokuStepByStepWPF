@@ -8,7 +8,7 @@ namespace SudokuStepByStep.Logic.Helpers;
 public static class RulesHelper
 {
     // Check if a number can be placed without breaking Sudoku rules
-    public static bool IsSafe(SudokuSquareModel[,] squares, int row, int col, int number)
+    public static bool IsSafe(SudokuSquare[,] squares, int row, int col, int number)
     {
         // Row & Column
         for (int i = 0; i < 9; i++)
@@ -29,7 +29,7 @@ public static class RulesHelper
     }
 
     // Set PossibleNumbers for each square
-    public static void SetPossibleNumbers(SudokuSquareModel[,] squares)
+    public static void SetPossibleNumbers(SudokuSquare[,] squares)
     {
         int[,] grid = GridHelper.GetNumbers(squares);
 
@@ -81,13 +81,13 @@ public static class RulesHelper
         return true;
     }
 
-    public static bool PuzzleSolved(SudokuSquareModel[,] squares)
+    public static bool PuzzleSolved(SudokuSquare[,] squares)
     {
-        return !squares.Cast<SudokuSquareModel>().Any(s => s.Number == 0);
+        return !squares.Cast<SudokuSquare>().Any(s => s.Number == 0);
     }
 
     // Remove a number from possible candidates
-    public static void RemovePossibleNumber(SudokuSquareModel square, int number)
+    public static void RemovePossibleNumber(SudokuSquare square, int number)
     {
         if (square.PossibleNumbers.Contains(number))
             square.PossibleNumbers.Remove(number);

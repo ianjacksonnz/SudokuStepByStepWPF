@@ -4,7 +4,7 @@ using System.Windows.Media;
 
 namespace SudokuStepByStep.Models
 {
-    public class SudokuSquareModel : INotifyPropertyChanged
+    public class SudokuSquare : INotifyPropertyChanged
     {
         private int _number;
         private bool _isReadOnly;
