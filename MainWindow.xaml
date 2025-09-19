@@ -66,17 +66,24 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <TextBox Text="{Binding Number, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                 IsReadOnly="{Binding IsReadOnly}"
-                                                 Background="{Binding BackgroundColor}"
-                                                 FontSize="20"
-                                                 HorizontalContentAlignment="Center"
-                                                 VerticalContentAlignment="Center"
-                                                 BorderThickness="0.5"
-                                                 BorderBrush="Black"
-                                                 Padding="0"
-                                                 Margin="0"
-                                                 Width="48" Height="48"/>
+                                        <Border Width="48" Height="48" BorderBrush="Black">
+                                            <Border.BorderThickness>
+                                                <MultiBinding Converter="{StaticResource SudokuBorderThicknessConverter}">
+                                                    <Binding Path="Column"/>
+                                                    <Binding Path="Row"/>
+                                                </MultiBinding>
+                                            </Border.BorderThickness>
+                                            <TextBox Text="{Binding Number, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                     IsReadOnly="{Binding IsReadOnly}"
+                                                     Background="{Binding BackgroundColor}"
+                                                     FontSize="20"
+                                                     HorizontalContentAlignment="Center"
+                                                     VerticalContentAlignment="Center"
+                                                     BorderThickness="0"
+                                                     Padding="0"
+                                                     Margin="0"
+                                                     Width="48" Height="48"/>
+                                        </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
@@ -107,4 +114,7 @@
                     Grid.Column="3"/>
         </Grid>
     </Grid>
+    <Window.Resources>
+        <viewModels:SudokuBorderThicknessConverter x:Key="SudokuBorderThicknessConverter"/>
+    </Window.Resources>
 </Window>
