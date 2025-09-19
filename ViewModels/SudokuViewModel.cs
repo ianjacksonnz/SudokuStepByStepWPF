@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Input;
+using System.Configuration;
 
 namespace SudokuStepByStep.ViewModels;
 
@@ -42,37 +43,57 @@ public class SudokuViewModel : INotifyPropertyChanged
     private void InitializeGrid()
     {
         Grid.Clear();
+
         for (int row = 0; row < 9; row++)
         {
             var rowList = new ObservableCollection<SudokuSquare>();
+
             for (int col = 0; col < 9; col++)
             {
                 rowList.Add(new SudokuSquare { Row = row, Column = col });
             }
+
             Grid.Add(rowList);
         }
     }
 
     private void LoadPuzzles()
     {
-        // Example: replace with your PuzzleLoader logic
-        var puzzles = SudokuStepByStep.Logic.Helpers.PuzzleLoader.GetPuzzles();
+        var puzzles = Logic.Helpers.PuzzleLoader.GetPuzzles();
 
         PuzzleNames.Clear();
-        foreach (var key in puzzles.Keys)
-            PuzzleNames.Add(key);
 
-        SelectedPuzzle = PuzzleNames.Count > 0 ? PuzzleNames[0] : null!;
+        foreach (var key in puzzles.Keys)
+        {
+            PuzzleNames.Add(key);
+        }
+
+        // Read default puzzle name from appSettings
+        var defaultPuzzleName = ConfigurationManager.AppSettings["DefaultPuzzleName"];
+
+        if (!string.IsNullOrEmpty(defaultPuzzleName) && PuzzleNames.Contains(defaultPuzzleName))
+        {
+            SelectedPuzzle = defaultPuzzleName;
+        }
+        else
+        {
+            SelectedPuzzle = PuzzleNames.Count > 0 ? PuzzleNames[0] : null!;
+        }
     }
 
     private void LoadSelectedPuzzle()
     {
         if (string.IsNullOrEmpty(SelectedPuzzle)) return;
 
-        var puzzles = SudokuStepByStep.Logic.Helpers.PuzzleLoader.GetPuzzles();
-        if (!puzzles.TryGetValue(SelectedPuzzle, out var puzzle)) return;
+        var puzzles = Logic.Helpers.PuzzleLoader.GetPuzzles();
+
+        if (!puzzles.TryGetValue(SelectedPuzzle, out var puzzle))
+        {
+            return;
+        }
 
         for (int row = 0; row < 9; row++)
+        {
             for (int col = 0; col < 9; col++)
             {
                 var square = Grid[row][col];
@@ -80,16 +101,17 @@ public class SudokuViewModel : INotifyPropertyChanged
                 square.IsReadOnly = puzzle[row, col] != 0;
                 square.BackgroundColor = System.Windows.Media.Brushes.White;
             }
+        }
 
         // Initialize candidates
-        SudokuStepByStep.Logic.Helpers.RulesHelper.SetPossibleNumbers(GridToSquaresArray());
+        Logic.Helpers.RulesHelper.SetPossibleNumbers(GridToSquaresArray());
     }
 
     private void Step()
     {
         // Example: call your RulesEngine logic using Grid
         var squaresArray = GridToSquaresArray();
-        var solveStep = SudokuStepByStep.Logic.RulesEngine.CalculateNextStep(squaresArray);
+        var solveStep = Logic.RulesEngine.CalculateNextStep(squaresArray);
 
         if (solveStep != null)
         {
@@ -101,6 +123,7 @@ public class SudokuViewModel : INotifyPropertyChanged
     private void Clear()
     {
         foreach (var row in Grid)
+        {
             foreach (var square in row)
             {
                 square.Number = 0;
@@ -108,6 +131,7 @@ public class SudokuViewModel : INotifyPropertyChanged
                 square.BackgroundColor = System.Windows.Media.Brushes.White;
                 square.PossibleNumbers.Clear();
             }
+        }
     }
 
     private void NewPuzzle()
@@ -116,20 +140,23 @@ public class SudokuViewModel : INotifyPropertyChanged
         SelectedPuzzle = null!;
     }
 
-    private SudokuStepByStep.Models.SudokuSquare[,] GridToSquaresArray()
+    private SudokuSquare[,] GridToSquaresArray()
     {
         var arr = new SudokuSquare[9, 9];
 
         for (int row = 0; row < 9; row++)
+        {
             for (int col = 0; col < 9; col++)
             {
-                var m = Grid[row][col];
+                var cell = Grid[row][col];
+
                 arr[row, col] = new SudokuSquare
                 {
-                    Number = m.Number,
-                    PossibleNumbers = new System.Collections.ObjectModel.ObservableCollection<int>(m.PossibleNumbers)
+                    Number = cell.Number,
+                    PossibleNumbers = new ObservableCollection<int>(cell.PossibleNumbers)
                 };
             }
+        }
 
         return arr;
     }
@@ -137,6 +164,7 @@ public class SudokuViewModel : INotifyPropertyChanged
     private void UpdateGridFromSolveStep(SolveStep solveStep)
     {
         var square = Grid[solveStep.Row][solveStep.Column];
+
         if (solveStep.Solved)
         {
             square.Number = solveStep.Number;
