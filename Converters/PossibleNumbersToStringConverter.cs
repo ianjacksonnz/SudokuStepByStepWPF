@@ -1,7 +1,5 @@
-using System;
-using System.Collections;
+using System.Collections.ObjectModel;
 using System.Globalization;
-using System.Linq;
 using System.Windows.Data;
 
 namespace SudokuStepByStep.Converters
@@ -10,17 +8,9 @@ namespace SudokuStepByStep.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            // Accept any IEnumerable and filter for ints
-            if (value is IEnumerable enumerable)
+            if (value is ObservableCollection<int> numbers && numbers.Any())
             {
-                var numbers = enumerable.Cast<object>()
-                                       .OfType<int>()
-                                       .ToList();
-
-                if (numbers.Count > 0)
-                {
-                    return string.Join(" ", numbers);
-                }
+                return string.Join(" ", numbers);
             }
 
             return string.Empty;

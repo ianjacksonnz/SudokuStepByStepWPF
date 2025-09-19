@@ -145,17 +145,8 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Grid Width="48" Height="48">
-                                            <!-- Possible numbers in top-left corner -->
-                                            <TextBlock Text="{Binding PossibleNumbers, Converter={StaticResource PossibleNumbersToStringConverter}}"
-                                                       Foreground="Red"
-                                                       FontSize="10"
-                                                       FontWeight="Bold"
-                                                       HorizontalAlignment="Left"
-                                                       VerticalAlignment="Top"
-                                                       Margin="2,2,0,0"
-                                                       TextWrapping="Wrap"
-                                                       />
-                                            <Border BorderBrush="Black">
+                                            <!-- Main cell border + number -->
+                                            <Border BorderBrush="Black" Panel.ZIndex="1">
                                                 <Border.BorderThickness>
                                                     <MultiBinding Converter="{StaticResource SudokuBorderThicknessConverter}">
                                                         <Binding Path="Column"/>
@@ -173,7 +164,18 @@
                                                          Margin="0"
                                                          Width="48" Height="48"/>
                                             </Border>
+
+                                            <!-- Candidate numbers overlay (always on top) -->
+                                            <TextBlock Text="{Binding PossibleNumbers, Converter={StaticResource PossibleNumbersToStringConverter}}"
+                                                       Foreground="Red"
+                                                       FontSize="10"
+                                                       HorizontalAlignment="Left"
+                                                       VerticalAlignment="Top"
+                                                       Margin="2,2,0,0"
+                                                       TextWrapping="Wrap"
+                                                       Panel.ZIndex="2"/>
                                         </Grid>
+
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>

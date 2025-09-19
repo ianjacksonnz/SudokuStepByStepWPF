@@ -3,6 +3,8 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Input;
 using System.Configuration;
+using SudokuStepByStep.Logic.Helpers;
+using SudokuStepByStep.Logic;
 
 namespace SudokuStepByStep.ViewModels;
 
@@ -59,7 +61,7 @@ public class SudokuViewModel : INotifyPropertyChanged
 
     private void LoadPuzzles()
     {
-        var puzzles = Logic.Helpers.PuzzleLoader.GetPuzzles();
+        var puzzles = PuzzleLoader.GetPuzzles();
 
         PuzzleNames.Clear();
 
@@ -85,7 +87,7 @@ public class SudokuViewModel : INotifyPropertyChanged
     {
         if (string.IsNullOrEmpty(SelectedPuzzle)) return;
 
-        var puzzles = Logic.Helpers.PuzzleLoader.GetPuzzles();
+        var puzzles = PuzzleLoader.GetPuzzles();
 
         if (!puzzles.TryGetValue(SelectedPuzzle, out var puzzle))
         {
@@ -105,14 +107,14 @@ public class SudokuViewModel : INotifyPropertyChanged
 
         // Initialize candidates
         var sodukoSquares = GridToSquaresArray();
-        Logic.Helpers.RulesHelper.SetPossibleNumbers(sodukoSquares);
+        RulesHelper.SetPossibleNumbers(sodukoSquares);
     }
 
     private void Step()
     {
         // Example: call your RulesEngine logic using Grid
         var squaresArray = GridToSquaresArray();
-        var solveStep = Logic.RulesEngine.CalculateNextStep(squaresArray);
+        var solveStep = RulesEngine.CalculateNextStep(squaresArray);
 
         if (solveStep != null)
         {
@@ -152,11 +154,7 @@ public class SudokuViewModel : INotifyPropertyChanged
                 var cell = Grid[row][column];
                 var possibleNumbers = new ObservableCollection<int>(cell.PossibleNumbers);
 
-                sodukoSquares[row, column] = new SudokuSquare
-                {
-                    Number = cell.Number,
-                    PossibleNumbers = possibleNumbers,
-                };
+                sodukoSquares[row, column] = Grid[row][column];
             }
         }
 
