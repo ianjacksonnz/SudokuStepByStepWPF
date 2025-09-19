@@ -11,7 +11,11 @@ namespace SudokuStepByStep.Converters
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is ObservableCollection<int> numbers && numbers.Count > 0)
-                return string.Join(" ", numbers);
+            {
+                var possibleNumbers = string.Join(" ", numbers);
+                return possibleNumbers;
+            }
+
             return string.Empty;
         }
 
