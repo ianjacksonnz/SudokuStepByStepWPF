@@ -60,13 +60,13 @@ public class SudokuViewModel : INotifyPropertyChanged
     {
         Grid.Clear();
 
-        for (int row = 0; row < 9; row++)
+        for (int rowIndex = 0; rowIndex < 9; rowIndex++)
         {
             var rowList = new ObservableCollection<SudokuSquare>();
 
-            for (int col = 0; col < 9; col++)
+            for (int columnIndex = 0; columnIndex < 9; columnIndex++)
             {
-                rowList.Add(new SudokuSquare { Row = row, Column = col });
+                rowList.Add(new SudokuSquare { Row = rowIndex, Column = columnIndex });
             }
 
             Grid.Add(rowList);
@@ -75,7 +75,7 @@ public class SudokuViewModel : INotifyPropertyChanged
 
     private void LoadPuzzles()
     {
-        var puzzles = Logic.Helpers.PuzzleLoader.GetPuzzles();
+        var puzzles = PuzzleLoader.GetPuzzles();
 
         PuzzleNames.Clear();
 
@@ -110,13 +110,13 @@ public class SudokuViewModel : INotifyPropertyChanged
             return;
         }
 
-        for (int row = 0; row < 9; row++)
+        for (int rowIndex = 0; rowIndex < 9; rowIndex++)
         {
-            for (int col = 0; col < 9; col++)
+            for (int columnIndex = 0; columnIndex < 9; columnIndex++)
             {
-                var square = Grid[row][col];
-                square.Number = puzzle[row, col];
-                square.IsReadOnly = puzzle[row, col] != 0;
+                var square = Grid[rowIndex][columnIndex];
+                square.Number = puzzle[rowIndex, columnIndex];
+                square.IsReadOnly = puzzle[rowIndex, columnIndex] != 0;
                 square.BackgroundColor = System.Windows.Media.Brushes.White;
             }
         }
@@ -143,16 +143,9 @@ public class SudokuViewModel : INotifyPropertyChanged
 
     private void Clear()
     {
-        foreach (var row in Grid)
-        {
-            foreach (var square in row)
-            {
-                square.Number = 0;
-                square.IsReadOnly = false;
-                square.BackgroundColor = System.Windows.Media.Brushes.White;
-                square.PossibleNumbers.Clear();
-            }
-        }
+        var sodukoSquares = GridToSquaresArray();
+        GridHelper.ClearSquares(sodukoSquares);
+        RulesHelper.SetPossibleNumbers(sodukoSquares);
     }
 
     private void NewPuzzle()
@@ -165,14 +158,14 @@ public class SudokuViewModel : INotifyPropertyChanged
     {
         var sodukoSquares = new SudokuSquare[9, 9];
 
-        for (int row = 0; row < 9; row++)
+        for (int rowIndex = 0; rowIndex < 9; rowIndex++)
         {
-            for (int column = 0; column < 9; column++)
+            for (int columnIndex = 0; columnIndex < 9; columnIndex++)
             {
-                var cell = Grid[row][column];
-                var possibleNumbers = new ObservableCollection<int>(cell.PossibleNumbers);
+                var square = Grid[rowIndex][columnIndex];
+                var possibleNumbers = new ObservableCollection<int>(square.PossibleNumbers);
 
-                sodukoSquares[row, column] = Grid[row][column];
+                sodukoSquares[rowIndex, columnIndex] = Grid[rowIndex][columnIndex];
             }
         }
 
@@ -191,14 +184,14 @@ public class SudokuViewModel : INotifyPropertyChanged
         }
 
         // Highlight other squares
-        foreach (var (r, c) in solveStep.HighlightedSquares)
+        foreach (var (rowIndex, columnIndex) in solveStep.HighlightedSquares)
         {
-            Grid[r][c].BackgroundColor = System.Windows.Media.Brushes.LightYellow;
+            Grid[rowIndex][columnIndex].BackgroundColor = System.Windows.Media.Brushes.LightYellow;
         }
 
-        foreach (var (r, c) in solveStep.CandidatesRemovedSquares)
+        foreach (var (rowIndex, columnIndex) in solveStep.CandidatesRemovedSquares)
         {
-            Grid[r][c].BackgroundColor = System.Windows.Media.Brushes.LightBlue;
+            Grid[rowIndex][columnIndex].BackgroundColor = System.Windows.Media.Brushes.LightBlue;
         }
     }
 

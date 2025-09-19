@@ -1,5 +1,5 @@
 ﻿using SudokuStepByStep.Models;
-using System.Collections.Generic;
+using System.Windows.Media;
 
 namespace SudokuStepByStep.Logic.Helpers;
 
@@ -10,46 +10,67 @@ public static class GridHelper
     {
         int[,] grid = new int[9, 9];
 
-        for (int r = 0; r < 9; r++)
+        for (int rowIndex = 0; rowIndex < 9; rowIndex++)
         {
-            for (int c = 0; c < 9; c++)
+            for (int columnIndex = 0; columnIndex < 9; columnIndex++)
             {
-                grid[r, c] = squares[r, c].Number;
+                grid[rowIndex, columnIndex] = squares[rowIndex, columnIndex].Number;
             }
         }
 
         return grid;
     }
 
-    // Clear numbers for a normal reset (does not affect UI directly)
+    /// <summary>
+    /// Clear the numbers entered in the grid
+    /// </summary>
+    /// <param name="squares"></param>
     public static void ClearSquares(SudokuSquare[,] squares)
     {
-        for (int r = 0; r < 9; r++)
+        // --- Clear the grid squares for editable squares ---
+        for (int rowIndex = 0; rowIndex < 9; rowIndex++)
         {
-            for (int c = 0; c < 9; c++)
+            for (int columnIndex = 0; columnIndex < 9; columnIndex++)
             {
-                squares[r, c].Number = 0;
-                squares[r, c].PossibleNumbers.Clear();
+                var square = squares[rowIndex, columnIndex];
+
+                if (square.HasNumber && !square.IsReadOnly)
+                {
+                    square.Number = 0;
+                    square.BackgroundColor = Brushes.White;
+                }
             }
         }
     }
 
-    // Clear numbers for a new puzzle
+    /// <summary>
+    /// Clear the numbers entered in the grid
+    /// </summary>
+    /// <param name="squares"></param>
     public static void ClearSquaresNewPuzzle(SudokuSquare[,] squares)
     {
-        ClearSquares(squares);
+        // --- Clear the grid squares for editable squares ---
+        for (int rowIndex = 0; rowIndex < 9; rowIndex++)
+        {
+            for (int columnIndex = 0; columnIndex < 9; columnIndex++)
+            {
+                squares[rowIndex, columnIndex].IsReadOnly = false;
+                squares[rowIndex, columnIndex].Number = 0;
+                squares[rowIndex, columnIndex].BackgroundColor = Brushes.White;
+            }
+        }
     }
 
     public static HashSet<int>[,] GetPossibleNumbers(SudokuSquare[,] squares)
     {
         var grid = new HashSet<int>[9, 9];
 
-        for (int row = 0; row < 9; row++)
+        for (int rowIndex = 0; rowIndex < 9; rowIndex++)
         {
-            for (int col = 0; col < 9; col++)
+            for (int columnIndex = 0; columnIndex < 9; columnIndex++)
             {
                 // Make a copy of the possible numbers
-                grid[row, col] = new HashSet<int>(squares[row, col].PossibleNumbers);
+                grid[rowIndex, columnIndex] = new HashSet<int>(squares[rowIndex, columnIndex].PossibleNumbers);
             }
         }
 

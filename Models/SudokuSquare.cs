@@ -25,7 +25,7 @@ namespace SudokuStepByStep.Models
             }
         }
 
-        // Add this property to hide zeros in the UI
+        public bool HasNumber => _number != 0;
         public string DisplayNumber => _number == 0 ? string.Empty : _number.ToString();
 
         public ObservableCollection<int> PossibleNumbers
@@ -69,6 +69,8 @@ namespace SudokuStepByStep.Models
                 }
             }
         }
+
+        public bool HasBackground => _backgroundColor != Brushes.White;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 

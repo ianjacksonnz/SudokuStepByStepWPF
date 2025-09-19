@@ -8,18 +8,18 @@ namespace SudokuStepByStep.Logic.Helpers;
 public static class RulesHelper
 {
     // Check if a number can be placed without breaking Sudoku rules
-    public static bool IsSafe(SudokuSquare[,] squares, int row, int column, int number)
+    public static bool IsSafe(SudokuSquare[,] squares, int rowIndex, int columnIndex, int number)
     {
         // Row & Column
         for (int i = 0; i < 9; i++)
         {
-            if (squares[row, i].Number == number) return false;
-            if (squares[i, column].Number == number) return false;
+            if (squares[rowIndex, i].Number == number) return false;
+            if (squares[i, columnIndex].Number == number) return false;
         }
 
         // 3x3 box
-        int startRow = row - row % 3;
-        int startColumn = column - column % 3;
+        int startRow = rowIndex - rowIndex % 3;
+        int startColumn = columnIndex - columnIndex % 3;
 
         for (int r = startRow; r < startRow + 3; r++)
         {
@@ -40,21 +40,21 @@ public static class RulesHelper
     {
         int[,] grid = GridHelper.GetNumbers(squares);
 
-        for (int row = 0; row < 9; row++)
+        for (int rowIndex = 0; rowIndex < 9; rowIndex++)
         {
-            for (int column = 0; column < 9; column++)
+            for (int columnIndex = 0; columnIndex < 9; columnIndex++)
             {
-                var square = squares[row, column];
+                var square = squares[rowIndex, columnIndex];
 
                 square.PossibleNumbers.Clear();
 
                 if (square.Number == 0)
                 {
-                    var possibleNumbers = GetPossibleNumbers(grid, row, column);
+                    var possibleNumbers = GetPossibleNumbers(grid, rowIndex, columnIndex);
 
-                    foreach (var num in possibleNumbers)
+                    foreach (var number in possibleNumbers)
                     {
-                        square.PossibleNumbers.Add(num);
+                        square.PossibleNumbers.Add(number);
                     }
                 }
             }
@@ -62,13 +62,13 @@ public static class RulesHelper
     }
 
     // Get possible numbers for a cell based on current grid
-    public static HashSet<int> GetPossibleNumbers(int[,] grid, int row, int column)
+    public static HashSet<int> GetPossibleNumbers(int[,] grid, int rowIndex, int columnIndex)
     {
         var possible = new HashSet<int>();
 
         for (int number = 1; number <= 9; number++)
         {
-            if (NumberNotInRowColumnGrid(grid, row, column, number))
+            if (NumberNotInRowColumnGrid(grid, rowIndex, columnIndex, number))
             {
                 possible.Add(number);
             }
@@ -77,24 +77,24 @@ public static class RulesHelper
         return possible;
     }
 
-    private static bool NumberNotInRowColumnGrid(int[,] grid, int row, int column, int number)
+    private static bool NumberNotInRowColumnGrid(int[,] grid, int rowIndex, int columnIndex, int number)
     {
         for (int c = 0; c < 9; c++)
         {
-            if (grid[row, c] == number) return false;
+            if (grid[rowIndex, c] == number) return false;
         }
 
         for (int r = 0; r < 9; r++)
         {
-            if (grid[r, column] == number) return false;
+            if (grid[r, columnIndex] == number) return false;
         }
 
-        int startRow = row - row % 3;
-        int startColumn = column - column % 3;
+        int startRowIndex = rowIndex - rowIndex % 3;
+        int startColumnIndex = columnIndex - columnIndex % 3;
 
-        for (int r = startRow; r < startRow + 3; r++)
+        for (int r = startRowIndex; r < startRowIndex + 3; r++)
         {
-            for (int c = startColumn; c < startColumn + 3; c++)
+            for (int c = startColumnIndex; c < startColumnIndex + 3; c++)
             {
                 if (grid[r, c] == number)
                 {
@@ -126,15 +126,16 @@ public static class RulesHelper
 
         var keepSet = new HashSet<int>(numbersToKeep);
 
-        for (int num = 1; num <= 9; num++)
+        for (int number = 1; number <= 9; number++)
         {
-            if (!keepSet.Contains(num))
+            if (!keepSet.Contains(number))
             {
-                result.Add(num);
+                result.Add(number);
             }
         }
 
         return result;
     }
+
 
 }
