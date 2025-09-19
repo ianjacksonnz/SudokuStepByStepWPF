@@ -60,7 +60,7 @@
                         <ItemsControl ItemsSource="{Binding}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <UniformGrid Rows="1" Columns="9"/>
+                                    <StackPanel Orientation="Horizontal" IsItemsHost="True" Margin="0"/>
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
