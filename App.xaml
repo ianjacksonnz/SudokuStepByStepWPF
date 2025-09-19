@@ -1,9 +1,10 @@
 ﻿<Application x:Class="SodokuSolver2025.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:SudokuStepByStep" xmlns:viewModels="clr-namespace:SudokuStepByStep.ViewModels"
+             xmlns:local="clr-namespace:SudokuStepByStep" xmlns:converters="clr-namespace:SudokuStepByStep.Converters"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <viewModels:SudokuBorderThicknessConverter x:Key="SudokuBorderThicknessConverter"/>
+        <converters:ZeroToEmptyStringConverter x:Key="ZeroToEmptyStringConverter"/>
+        <converters:SudokuBorderThicknessConverter x:Key="SudokuBorderThicknessConverter"/>
     </Application.Resources>
 </Application>

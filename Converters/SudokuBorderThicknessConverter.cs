@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace SudokuStepByStep.ViewModels;
+namespace SudokuStepByStep.Converters;
 
 public class SudokuBorderThicknessConverter : IMultiValueConverter
 {

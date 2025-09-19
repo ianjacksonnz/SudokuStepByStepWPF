@@ -20,9 +20,13 @@ namespace SudokuStepByStep.Models
                 {
                     _number = value;
                     OnPropertyChanged(nameof(Number));
+                    OnPropertyChanged(nameof(DisplayNumber)); // Notify when DisplayNumber changes
                 }
             }
         }
+
+        // Add this property to hide zeros in the UI
+        public string DisplayNumber => _number == 0 ? string.Empty : _number.ToString();
 
         public ObservableCollection<int> PossibleNumbers
         {
