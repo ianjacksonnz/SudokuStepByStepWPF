@@ -42,6 +42,23 @@ A modern WPF application for learning and solving Sudoku puzzles step by step. T
 - `Logic/RulesEngine.cs`: Main engine for step-by-step solving.
 - `MainWindow.xaml`: WPF UI definition.
 
+## Architecture
+
+Uses the MVVM (Model-View-ViewModel) achitecture pattern for a clean separation of UI and logic.
+MVVM (Model–View–ViewModel) is a UI architecture pattern where:
+
+- Model holds the data and business logic,
+
+- View is the UI (XAML), and
+
+- ViewModel acts as the bridge between them.
+
+The Model, View, and ViewModel communicate through data bindings and commands.
+
+- Bindings connect the View to ViewModel properties so UI updates automatically when data changes.
+- Commands expose actions from the ViewModel that the View can trigger (e.g., button clicks).
+- Notifications (INotifyPropertyChanged) let the View know when a property changes so the UI refreshes dynamically without manual updates.
+
 
 ## License
 
