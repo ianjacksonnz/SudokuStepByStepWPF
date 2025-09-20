@@ -10,6 +10,11 @@ namespace SudokuStepByStep.ViewModels;
 
 public class SudokuViewModel : INotifyPropertyChanged
 {
+    private List<int> _previousStepCandidatesRemovedNumbers = [];
+    private bool _previousStepCandidatesRemoved = false;
+    private HashSet<(int row, int col)> _previousStepCandidatesRemovedSquares = new();
+    private bool _isNew = false;
+
     public ObservableCollection<ObservableCollection<SudokuSquare>> Grid { get; set; } = new();
     public ObservableCollection<string> PuzzleNames { get; set; } = new();
     public ICommand StepCommand { get; }
@@ -168,9 +173,32 @@ public class SudokuViewModel : INotifyPropertyChanged
 
     private void Step()
     {
+        var sodukoSquares = GridToSquaresArray();
         GridHelper.ClearHighlighting(GridToSquaresArray());
-        var squaresArray = GridToSquaresArray();
-        var solveStep = RulesEngine.CalculateNextStep(squaresArray);
+
+        var puzzleSolved = RulesHelper.IsPuzzleSolved(sodukoSquares);
+
+        if (puzzleSolved)
+        {
+            Explanation = "Puzzle Solved!";
+            GridHelper.ClearHighlighting(sodukoSquares);
+            return;
+        }
+
+        if (_previousStepCandidatesRemoved)
+        {
+            foreach (var (rowIndex, columnIndex) in _previousStepCandidatesRemovedSquares)
+            {
+                var squareRemoveCandidates = sodukoSquares[rowIndex, columnIndex];
+
+                foreach (var number in _previousStepCandidatesRemovedNumbers)
+                {
+                    RulesHelper.RemovePossibleNumbersFromSquare(squareRemoveCandidates, number);
+                }
+            }
+        }
+
+        var solveStep = RulesEngine.CalculateNextStep(sodukoSquares);
 
         if (solveStep != null)
         {
@@ -185,6 +213,16 @@ public class SudokuViewModel : INotifyPropertyChanged
     {
         var puzzleSolved = false;
         var square = Grid[solveStep.Row][solveStep.Column];
+
+        _previousStepCandidatesRemovedNumbers = solveStep.CandidatesRemovedNumbers;
+        _previousStepCandidatesRemoved = solveStep.CandidatesRemovedInHighlightedSquares || solveStep.CandidatesRemovedInNonHighlightedSquares;
+
+        _previousStepCandidatesRemovedSquares =
+            solveStep.CandidatesRemovedInHighlightedSquares
+                ? [.. solveStep.HighlightedSquares]
+                : solveStep.CandidatesRemovedInNonHighlightedSquares
+                    ? new HashSet<(int row, int col)>(solveStep.CandidatesRemovedSquares)
+                    : new HashSet<(int row, int col)>();
 
         if (solveStep.Solved)
         {
@@ -233,5 +271,10 @@ public class SudokuViewModel : INotifyPropertyChanged
         SelectedPuzzle = null!;
     }
 
-
+    private void ResetPreviousStepStoredValues()
+    {
+        _previousStepCandidatesRemovedNumbers = [];
+        _previousStepCandidatesRemoved = false;
+        _previousStepCandidatesRemovedSquares = new();
+    }
 }

@@ -85,13 +85,18 @@ public static class RulesHelper
 
                 if (sameRowIndex || sameColumnIndex || sameBoxIndex)
                 {
-                    if (square.PossibleNumbers.Contains(solveStep.Number))
-                    {
-                        square.PossibleNumbers.Remove(solveStep.Number);
-                        square.OnPropertyChanged(nameof(SudokuSquare.PossibleNumbers));
-                    }
+                    RemovePossibleNumbersFromSquare(square, solveStep.Number);
                 }
             }
+        }
+    }
+
+    public static void RemovePossibleNumbersFromSquare(SudokuSquare square, int number)
+    {
+        if (square.PossibleNumbers.Contains(number))
+        {
+            square.PossibleNumbers.Remove(number);
+            square.OnPropertyChanged(nameof(SudokuSquare.PossibleNumbers));
         }
     }
 
