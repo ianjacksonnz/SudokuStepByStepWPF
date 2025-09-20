@@ -127,6 +127,7 @@ public class SudokuViewModel : INotifyPropertyChanged
 
     private void LoadSelectedPuzzle()
     {
+        _isNew = false;
         if (string.IsNullOrEmpty(SelectedPuzzle)) return;
 
         var puzzles = PuzzleLoader.GetPuzzles();
@@ -150,6 +151,7 @@ public class SudokuViewModel : INotifyPropertyChanged
         // Initialize candidates
         var sodukoSquares = GridToSquaresArray();
         RulesHelper.SetPossibleNumbers(sodukoSquares);
+        ResetPreviousStepStoredValues();
         ShowPossibleNumbers = false;
     }
 
@@ -256,14 +258,25 @@ public class SudokuViewModel : INotifyPropertyChanged
     private void Clear()
     {
         var sodukoSquares = GridToSquaresArray();
-        GridHelper.ClearSquares(sodukoSquares);
+
+        if (_isNew)
+        {
+            GridHelper.ClearSquaresNewPuzzle(sodukoSquares);
+        }
+        else
+        {
+            GridHelper.ClearSquares(sodukoSquares);
+        }
+
         RulesHelper.SetPossibleNumbers(sodukoSquares);
+        ResetPreviousStepStoredValues();
         Explanation = string.Empty;
         ShowPossibleNumbers = false;
     }
 
     private void NewPuzzle()
     {
+        _isNew = true;
         Clear();
         SelectedPuzzle = null!;
     }

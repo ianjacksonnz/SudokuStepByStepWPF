@@ -50,6 +50,23 @@ public static class GridHelper
     }
 
     /// <summary>
+    /// Clear the numbers entered in the grid
+    /// </summary>
+    public static void ClearSquaresNewPuzzle(SudokuSquare[,] squares)
+    {
+        // --- Clear the grid squares for editable squares ---
+        for (int rowIndex = 0; rowIndex < 9; rowIndex++)
+        {
+            for (int columnIndex = 0; columnIndex < 9; columnIndex++)
+            {
+                squares[rowIndex, columnIndex].IsReadOnly = false;
+                squares[rowIndex, columnIndex].Number = 0;
+                squares[rowIndex, columnIndex].BackgroundColor = Brushes.White;
+            }
+        }
+    }
+
+    /// <summary>
     /// Clear the highlighted squares in the the grid
     /// </summary>
     public static void ClearHighlighting(SudokuSquare[,] squares)
@@ -65,23 +82,6 @@ public static class GridHelper
                 {
                     square.BackgroundColor = Brushes.White;
                 }
-            }
-        }
-    }
-
-    /// <summary>
-    /// Clear the numbers entered in the grid
-    /// </summary>
-    public static void ClearSquaresNewPuzzle(SudokuSquare[,] squares)
-    {
-        // --- Clear the grid squares for editable squares ---
-        for (int rowIndex = 0; rowIndex < 9; rowIndex++)
-        {
-            for (int columnIndex = 0; columnIndex < 9; columnIndex++)
-            {
-                squares[rowIndex, columnIndex].IsReadOnly = false;
-                squares[rowIndex, columnIndex].Number = 0;
-                squares[rowIndex, columnIndex].BackgroundColor = Brushes.White;
             }
         }
     }

@@ -44,7 +44,7 @@ public static class HiddenSingle
                     solveStep.Number = number;
                     solveStep.Row = rowIndex;
                     solveStep.Column = solvedColumn;
-                    solveStep.Explanation = $"The number {number} can only fit in this square in row {rowIndex + 1}.";
+                    solveStep.Explanation = $"The number {number} can only go in this square in row {rowIndex + 1}.";
 
                     for (int columnIndex = 0; columnIndex < 9; columnIndex++)
                     {
@@ -85,7 +85,7 @@ public static class HiddenSingle
                     solveStep.Number = number;
                     solveStep.Row = solvedRow;
                     solveStep.Column = columnIndex;
-                    solveStep.Explanation = $"The number {number} can only fit in this square in column {columnIndex + 1}.";
+                    solveStep.Explanation = $"The number {number} can only go in this square in column {columnIndex + 1}.";
 
                     for (int rowIndex = 0; rowIndex < 9; rowIndex++)
                     {
@@ -131,7 +131,7 @@ public static class HiddenSingle
                         solveStep.Number = number;
                         solveStep.Row = solvedRow;
                         solveStep.Column = solvedColumn;
-                        solveStep.Explanation = $"The number {number} can only fit in this square in its 3x3 grid.";
+                        solveStep.Explanation = $"The number {number} can only go in this square in its 3x3 grid.";
 
                         int startRowIndex = (solvedRow / 3) * 3;
                         int startColumnIndex = (solvedColumn / 3) * 3;
