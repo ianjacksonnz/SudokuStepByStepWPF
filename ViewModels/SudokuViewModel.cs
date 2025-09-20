@@ -12,8 +12,20 @@ public class SudokuViewModel : INotifyPropertyChanged
 {
     public ObservableCollection<ObservableCollection<SudokuSquare>> Grid { get; set; } = new();
     public ObservableCollection<string> PuzzleNames { get; set; } = new();
-    private string _selectedPuzzle;
+    public ICommand StepCommand { get; }
+    public ICommand ClearCommand { get; }
+    public ICommand NewPuzzleCommand { get; }
+    public ICommand LoadPuzzleCommand { get; }
 
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+
+    private string _selectedPuzzle;
     public string SelectedPuzzle
     {
         get => _selectedPuzzle;
@@ -24,11 +36,6 @@ public class SudokuViewModel : INotifyPropertyChanged
             LoadPuzzleCommand.Execute(null);
         }
     }
-
-    public ICommand StepCommand { get; }
-    public ICommand ClearCommand { get; }
-    public ICommand NewPuzzleCommand { get; }
-    public ICommand LoadPuzzleCommand { get; }
 
     private bool _showPossibleNumbers;
     public bool ShowPossibleNumbers
@@ -43,6 +50,21 @@ public class SudokuViewModel : INotifyPropertyChanged
             }
         }
     }
+
+    private string _explanation;
+    public string Explanation
+    {
+        get => _explanation;
+        set
+        {
+            if (_explanation != value)
+            {
+                _explanation = value;
+                OnPropertyChanged(nameof(Explanation));
+            }
+        }
+    }
+
 
     public SudokuViewModel()
     {
@@ -172,6 +194,9 @@ public class SudokuViewModel : INotifyPropertyChanged
             RulesHelper.RemovePossibleNumbersFromGridAfterSquareSolved(sodukoSquares, solveStep);
         }
 
+        // Set the explanation text for the label
+        Explanation = solveStep.Explanation;
+
         // Highlight other squares
         foreach (var (rowIndex, columnIndex) in solveStep.HighlightedSquares)
         {
@@ -197,9 +222,5 @@ public class SudokuViewModel : INotifyPropertyChanged
         SelectedPuzzle = null!;
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
-    protected void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
+
 }
