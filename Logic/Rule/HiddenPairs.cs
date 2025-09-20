@@ -23,7 +23,7 @@ public static class HiddenPairs
         };
 
         // Check each row
-        for (int row = 0; row < 9; row++)
+        for (int rowIndex = 0; rowIndex < 9; rowIndex++)
         {
             for (int firstNumber = 1; firstNumber <= 8; firstNumber++)
             {
@@ -31,13 +31,13 @@ public static class HiddenPairs
                 {
                     var pairColumns = new List<int>();
 
-                    for (int column = 0; column < 9; column++)
+                    for (int columnIndex = 0; columnIndex < 9; columnIndex++)
                     {
-                        var square = squares[row, column];
+                        var square = squares[rowIndex, columnIndex];
 
                         if (square.PossibleNumbers.Contains(firstNumber) && square.PossibleNumbers.Contains(secondNumber))
                         {
-                            pairColumns.Add(column);
+                            pairColumns.Add(columnIndex);
                         }
                     }
 
@@ -46,11 +46,11 @@ public static class HiddenPairs
                         // Ensure firstNumber and secondNumber do NOT appear in any other square in the row
                         bool onlyInPair = true;
 
-                        for (int column = 0; column < 9; column++)
+                        for (int columnIndex = 0; columnIndex < 9; columnIndex++)
                         {
-                            if (!pairColumns.Contains(column))
+                            if (!pairColumns.Contains(columnIndex))
                             {
-                                var square = squares[row, column];
+                                var square = squares[rowIndex, columnIndex];
 
                                 if (square.PossibleNumbers.Contains(firstNumber) || square.PossibleNumbers.Contains(secondNumber))
                                 {
@@ -60,21 +60,21 @@ public static class HiddenPairs
                             }
                         }
 
-                        if (onlyInPair && pairColumns.All(col => squares[row, col].PossibleNumbers.Count > 2))
+                        if (onlyInPair && pairColumns.All(columnIndex => squares[rowIndex, columnIndex].PossibleNumbers.Count > 2))
                         {
                             solveStep.Number = 0;
-                            solveStep.Explanation = $"Hidden Pair: Numbers {firstNumber} and {secondNumber} only appear together in two squares in row {row + 1}.{Environment.NewLine}Remove other candidates from those squares.";
+                            solveStep.Explanation = $"Hidden Pair: Numbers {firstNumber} and {secondNumber} only appear together in two squares in row {rowIndex + 1}.{Environment.NewLine}Remove other candidates from those squares.";
 
                             foreach (var column in pairColumns)
                             {
-                                solveStep.HighlightedSquares.Add((row, column));
+                                solveStep.HighlightedSquares.Add((rowIndex, column));
 
-                                foreach (var num in squares[row, column].PossibleNumbers.ToList())
+                                foreach (var num in squares[rowIndex, column].PossibleNumbers.ToList())
                                 {
                                     if (num != firstNumber && num != secondNumber)
                                     {
                                         hiddenPairFound = true;
-                                        solveStep.CandidatesRemovedSquares.Add((row, column));
+                                        solveStep.CandidatesRemovedSquares.Add((rowIndex, column));
                                         solveStep.CandidatesRemovedInHighlightedSquares = true;
                                     }
                                 }
@@ -93,7 +93,7 @@ public static class HiddenPairs
         }
 
         // Check each column
-        for (int column = 0; column < 9; column++)
+        for (int columnIndex = 0; columnIndex < 9; columnIndex++)
         {
             for (int firstNumber = 1; firstNumber <= 8; firstNumber++)
             {
@@ -101,13 +101,13 @@ public static class HiddenPairs
                 {
                     var pairRows = new List<int>();
 
-                    for (int row = 0; row < 9; row++)
+                    for (int rowIndex = 0; rowIndex < 9; rowIndex++)
                     {
-                        var square = squares[row, column];
+                        var square = squares[rowIndex, columnIndex];
 
                         if (square.PossibleNumbers.Contains(firstNumber) && square.PossibleNumbers.Contains(secondNumber))
                         {
-                            pairRows.Add(row);
+                            pairRows.Add(rowIndex);
                         }
                     }
 
@@ -115,11 +115,11 @@ public static class HiddenPairs
                     {
                         bool onlyInPair = true;
 
-                        for (int row = 0; row < 9; row++)
+                        for (int rowIndex = 0; rowIndex < 9; rowIndex++)
                         {
-                            if (!pairRows.Contains(row))
+                            if (!pairRows.Contains(rowIndex))
                             {
-                                var square = squares[row, column];
+                                var square = squares[rowIndex, columnIndex];
 
                                 if (square.PossibleNumbers.Contains(firstNumber) || square.PossibleNumbers.Contains(secondNumber))
                                 {
@@ -129,21 +129,21 @@ public static class HiddenPairs
                             }
                         }
 
-                        if (onlyInPair && pairRows.All(row => squares[row, column].PossibleNumbers.Count > 2))
+                        if (onlyInPair && pairRows.All(rowIndex => squares[rowIndex, columnIndex].PossibleNumbers.Count > 2))
                         {
                             solveStep.Number = 0;
-                            solveStep.Explanation = $"Hidden Pair: Numbers {firstNumber} and {secondNumber} only appear together in two squares in column {column + 1}.{Environment.NewLine}Remove other candidates from those squares.";
+                            solveStep.Explanation = $"Hidden Pair: Numbers {firstNumber} and {secondNumber} only appear together in two squares in column {columnIndex + 1}.{Environment.NewLine}Remove other candidates from those squares.";
 
-                            foreach (var row in pairRows)
+                            foreach (var rowIndex in pairRows)
                             {
-                                solveStep.HighlightedSquares.Add((row, column));
+                                solveStep.HighlightedSquares.Add((rowIndex, columnIndex));
 
-                                foreach (var num in squares[row, column].PossibleNumbers.ToList())
+                                foreach (var num in squares[rowIndex, columnIndex].PossibleNumbers.ToList())
                                 {
                                     if (num != firstNumber && num != secondNumber)
                                     {
                                         hiddenPairFound = true;
-                                        solveStep.CandidatesRemovedSquares.Add((row, column));
+                                        solveStep.CandidatesRemovedSquares.Add((rowIndex, columnIndex));
                                         solveStep.CandidatesRemovedInHighlightedSquares = true;
                                     }
                                 }
@@ -161,43 +161,43 @@ public static class HiddenPairs
         }
 
         // Check each 3x3 box
-        for (int boxRow = 0; boxRow < 3; boxRow++)
+        for (int boxRowIndex = 0; boxRowIndex < 3; boxRowIndex++)
         {
-            for (int boxColumn = 0; boxColumn < 3; boxColumn++)
+            for (int boxColumnIndex = 0; boxColumnIndex < 3; boxColumnIndex++)
             {
-                int startRow = boxRow * 3;
-                int startColumn = boxColumn * 3;
+                int startRowIndex = boxRowIndex * 3;
+                int startColumnIndex = boxColumnIndex * 3;
 
                 for (int firstNumber = 1; firstNumber <= 8; firstNumber++)
                 {
                     for (int secondNumber = firstNumber + 1; secondNumber <= 9; secondNumber++)
                     {
-                        var pairCells = new List<(int row, int col)>();
+                        var pairSquares = new List<(int row, int col)>();
 
-                        for (int r = startRow; r < startRow + 3; r++)
+                        for (int rowIndex = startRowIndex; rowIndex < startRowIndex + 3; rowIndex++)
                         {
-                            for (int c = startColumn; c < startColumn + 3; c++)
+                            for (int columnIndex = startColumnIndex; columnIndex < startColumnIndex + 3; columnIndex++)
                             {
-                                var square = squares[r, c];
+                                var square = squares[rowIndex, columnIndex];
 
                                 if (square.PossibleNumbers.Contains(firstNumber) && square.PossibleNumbers.Contains(secondNumber))
                                 {
-                                    pairCells.Add((r, c));
+                                    pairSquares.Add((rowIndex, columnIndex));
                                 }
                             }
                         }
 
-                        if (pairCells.Count == 2)
+                        if (pairSquares.Count == 2)
                         {
                             bool onlyInPair = true;
 
-                            for (int r = startRow; r < startRow + 3; r++)
+                            for (int rowIndex = startRowIndex; rowIndex < startRowIndex + 3; rowIndex++)
                             {
-                                for (int c = startColumn; c < startColumn + 3; c++)
+                                for (int columnIndex = startColumnIndex; columnIndex < startColumnIndex + 3; columnIndex++)
                                 {
-                                    if (!pairCells.Contains((r, c)))
+                                    if (!pairSquares.Contains((rowIndex, columnIndex)))
                                     {
-                                        var square = squares[r, c];
+                                        var square = squares[rowIndex, columnIndex];
 
                                         if (square.PossibleNumbers.Contains(firstNumber) || square.PossibleNumbers.Contains(secondNumber))
                                         {
@@ -210,18 +210,18 @@ public static class HiddenPairs
                                 if (!onlyInPair) break;
                             }
 
-                            if (onlyInPair && pairCells.All(cell => squares[cell.row, cell.col].PossibleNumbers.Count > 2))
+                            if (onlyInPair && pairSquares.All(cell => squares[cell.row, cell.col].PossibleNumbers.Count > 2))
                             {
                                 solveStep.Number = 0;
                                 solveStep.Explanation = $"Hidden Pair: Numbers {firstNumber} and {secondNumber} only appear together in two squares in the box.{Environment.NewLine}Remove other candidates from those squares.";
 
-                                foreach (var cell in pairCells)
+                                foreach (var cell in pairSquares)
                                 {
                                     solveStep.HighlightedSquares.Add(cell);
 
-                                    foreach (var num in squares[cell.row, cell.col].PossibleNumbers.ToList())
+                                    foreach (var number in squares[cell.row, cell.col].PossibleNumbers.ToList())
                                     {
-                                        if (num != firstNumber && num != secondNumber)
+                                        if (number != firstNumber && number != secondNumber)
                                         {
                                             hiddenPairFound = true;
                                             solveStep.CandidatesRemovedSquares.Add(cell);

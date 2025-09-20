@@ -145,6 +145,7 @@ public class SudokuViewModel : INotifyPropertyChanged
         // Initialize candidates
         var sodukoSquares = GridToSquaresArray();
         RulesHelper.SetPossibleNumbers(sodukoSquares);
+        ShowPossibleNumbers = false;
     }
 
     private SudokuSquare[,] GridToSquaresArray()
@@ -177,11 +178,12 @@ public class SudokuViewModel : INotifyPropertyChanged
             UpdateGridFromSolveStep(solveStep);
         }
 
-        ShowPossibleNumbers = true; // Show possible numbers after stepping
+        ShowPossibleNumbers = true;
     }
 
     private void UpdateGridFromSolveStep(SolveStep solveStep)
     {
+        var puzzleSolved = false;
         var square = Grid[solveStep.Row][solveStep.Column];
 
         if (solveStep.Solved)
@@ -192,9 +194,16 @@ public class SudokuViewModel : INotifyPropertyChanged
 
             var sodukoSquares = GridToSquaresArray();
             RulesHelper.RemovePossibleNumbersFromGridAfterSquareSolved(sodukoSquares, solveStep);
-        }
+            puzzleSolved = RulesHelper.IsPuzzleSolved(sodukoSquares);
 
-        // Set the explanation text for the label
+            if (puzzleSolved)
+            {
+                Explanation = "Puzzle Solved!";
+                GridHelper.ClearHighlighting(sodukoSquares);
+                return;
+            }
+        }
+       
         Explanation = solveStep.Explanation;
 
         // Highlight other squares
@@ -214,6 +223,8 @@ public class SudokuViewModel : INotifyPropertyChanged
         var sodukoSquares = GridToSquaresArray();
         GridHelper.ClearSquares(sodukoSquares);
         RulesHelper.SetPossibleNumbers(sodukoSquares);
+        Explanation = string.Empty;
+        ShowPossibleNumbers = false;
     }
 
     private void NewPuzzle()

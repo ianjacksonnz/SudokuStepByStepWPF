@@ -19,11 +19,11 @@ public static class NakedSingle
         var gridPossibleNumbers = GridHelper.GetPossibleNumbers(squares);
 
         // --- rows ---
-        for (int row = 0; row < 9; row++)
+        for (int rowIndex = 0; rowIndex < 9; rowIndex++)
         {
-            for (int column = 0; column < 9; column++)
+            for (int columnIndex = 0; columnIndex < 9; columnIndex++)
             {
-                var square = squares[row, column];
+                var square = squares[rowIndex, columnIndex];
 
                 if (square.PossibleNumbers.Count == 1)
                 {
@@ -31,8 +31,8 @@ public static class NakedSingle
 
                     solveStep.Solved = true;
                     solveStep.Number = number;
-                    solveStep.Row = row;
-                    solveStep.Column = column;
+                    solveStep.Row = rowIndex;
+                    solveStep.Column = columnIndex;
                     solveStep.Explanation = $"The number {number} is the only number that can go in this square.";
 
                     return solveStep;

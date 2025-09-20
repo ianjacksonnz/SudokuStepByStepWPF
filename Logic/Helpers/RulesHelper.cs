@@ -148,7 +148,7 @@ public static class RulesHelper
     /// <summary>
     /// Is puzzle solved?
     /// </summary>
-    public static bool PuzzleSolved(SudokuSquare[,] squares)
+    public static bool IsPuzzleSolved(SudokuSquare[,] squares)
     {
         return !squares.Cast<SudokuSquare>().Any(s => s.Number == 0);
     }

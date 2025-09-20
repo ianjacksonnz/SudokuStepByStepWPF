@@ -18,18 +18,18 @@ namespace SudokuStepByStep.Logic.Rule
             };
 
             // Check rows
-            for (int row = 0; row < 9; row++)
+            for (int rowIndex = 0; rowIndex < 9; rowIndex++)
             {
                 var cells = Enumerable.Range(0, 9)
-                    .Where(column => squares[row, column].PossibleNumbers.Count >= 2 && squares[row, column].PossibleNumbers.Count <= groupSize)
-                    .Select(col => (row, col)).ToList();
+                    .Where(column => squares[rowIndex, column].PossibleNumbers.Count >= 2 && squares[rowIndex, column].PossibleNumbers.Count <= groupSize)
+                    .Select(col => (rowIndex, col)).ToList();
 
                 if (cells.Count >= groupSize)
                 {
                     foreach (var group in cells.Combinations(groupSize))
                     {
-                        CheckGroup(group, Enumerable.Range(0, 9).Select(column => (row, column)).ToList(),
-                                   Enums.SquareGroupType.Row, squares, solveStep, groupSize, row);
+                        CheckGroup(group, Enumerable.Range(0, 9).Select(column => (rowIndex, column)).ToList(),
+                                   Enums.SquareGroupType.Row, squares, solveStep, groupSize, rowIndex);
 
                         if (!string.IsNullOrEmpty(solveStep.Explanation))
                             return solveStep;
@@ -38,39 +38,41 @@ namespace SudokuStepByStep.Logic.Rule
             }
 
             // Check columns
-            for (int column = 0; column < 9; column++)
+            for (int columnIndex = 0; columnIndex < 9; columnIndex++)
             {
                 var cells = Enumerable.Range(0, 9)
-                    .Where(row => squares[row, column].PossibleNumbers.Count >= 2 && squares[row, column].PossibleNumbers.Count <= groupSize)
-                    .Select(row => (row, column)).ToList();
+                    .Where(row => squares[row, columnIndex].PossibleNumbers.Count >= 2 && squares[row, columnIndex].PossibleNumbers.Count <= groupSize)
+                    .Select(row => (row, columnIndex)).ToList();
 
                 if (cells.Count >= groupSize)
                 {
                     foreach (var group in cells.Combinations(groupSize))
                     {
-                        CheckGroup(group, Enumerable.Range(0, 9).Select(row => (row, column)).ToList(),
-                                   Enums.SquareGroupType.Column, squares, solveStep, groupSize, 0, column);
+                        CheckGroup(group, Enumerable.Range(0, 9).Select(row => (row, columnIndex)).ToList(),
+                                   Enums.SquareGroupType.Column, squares, solveStep, groupSize, 0, columnIndex);
 
                         if (!string.IsNullOrEmpty(solveStep.Explanation))
+                        {
                             return solveStep;
+                        }
                     }
                 }
             }
 
             // Check boxes
-            for (int boxRow = 0; boxRow < 3; boxRow++)
+            for (int boxRowIndex = 0; boxRowIndex < 3; boxRowIndex++)
             {
-                for (int boxColumn = 0; boxColumn < 3; boxColumn++)
+                for (int boxColumnIndex = 0; boxColumnIndex < 3; boxColumnIndex++)
                 {
                     var boxCells = new List<(int row, int col)>();
 
-                    for (int r = boxRow * 3; r < boxRow * 3 + 3; r++)
+                    for (int rowIndex = boxRowIndex * 3; rowIndex < boxRowIndex * 3 + 3; rowIndex++)
                     {
-                        for (int c = boxColumn * 3; c < boxColumn * 3 + 3; c++)
+                        for (int columnIndex = boxColumnIndex * 3; columnIndex < boxColumnIndex * 3 + 3; columnIndex++)
                         {
-                            if (squares[r, c].PossibleNumbers.Count >= 2 && squares[r, c].PossibleNumbers.Count <= groupSize)
+                            if (squares[rowIndex, columnIndex].PossibleNumbers.Count >= 2 && squares[rowIndex, columnIndex].PossibleNumbers.Count <= groupSize)
                             {
-                                boxCells.Add((r, c));
+                                boxCells.Add((rowIndex, columnIndex));
                             }
                         }
                     }
@@ -80,9 +82,9 @@ namespace SudokuStepByStep.Logic.Rule
                         foreach (var group in boxCells.Combinations(groupSize))
                         {
                             CheckGroup(group,
-                                Enumerable.Range(boxRow * 3, 3)
-                                    .SelectMany(r => Enumerable.Range(boxColumn * 3, 3).Select(c => (r, c))).ToList(),
-                                Enums.SquareGroupType.Box, squares, solveStep, groupSize, boxRow, boxColumn);
+                                Enumerable.Range(boxRowIndex * 3, 3)
+                                    .SelectMany(r => Enumerable.Range(boxColumnIndex * 3, 3).Select(c => (r, c))).ToList(),
+                                Enums.SquareGroupType.Box, squares, solveStep, groupSize, boxRowIndex, boxColumnIndex);
 
                             if (!string.IsNullOrEmpty(solveStep.Explanation))
                                 return solveStep;
@@ -113,21 +115,23 @@ namespace SudokuStepByStep.Logic.Rule
             var groupCandidates = new HashSet<int>();
 
             foreach (var cell in cells)
+            {
                 groupCandidates.UnionWith(squares[cell.row, cell.col].PossibleNumbers);
+            }
 
             if (groupCandidates.Count == groupSize &&
                 cells.All(cell => squares[cell.row, cell.col].PossibleNumbers.All(n => groupCandidates.Contains(n))))
             {
                 foreach (var cell in allCells.Except(cells))
                 {
-                    foreach (var n in groupCandidates)
+                    foreach (var number in groupCandidates)
                     {
-                        if (squares[cell.row, cell.col].PossibleNumbers.Contains(n))
+                        if (squares[cell.row, cell.col].PossibleNumbers.Contains(number))
                         {
                             solveStep.CandidatesRemovedSquares.Add(cell);
 
-                            if (!solveStep.CandidatesRemovedNumbers.Contains(n))
-                                solveStep.CandidatesRemovedNumbers.Add(n);
+                            if (!solveStep.CandidatesRemovedNumbers.Contains(number))
+                                solveStep.CandidatesRemovedNumbers.Add(number);
                         }
                     }
                 }

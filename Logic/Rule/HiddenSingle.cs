@@ -19,20 +19,20 @@ public static class HiddenSingle
         var gridPossibleNumbers = GridHelper.GetPossibleNumbers(squares);
 
         // --- rows ---
-        for (int row = 0; row < 9; row++)
+        for (int rowIndex = 0; rowIndex < 9; rowIndex++)
         {
             for (int number = 1; number <= 9; number++)
             {
                 var possibleColumns = new List<int>();
 
-                for (int column = 0; column < 9; column++)
+                for (int columnIndex = 0; columnIndex < 9; columnIndex++)
                 {
-                    var square = squares[row, column];
+                    var square = squares[rowIndex, columnIndex];
 
                     if (square.PossibleNumbers.Count > 0 &&
                         square.PossibleNumbers.Contains(number))
                     {
-                        possibleColumns.Add(column);
+                        possibleColumns.Add(columnIndex);
                     }
                 }
 
@@ -42,15 +42,15 @@ public static class HiddenSingle
 
                     solveStep.Solved = true;
                     solveStep.Number = number;
-                    solveStep.Row = row;
+                    solveStep.Row = rowIndex;
                     solveStep.Column = solvedColumn;
-                    solveStep.Explanation = $"The number {number} can only fit in this square in row {row + 1}.";
+                    solveStep.Explanation = $"The number {number} can only fit in this square in row {rowIndex + 1}.";
 
-                    for (int column = 0; column < 9; column++)
+                    for (int columnIndex = 0; columnIndex < 9; columnIndex++)
                     {
-                        if (column != solvedColumn)
+                        if (columnIndex != solvedColumn)
                         {
-                            solveStep.HighlightedSquares.Add((row, column));
+                            solveStep.HighlightedSquares.Add((rowIndex, columnIndex));
                         }
                     }
 
@@ -60,20 +60,20 @@ public static class HiddenSingle
         }
 
         // --- columns ---
-        for (int column = 0; column < 9; column++)
+        for (int columnIndex = 0; columnIndex < 9; columnIndex++)
         {
             for (int number = 1; number <= 9; number++)
             {
                 var possibleRows = new List<int>();
 
-                for (int row = 0; row < 9; row++)
+                for (int rowIndex = 0; rowIndex < 9; rowIndex++)
                 {
-                    var square = squares[row, column];
+                    var square = squares[rowIndex, columnIndex];
 
                     if (square.PossibleNumbers.Count > 0 &&
                         square.PossibleNumbers.Contains(number))
                     {
-                        possibleRows.Add(row);
+                        possibleRows.Add(rowIndex);
                     }
                 }
 
@@ -84,14 +84,14 @@ public static class HiddenSingle
                     solveStep.Solved = true;
                     solveStep.Number = number;
                     solveStep.Row = solvedRow;
-                    solveStep.Column = column;
-                    solveStep.Explanation = $"The number {number} can only fit in this square in column {column + 1}.";
+                    solveStep.Column = columnIndex;
+                    solveStep.Explanation = $"The number {number} can only fit in this square in column {columnIndex + 1}.";
 
-                    for (int row = 0; row < 9; row++)
+                    for (int rowIndex = 0; rowIndex < 9; rowIndex++)
                     {
-                        if (row != solvedRow)
+                        if (rowIndex != solvedRow)
                         {
-                            solveStep.HighlightedSquares.Add((row, column));
+                            solveStep.HighlightedSquares.Add((rowIndex, columnIndex));
                         }
                     }
 
@@ -100,25 +100,25 @@ public static class HiddenSingle
             }
         }
 
-        // --- grids ---
-        for (int boxRow = 0; boxRow < 3; boxRow++)
+        // --- 3*3 boxes ---
+        for (int boxRowIndex = 0; boxRowIndex < 3; boxRowIndex++)
         {
-            for (int boxColumn = 0; boxColumn < 3; boxColumn++)
+            for (int boxColumnIndex = 0; boxColumnIndex < 3; boxColumnIndex++)
             {
                 for (int number = 1; number <= 9; number++)
                 {
                     var possibleSquares = new List<(int row, int column)>();
 
-                    for (int row = boxRow * 3; row < boxRow * 3 + 3; row++)
+                    for (int rowIndex = boxRowIndex * 3; rowIndex < boxRowIndex * 3 + 3; rowIndex++)
                     {
-                        for (int column = boxColumn * 3; column < boxColumn * 3 + 3; column++)
+                        for (int columnIndex = boxColumnIndex * 3; columnIndex < boxColumnIndex * 3 + 3; columnIndex++)
                         {
-                            var square = squares[row, column];
+                            var square = squares[rowIndex, columnIndex];
 
                             if (square.PossibleNumbers.Count > 0 &&
                                 square.PossibleNumbers.Contains(number))
                             {
-                                possibleSquares.Add((row, column));
+                                possibleSquares.Add((rowIndex, columnIndex));
                             }
                         }
                     }
@@ -133,16 +133,16 @@ public static class HiddenSingle
                         solveStep.Column = solvedColumn;
                         solveStep.Explanation = $"The number {number} can only fit in this square in its 3x3 grid.";
 
-                        int startRow = (solvedRow / 3) * 3;
-                        int startColumn = (solvedColumn / 3) * 3;
+                        int startRowIndex = (solvedRow / 3) * 3;
+                        int startColumnIndex = (solvedColumn / 3) * 3;
 
-                        for (int r = startRow; r < startRow + 3; r++)
+                        for (int rowIndex = startRowIndex; rowIndex < startRowIndex + 3; rowIndex++)
                         {
-                            for (int c = startColumn; c < startColumn + 3; c++)
+                            for (int columnIndex = startColumnIndex; columnIndex < startColumnIndex + 3; columnIndex++)
                             {
-                                if (r != solvedRow || c != solvedColumn)
+                                if (rowIndex != solvedRow || columnIndex != solvedColumn)
                                 {
-                                    solveStep.HighlightedSquares.Add((r, c));
+                                    solveStep.HighlightedSquares.Add((rowIndex, columnIndex));
                                 }
                             }
                         }

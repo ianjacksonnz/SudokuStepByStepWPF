@@ -1,8 +1,5 @@
 ﻿using SudokuStepByStep.Common;
-using SudokuStepByStep.Logic.Helpers;
 using SudokuStepByStep.Models;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace SudokuStepByStep.Logic.Rule;
 
@@ -22,21 +19,21 @@ public static class XWing
         {
             var rowColumns = new List<(int row, List<int> cols)>();
 
-            for (int row = 0; row < 9; row++)
+            for (int rowIndex = 0; rowIndex < 9; rowIndex++)
             {
                 var cols = new List<int>();
 
-                for (int col = 0; col < 9; col++)
+                for (int columnIndex = 0; columnIndex < 9; columnIndex++)
                 {
-                    if (squares[row, col].PossibleNumbers.Contains(number))
+                    if (squares[rowIndex, columnIndex].PossibleNumbers.Contains(number))
                     {
-                        cols.Add(col);
+                        cols.Add(columnIndex);
                     }
                 }
 
                 if (cols.Count == 2)
                 {
-                    rowColumns.Add((row, cols));
+                    rowColumns.Add((rowIndex, cols));
                 }
             }
 
@@ -47,30 +44,30 @@ public static class XWing
                 {
                     if (rowColumns[i].cols.SequenceEqual(rowColumns[j].cols))
                     {
-                        int row1 = rowColumns[i].row;
-                        int row2 = rowColumns[j].row;
-                        int col1 = rowColumns[i].cols[0];
-                        int col2 = rowColumns[i].cols[1];
+                        int rowIndex1 = rowColumns[i].row;
+                        int rowIndex2 = rowColumns[j].row;
+                        int columnIndex1 = rowColumns[i].cols[0];
+                        int columnIndex2 = rowColumns[i].cols[1];
 
                         // Highlight the four corners
-                        solveStep.HighlightedSquares.Add((row1, col1));
-                        solveStep.HighlightedSquares.Add((row1, col2));
-                        solveStep.HighlightedSquares.Add((row2, col1));
-                        solveStep.HighlightedSquares.Add((row2, col2));
+                        solveStep.HighlightedSquares.Add((rowIndex1, columnIndex1));
+                        solveStep.HighlightedSquares.Add((rowIndex1, columnIndex2));
+                        solveStep.HighlightedSquares.Add((rowIndex2, columnIndex1));
+                        solveStep.HighlightedSquares.Add((rowIndex2, columnIndex2));
 
                         // Remove candidate from other rows in these columns
-                        for (int row = 0; row < 9; row++)
+                        for (int rowIndex = 0; rowIndex < 9; rowIndex++)
                         {
-                            if (row != row1 && row != row2)
+                            if (rowIndex != rowIndex1 && rowIndex != rowIndex2)
                             {
-                                if (squares[row, col1].PossibleNumbers.Contains(number))
+                                if (squares[rowIndex, columnIndex1].PossibleNumbers.Contains(number))
                                 {
-                                    solveStep.CandidatesRemovedSquares.Add((row, col1));
+                                    solveStep.CandidatesRemovedSquares.Add((rowIndex, columnIndex1));
                                 }
 
-                                if (squares[row, col2].PossibleNumbers.Contains(number))
+                                if (squares[rowIndex, columnIndex2].PossibleNumbers.Contains(number))
                                 {
-                                    solveStep.CandidatesRemovedSquares.Add((row, col2));
+                                    solveStep.CandidatesRemovedSquares.Add((rowIndex, columnIndex2));
                                 }
                             }
                         }
@@ -78,7 +75,7 @@ public static class XWing
                         if (solveStep.CandidatesRemovedSquares.Count > 0)
                         {
                             solveStep.Number = number;
-                            solveStep.Explanation = $"X-Wing (rows): {number} appears in exactly two columns in two rows ({row1 + 1}, {row2 + 1}).{Environment.NewLine}Remove {number} from other rows in those columns.";
+                            solveStep.Explanation = $"X-Wing (rows): {number} appears in exactly two columns in two rows ({rowIndex1 + 1}, {rowIndex2 + 1}).{Environment.NewLine}Remove {number} from other rows in those columns.";
                             solveStep.CandidatesRemovedInNonHighlightedSquares = true;
                             solveStep.CandidatesRemovedNumbers.Add(number);
                             return solveStep;
@@ -95,21 +92,21 @@ public static class XWing
         {
             var columnRows = new List<(int col, List<int> rows)>();
 
-            for (int col = 0; col < 9; col++)
+            for (int columnIndex = 0; columnIndex < 9; columnIndex++)
             {
                 var rows = new List<int>();
 
-                for (int row = 0; row < 9; row++)
+                for (int rowIndex = 0; rowIndex < 9; rowIndex++)
                 {
-                    if (squares[row, col].PossibleNumbers.Contains(number))
+                    if (squares[rowIndex, columnIndex].PossibleNumbers.Contains(number))
                     {
-                        rows.Add(row);
+                        rows.Add(rowIndex);
                     }
                 }
 
                 if (rows.Count == 2)
                 {
-                    columnRows.Add((col, rows));
+                    columnRows.Add((columnIndex, rows));
                 }
             }
 
@@ -120,30 +117,30 @@ public static class XWing
                 {
                     if (columnRows[i].rows.SequenceEqual(columnRows[j].rows))
                     {
-                        int col1 = columnRows[i].col;
-                        int col2 = columnRows[j].col;
-                        int row1 = columnRows[i].rows[0];
-                        int row2 = columnRows[i].rows[1];
+                        int columnIndex1 = columnRows[i].col;
+                        int columnIndex2 = columnRows[j].col;
+                        int rowIndex1 = columnRows[i].rows[0];
+                        int rowIndex2 = columnRows[i].rows[1];
 
                         // Highlight the four corners
-                        solveStep.HighlightedSquares.Add((row1, col1));
-                        solveStep.HighlightedSquares.Add((row2, col1));
-                        solveStep.HighlightedSquares.Add((row1, col2));
-                        solveStep.HighlightedSquares.Add((row2, col2));
+                        solveStep.HighlightedSquares.Add((rowIndex1, columnIndex1));
+                        solveStep.HighlightedSquares.Add((rowIndex2, columnIndex1));
+                        solveStep.HighlightedSquares.Add((rowIndex1, columnIndex2));
+                        solveStep.HighlightedSquares.Add((rowIndex2, columnIndex2));
 
                         // Remove candidate from other columns in these rows
-                        for (int col = 0; col < 9; col++)
+                        for (int columnIndex = 0; columnIndex < 9; columnIndex++)
                         {
-                            if (col != col1 && col != col2)
+                            if (columnIndex != columnIndex1 && columnIndex != columnIndex2)
                             {
-                                if (squares[row1, col].PossibleNumbers.Contains(number))
+                                if (squares[rowIndex1, columnIndex].PossibleNumbers.Contains(number))
                                 {
-                                    solveStep.CandidatesRemovedSquares.Add((row1, col));
+                                    solveStep.CandidatesRemovedSquares.Add((rowIndex1, columnIndex));
                                 }
 
-                                if (squares[row2, col].PossibleNumbers.Contains(number))
+                                if (squares[rowIndex2, columnIndex].PossibleNumbers.Contains(number))
                                 {
-                                    solveStep.CandidatesRemovedSquares.Add((row2, col));
+                                    solveStep.CandidatesRemovedSquares.Add((rowIndex2, columnIndex));
                                 }
                             }
                         }
@@ -151,7 +148,7 @@ public static class XWing
                         if (solveStep.CandidatesRemovedSquares.Count > 0)
                         {
                             solveStep.Number = number;
-                            solveStep.Explanation = $"X-Wing (columns): {number} appears in exactly two rows in two columns ({col1 + 1}, {col2 + 1}).{Environment.NewLine}Remove {number} from other columns in those rows.";
+                            solveStep.Explanation = $"X-Wing (columns): {number} appears in exactly two rows in two columns ({columnIndex1 + 1}, {columnIndex2 + 1}).{Environment.NewLine}Remove {number} from other columns in those rows.";
                             solveStep.CandidatesRemovedInNonHighlightedSquares = true;
                             solveStep.CandidatesRemovedNumbers.Add(number);
                             return solveStep;

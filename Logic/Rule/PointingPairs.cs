@@ -33,18 +33,18 @@ namespace SudokuStepByStep.Logic.Rule
                 }
             }
 
-            for (int r = 0; r < 9; r++)
+            for (int rowIndex = 0; rowIndex < 9; rowIndex++)
             {
-                for (int c = 0; c < 9; c++)
+                for (int columnIndex = 0; columnIndex < 9; columnIndex++)
                 {
-                    foreach (var number in squares[r, c].PossibleNumbers)
+                    foreach (var number in squares[rowIndex, columnIndex].PossibleNumbers)
                     {
-                        int nIndex = number - 1;
-                        int boxIndex = (r / 3) * 3 + (c / 3);
+                        int numberIndex = number - 1;
+                        int boxIndex = (rowIndex / 3) * 3 + (columnIndex / 3);
 
-                        boxCandidates[boxIndex, nIndex].Add((r, c));
-                        rowCandidates[r, nIndex].Add((r, c));
-                        colCandidates[c, nIndex].Add((r, c));
+                        boxCandidates[boxIndex, numberIndex].Add((rowIndex, columnIndex));
+                        rowCandidates[rowIndex, numberIndex].Add((rowIndex, columnIndex));
+                        colCandidates[columnIndex, numberIndex].Add((rowIndex, columnIndex));
                     }
                 }
             }
@@ -64,26 +64,27 @@ namespace SudokuStepByStep.Logic.Rule
                     // All in same row?
                     if (positions.All(p => p.row == positions[0].row))
                     {
-                        int row = positions[0].row;
+                        int rowIndex = positions[0].row;
                         var eliminations = new List<(int row, int col)>();
                         int startColumn = (boxIndex % 3) * 3;
 
-                        for (int c = 0; c < 9; c++)
+                        for (int columnIndex = 0; columnIndex < 9; columnIndex++)
                         {
-                            if (c >= startColumn && c < startColumn + 3)
+                            if (columnIndex >= startColumn && columnIndex < startColumn + 3)
                             {
                                 continue;
                             }
 
-                            if (squares[row, c].PossibleNumbers.Contains(n + 1))
+                            if (squares[rowIndex, columnIndex].PossibleNumbers.Contains(n + 1))
                             {
-                                eliminations.Add((row, c));
+                                eliminations.Add((rowIndex, columnIndex));
                             }
                         }
 
                         if (eliminations.Count > 0)
                         {
-                            solveStep.Explanation = $"Pointing Pair: {n + 1}s in box are all in row {row + 1}, remove from row.";
+                            int number = n + 1;
+                            solveStep.Explanation = $"Pointing Pair: {number}s in box are all in row {rowIndex + 1}. Remove {number}s from other squares in row.";
                             solveStep.CandidatesRemovedInNonHighlightedSquares = true;
                             solveStep.CandidatesRemovedNumbers.Add(n + 1);
                             positions.ForEach(p => solveStep.HighlightedSquares.Add(p));
@@ -95,26 +96,27 @@ namespace SudokuStepByStep.Logic.Rule
                     // All in same column?
                     if (positions.All(p => p.col == positions[0].col))
                     {
-                        int col = positions[0].col;
+                        int columnIndex = positions[0].col;
                         var eliminations = new List<(int row, int col)>();
                         int startRow = (boxIndex / 3) * 3;
 
-                        for (int r = 0; r < 9; r++)
+                        for (int rowIndex = 0; rowIndex < 9; rowIndex++)
                         {
-                            if (r >= startRow && r < startRow + 3)
+                            if (rowIndex >= startRow && rowIndex < startRow + 3)
                             {
                                 continue;
                             }
 
-                            if (squares[r, col].PossibleNumbers.Contains(n + 1))
+                            if (squares[rowIndex, columnIndex].PossibleNumbers.Contains(n + 1))
                             {
-                                eliminations.Add((r, col));
+                                eliminations.Add((rowIndex, columnIndex));
                             }
                         }
 
                         if (eliminations.Count > 0)
                         {
-                            solveStep.Explanation = $"Pointing Pair: {n + 1}s in box are all in column {col + 1}, remove from column.";
+                            int number = n + 1;
+                            solveStep.Explanation = $"Pointing Pair: {number}s in box are all in column {columnIndex + 1}. Remove {number}s from other squares in column.";
                             solveStep.CandidatesRemovedInNonHighlightedSquares = true;
                             solveStep.CandidatesRemovedNumbers.Add(n + 1);
                             positions.ForEach(p => solveStep.HighlightedSquares.Add(p));
@@ -129,9 +131,9 @@ namespace SudokuStepByStep.Logic.Rule
             for (int n = 0; n < 9; n++)
             {
                 // Rows
-                for (int r = 0; r < 9; r++)
+                for (int rowIndex = 0; rowIndex < 9; rowIndex++)
                 {
-                    var positions = rowCandidates[r, n];
+                    var positions = rowCandidates[rowIndex, n];
 
                     if (positions.Count == 2)
                     {
@@ -162,7 +164,8 @@ namespace SudokuStepByStep.Logic.Rule
 
                             if (eliminations.Count > 0)
                             {
-                                solveStep.Explanation = $"Pointing Pair: {n + 1}s in row {r + 1} are in same box, remove from other squares in box.";
+                                int number = n + 1;
+                                solveStep.Explanation = $"Pointing Pair: {number}s in row {rowIndex + 1} are in same box. Remove {number}s from other squares in box.";
                                 solveStep.CandidatesRemovedInNonHighlightedSquares = true;
                                 solveStep.CandidatesRemovedNumbers.Add(n + 1);
                                 positions.ForEach(p => solveStep.HighlightedSquares.Add(p));
@@ -174,9 +177,9 @@ namespace SudokuStepByStep.Logic.Rule
                 }
 
                 // Columns
-                for (int c = 0; c < 9; c++)
+                for (int columnIndex = 0; columnIndex < 9; columnIndex++)
                 {
-                    var positions = colCandidates[c, n];
+                    var positions = colCandidates[columnIndex, n];
 
                     if (positions.Count == 2)
                     {
@@ -207,7 +210,8 @@ namespace SudokuStepByStep.Logic.Rule
 
                             if (eliminations.Count > 0)
                             {
-                                solveStep.Explanation = $"Pointing Pair: {n + 1}s in column {c + 1} are in same box, remove from other squares in box.";
+                                int number = n + 1;
+                                solveStep.Explanation = $"Pointing Pair: {number}s in column {columnIndex + 1} are in same box. Remove {number}s from other squares in box.";
                                 solveStep.CandidatesRemovedInNonHighlightedSquares = true;
                                 solveStep.CandidatesRemovedNumbers.Add(n + 1);
                                 positions.ForEach(p => solveStep.HighlightedSquares.Add(p));
