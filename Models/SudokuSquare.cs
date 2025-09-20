@@ -70,7 +70,7 @@ namespace SudokuStepByStep.Models
             }
         }
 
-        public bool HasBackground => _backgroundColor != Brushes.White;
+        public bool HasHighlighting => _backgroundColor != Brushes.White;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 

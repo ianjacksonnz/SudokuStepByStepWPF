@@ -127,7 +127,7 @@ public class SudokuViewModel : INotifyPropertyChanged
 
     private void Step()
     {
-        // Example: call your RulesEngine logic using Grid
+        GridHelper.ClearHighlighting(GridToSquaresArray());
         var squaresArray = GridToSquaresArray();
         var solveStep = RulesEngine.CalculateNextStep(squaresArray);
 

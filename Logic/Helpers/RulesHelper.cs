@@ -57,6 +57,7 @@ public static class RulesHelper
                     foreach (var number in possibleNumbers)
                     {
                         square.PossibleNumbers.Add(number);
+                        square.OnPropertyChanged(nameof(SudokuSquare.PossibleNumbers));
                     }
                 }
             }

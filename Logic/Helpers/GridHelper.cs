@@ -38,6 +38,31 @@ public static class GridHelper
                 if (square.HasNumber && !square.IsReadOnly)
                 {
                     square.Number = 0;
+                    square.IsReadOnly = false;
+                }
+
+                if (square.HasHighlighting)
+                {
+                    square.BackgroundColor = Brushes.White;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Clear the highlighted squares in the the grid
+    /// </summary>
+    public static void ClearHighlighting(SudokuSquare[,] squares)
+    {
+        // --- Clear the grid squares for editable squares ---
+        for (int rowIndex = 0; rowIndex < 9; rowIndex++)
+        {
+            for (int columnIndex = 0; columnIndex < 9; columnIndex++)
+            {
+                var square = squares[rowIndex, columnIndex];
+
+                if (square.HasHighlighting)
+                {
                     square.BackgroundColor = Brushes.White;
                 }
             }
