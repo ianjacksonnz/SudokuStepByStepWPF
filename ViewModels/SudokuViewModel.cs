@@ -14,6 +14,7 @@ public class SudokuViewModel : INotifyPropertyChanged
     private bool _previousStepCandidatesRemoved = false;
     private HashSet<(int row, int col)> _previousStepCandidatesRemovedSquares = new();
     private bool _isNew = false;
+    private bool _possibleNumbersSet = false;
 
     public ObservableCollection<ObservableCollection<SudokuSquare>> Grid { get; set; } = new();
     public ObservableCollection<string> PuzzleNames { get; set; } = new();
@@ -128,7 +129,11 @@ public class SudokuViewModel : INotifyPropertyChanged
     private void LoadSelectedPuzzle()
     {
         _isNew = false;
-        if (string.IsNullOrEmpty(SelectedPuzzle)) return;
+
+        if (string.IsNullOrEmpty(SelectedPuzzle))
+        {
+            return;
+        }
 
         var puzzles = PuzzleLoader.GetPuzzles();
 
@@ -151,8 +156,9 @@ public class SudokuViewModel : INotifyPropertyChanged
         // Initialize candidates
         var sodukoSquares = GridToSquaresArray();
         RulesHelper.SetPossibleNumbers(sodukoSquares);
-        ResetPreviousStepStoredValues();
+        _possibleNumbersSet = true;
         ShowPossibleNumbers = false;
+        ResetPreviousStepStoredValues();
     }
 
     private SudokuSquare[,] GridToSquaresArray()
@@ -179,9 +185,15 @@ public class SudokuViewModel : INotifyPropertyChanged
 
         if (puzzleSolved)
         {
-            Explanation = "Puzzle Solved!";
+            Explanation = "Puzzle solved!";
             GridHelper.ClearHighlighting(sodukoSquares);
             return;
+        }
+
+        if (!_possibleNumbersSet)
+        {
+            RulesHelper.SetPossibleNumbers(sodukoSquares);
+            _possibleNumbersSet = true;
         }
 
         if (_previousStepCandidatesRemoved)
@@ -203,9 +215,14 @@ public class SudokuViewModel : INotifyPropertyChanged
         {
             // Update Grid with step result
             UpdateGridFromSolveStep(solveStep);
+            ShowPossibleNumbers = true;
         }
-
-        ShowPossibleNumbers = true;
+        else
+        {
+            Explanation = "Puzzle can not be solved!";
+            ShowPossibleNumbers = false;
+            _possibleNumbersSet = false;
+        }
     }
 
     private void UpdateGridFromSolveStep(SolveStep solveStep)
@@ -262,13 +279,15 @@ public class SudokuViewModel : INotifyPropertyChanged
         if (_isNew)
         {
             GridHelper.ClearSquaresNewPuzzle(sodukoSquares);
+            _possibleNumbersSet = false;
         }
         else
         {
             GridHelper.ClearSquares(sodukoSquares);
+            RulesHelper.SetPossibleNumbers(sodukoSquares);
+            _possibleNumbersSet = true;
         }
-
-        RulesHelper.SetPossibleNumbers(sodukoSquares);
+ 
         ResetPreviousStepStoredValues();
         Explanation = string.Empty;
         ShowPossibleNumbers = false;
@@ -276,9 +295,9 @@ public class SudokuViewModel : INotifyPropertyChanged
 
     private void NewPuzzle()
     {
+        SelectedPuzzle = null!;
         _isNew = true;
         Clear();
-        SelectedPuzzle = null!;
     }
 
     private void ResetPreviousStepStoredValues()
