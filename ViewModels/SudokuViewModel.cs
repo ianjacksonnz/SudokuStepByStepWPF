@@ -161,9 +161,6 @@ public class SudokuViewModel : INotifyPropertyChanged
         {
             for (int columnIndex = 0; columnIndex < 9; columnIndex++)
             {
-                var square = Grid[rowIndex][columnIndex];
-                var possibleNumbers = new ObservableCollection<int>(square.PossibleNumbers);
-
                 sodukoSquares[rowIndex, columnIndex] = Grid[rowIndex][columnIndex];
             }
         }
@@ -252,7 +249,7 @@ public class SudokuViewModel : INotifyPropertyChanged
 
         foreach (var (rowIndex, columnIndex) in solveStep.CandidatesRemovedSquares)
         {
-            Grid[rowIndex][columnIndex].BackgroundColor = System.Windows.Media.Brushes.LightBlue;
+            Grid[rowIndex][columnIndex].BackgroundColor = System.Windows.Media.Brushes.LightGreen;
         }
     }
 
