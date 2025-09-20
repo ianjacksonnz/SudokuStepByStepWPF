@@ -182,7 +182,7 @@ public class SudokuViewModel : INotifyPropertyChanged
             square.BackgroundColor = System.Windows.Media.Brushes.LightGreen;
 
             var sodukoSquares = GridToSquaresArray();
-            RulesHelper.RemovePossibleNumbersAfterSolveStep(sodukoSquares, solveStep);
+            RulesHelper.RemovePossibleNumbersFromGridAfterSquareSolved(sodukoSquares, solveStep);
         }
 
         // Highlight other squares

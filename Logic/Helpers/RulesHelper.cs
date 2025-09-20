@@ -63,8 +63,12 @@ public static class RulesHelper
         }
     }
 
-    public static void RemovePossibleNumbersAfterSolveStep(SudokuSquare[,] squares, SolveStep solveStep)
+    public static void RemovePossibleNumbersFromGridAfterSquareSolved(SudokuSquare[,] squares, SolveStep solveStep)
     {
+        var solvedSquare = squares[solveStep.Row, solveStep.Column];
+        solvedSquare.PossibleNumbers.Clear();
+        solvedSquare.OnPropertyChanged(nameof(SudokuSquare.PossibleNumbers));
+
         int startRowIndex = solveStep.Row - solveStep.Row % 3;
         int startColumnIndex = solveStep.Column - solveStep.Column % 3;
 
@@ -83,6 +87,7 @@ public static class RulesHelper
                     if (square.PossibleNumbers.Contains(solveStep.Number))
                     {
                         square.PossibleNumbers.Remove(solveStep.Number);
+                        square.OnPropertyChanged(nameof(SudokuSquare.PossibleNumbers));
                     }
                 }
             }
