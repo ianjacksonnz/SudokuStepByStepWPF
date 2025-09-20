@@ -125,34 +125,6 @@ public class SudokuViewModel : INotifyPropertyChanged
         RulesHelper.SetPossibleNumbers(sodukoSquares);
     }
 
-    private void Step()
-    {
-        GridHelper.ClearHighlighting(GridToSquaresArray());
-        var squaresArray = GridToSquaresArray();
-        var solveStep = RulesEngine.CalculateNextStep(squaresArray);
-
-        if (solveStep != null)
-        {
-            // Update Grid with step result
-            UpdateGridFromSolveStep(solveStep);
-        }
-
-        ShowPossibleNumbers = true; // Show possible numbers after stepping
-    }
-
-    private void Clear()
-    {
-        var sodukoSquares = GridToSquaresArray();
-        GridHelper.ClearSquares(sodukoSquares);
-        RulesHelper.SetPossibleNumbers(sodukoSquares);
-    }
-
-    private void NewPuzzle()
-    {
-        Clear();
-        SelectedPuzzle = null!;
-    }
-
     private SudokuSquare[,] GridToSquaresArray()
     {
         var sodukoSquares = new SudokuSquare[9, 9];
@@ -169,6 +141,21 @@ public class SudokuViewModel : INotifyPropertyChanged
         }
 
         return sodukoSquares;
+    }
+
+    private void Step()
+    {
+        GridHelper.ClearHighlighting(GridToSquaresArray());
+        var squaresArray = GridToSquaresArray();
+        var solveStep = RulesEngine.CalculateNextStep(squaresArray);
+
+        if (solveStep != null)
+        {
+            // Update Grid with step result
+            UpdateGridFromSolveStep(solveStep);
+        }
+
+        ShowPossibleNumbers = true; // Show possible numbers after stepping
     }
 
     private void UpdateGridFromSolveStep(SolveStep solveStep)
@@ -195,6 +182,19 @@ public class SudokuViewModel : INotifyPropertyChanged
         {
             Grid[rowIndex][columnIndex].BackgroundColor = System.Windows.Media.Brushes.LightBlue;
         }
+    }
+
+    private void Clear()
+    {
+        var sodukoSquares = GridToSquaresArray();
+        GridHelper.ClearSquares(sodukoSquares);
+        RulesHelper.SetPossibleNumbers(sodukoSquares);
+    }
+
+    private void NewPuzzle()
+    {
+        Clear();
+        SelectedPuzzle = null!;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
